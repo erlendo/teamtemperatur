@@ -1,11 +1,15 @@
 "use server";
 
 import { supabaseServer } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 export async function listMyTeams() {
   const supabase = supabaseServer();
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user) throw new Error("Not authenticated");
+  const { data: u, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !u.user) {
+    redirect("/login");
+  }
 
   const { data, error } = await supabase
     .from("team_memberships")
@@ -13,7 +17,10 @@ export async function listMyTeams() {
     .eq("user_id", u.user.id)
     .eq("status", "active");
 
-  if (error) throw error;
+  if (error) {
+    console.error("listMyTeams error:", error);
+    return [];
+  }
 
   return (data ?? []).map((r: any) => ({
     id: r.teams.id as string,
