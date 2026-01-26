@@ -1,31 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { sendMagicLink } from "@/server/actions/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 
-  async function sendLink(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
 
-    const supabase = supabaseBrowser();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/teams`,
-      },
-    });
+    const result = await sendMagicLink(email);
 
-    setMsg(error ? `Feil: ${error.message}` : "Sjekk e-post for innloggingslenke.");
+    if ("error" in result) {
+      setMsg(`Feil: ${result.error}`);
+    } else {
+      setMsg("Sjekk e-post for innloggingslenke.");
+    }
   }
 
   return (
     <div style={{ maxWidth: 420 }}>
       <h1>Logg inn</h1>
-      <form onSubmit={sendLink}>
+      <form onSubmit={handleSubmit}>
         <label>E-post</label>
         <input
           value={email}
