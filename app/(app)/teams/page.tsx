@@ -1,8 +1,14 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { listMyTeams, createTeam } from "@/server/actions/teams";
 
 export default async function TeamsPage() {
   const teams = await listMyTeams();
+
+  // If not authenticated, redirect to login
+  if (teams === null) {
+    redirect("/login");
+  }
 
   return (
     <div style={{ maxWidth: 720 }}>

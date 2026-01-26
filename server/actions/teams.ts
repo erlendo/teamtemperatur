@@ -8,7 +8,7 @@ export async function listMyTeams() {
   const { data: u, error: authError } = await supabase.auth.getUser();
   
   if (authError || !u.user) {
-    redirect("/login");
+    return null; // Return null when not authenticated
   }
 
   const { data, error } = await supabase
@@ -34,7 +34,7 @@ export async function createTeam(name: string) {
   const { data: u, error: authError } = await supabase.auth.getUser();
   
   if (authError || !u.user) {
-    redirect("/login");
+    throw new Error("Not authenticated");
   }
 
   const { data: team, error: teamErr } = await supabase
