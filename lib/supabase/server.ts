@@ -10,7 +10,7 @@ export function supabaseServer() {
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
-        setAll: (cs) => cs.forEach((c) => cookieStore.set(c.name, c.value, c.options)),
+        setAll: (cs: Array<{ name: string; value: string; options?: Record<string, unknown> }>) => cs.forEach((c) => cookieStore.set(c.name, c.value, c.options)),
       },
     }
   );
