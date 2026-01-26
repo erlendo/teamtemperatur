@@ -1,6 +1,7 @@
 "use server";
 
 import { supabaseServer } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 type AnswerPayload = {
   question_id: string;
@@ -43,8 +44,11 @@ export async function submitSurvey(input: {
   answers: AnswerPayload[];
 }) {
   const supabase = supabaseServer();
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user) throw new Error("Not authenticated");
+  const { data: u, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !u.user) {
+    redirect("/login");
+  }
 
   const { data: submission, error: sErr } = await supabase
     .from("submissions")

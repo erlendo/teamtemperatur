@@ -31,20 +31,29 @@ export async function listMyTeams() {
 
 export async function createTeam(name: string) {
   const supabase = supabaseServer();
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user) throw new Error("Not authenticated");
+  const { data: u, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !u.user) {
+    redirect("/login");
+  }
 
   const { data: team, error: teamErr } = await supabase
     .from("teams")
     .insert({ name, created_by: u.user.id, settings: { teamSize: 6 } })
     .select()
     .single();
-  if (teamErr) throw teamErr;
+  if (teamErr) {
+    console.error("createTeam error:", teamErr);
+    throw teamErr;
+  }
 
   const { error: memErr } = await supabase
     .from("team_memberships")
     .insert({ team_id: team.id, user_id: u.user.id, role: "owner", status: "active" });
-  if (memErr) throw memErr;
+  if (memErr) {
+    console.error("createTeam membership error:", memErr);
+    throw memErr;
+  }
 
   return team;
 }
