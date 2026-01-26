@@ -16,7 +16,17 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  // Refresh session if needed (handles OTP callback)
+  // Handle OTP callback from magic link - exchange code for session
+  const code = req.nextUrl.searchParams.get("code");
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      console.error("exchangeCodeForSession error:", error);
+      // Continue anyway - let page handle auth check
+    }
+  }
+
+  // Refresh session if needed
   await supabase.auth.getUser();
   return res;
 }
