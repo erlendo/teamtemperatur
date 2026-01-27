@@ -26,8 +26,13 @@ export async function submitSurvey(input: {
   }
 
   // Verify membership BEFORE attempting insert
-  console.log('[submitSurvey] Checking membership for user:', u.user.id, 'team:', input.teamId)
-  
+  console.log(
+    '[submitSurvey] Checking membership for user:',
+    u.user.id,
+    'team:',
+    input.teamId
+  )
+
   const { data: membership, error: memCheckErr } = await supabase
     .from('team_memberships')
     .select('team_id')
@@ -38,12 +43,16 @@ export async function submitSurvey(input: {
 
   if (memCheckErr) {
     console.error('[submitSurvey] Membership check error:', memCheckErr)
-    redirect(`/t/${input.teamId}/survey?error=${encodeURIComponent('Kunne ikke verifisere medlemskap')}`)
+    redirect(
+      `/t/${input.teamId}/survey?error=${encodeURIComponent('Kunne ikke verifisere medlemskap')}`
+    )
   }
 
   if (!membership) {
     console.log('[submitSurvey] User not a member of team')
-    redirect(`/t/${input.teamId}/survey?error=${encodeURIComponent('Du er ikke medlem av dette teamet')}`)
+    redirect(
+      `/t/${input.teamId}/survey?error=${encodeURIComponent('Du er ikke medlem av dette teamet')}`
+    )
   }
 
   const errorMessageFromUnknown = (err: unknown) => {
