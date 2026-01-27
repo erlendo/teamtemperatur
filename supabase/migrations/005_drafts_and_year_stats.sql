@@ -33,7 +33,6 @@ create policy "drafts_delete_own" on public.tt_drafts
 -- Grant access
 grant select, insert, update, delete on public.tt_drafts to authenticated;
 
--- Function to get year stats (52 weeks)
 create or replace function public.get_team_year_stats(
   p_team_id uuid,
   p_current_week int default null
@@ -53,53 +52,61 @@ declare
   v_current_week int;
   v_start_week int;
 begin
-  -- Verify membership
   if not public.is_team_member(p_team_id) then
     raise exception 'Not a team member';
   end if;
 
-  -- Determine current week if not provided
-  v_current_week := coalesce(
-    p_current_week,
-    extract(week from now())::int
-  );
-  
-  -- Calculate start week (52 weeks back, wrapping around year boundary)
-  v_start_week := v_current_week - 51;
+  v_current_week := coalesce(p_current_week, extract(week from now())::int);
+  v_start_week := greatest(1, v_current_week - 51);
 
   return query
   with active_members as (
-    select count(*) as total
+    select count(*)::int as total
     from public.team_memberships
-    where team_id = p_team_id
-      and status = 'active'
+    where team_id = p_team_id and status = 'active'
   ),
   week_series as (
-    select generate_series(
-      greatest(1, v_start_week),
-      v_current_week
-    ) as wk
+    select generate_series(v_start_week, v_current_week) as wk
   ),
-  weekly_submissions as (
+  answers_agg as (
     select
       s.week,
-      count(distinct s.submitted_by) as respondents,
+      a.question_id,
+      avg(a.value_num) as avg_score,
+      count(a.value_num) as value_count
+    from public.submissions s
+    join public.answers a on a.submission_id = s.id
+    where s.team_id = p_team_id
+      and s.week between v_start_week and v_current_week
+    group by s.week, a.question_id
+  ),
+  question_stats as (
+    select
+      aa.week,
       jsonb_agg(
         jsonb_build_object(
           'question_key', q.key,
           'question_label', q.label,
           'sort_order', coalesce(q.sort_order, 0),
-          'avg_score', avg(a.value_num),
-          'count', count(a.value_num)
+          'avg_score', aa.avg_score,
+          'count', aa.value_count
         ) order by coalesce(q.sort_order, 0), q.key
-      ) filter (where q.type = 'scale_1_5') as q_stats,
+      ) as q_stats
+    from answers_agg aa
+    join public.questions q on q.id = aa.question_id
+    where q.type = 'scale_1_5'
+    group by aa.week
+  ),
+  weekly_submissions as (
+    select
+      s.week,
+      count(distinct s.submitted_by)::int as respondents,
       avg(a.value_num) filter (where q.type = 'scale_1_5') as overall
     from public.submissions s
     join public.answers a on a.submission_id = s.id
     join public.questions q on q.id = a.question_id
     where s.team_id = p_team_id
-      and s.week >= greatest(1, v_start_week)
-      and s.week <= v_current_week
+      and s.week between v_start_week and v_current_week
     group by s.week
   )
   select
@@ -107,14 +114,14 @@ begin
     coalesce(wsub.overall, 0) as overall_avg,
     coalesce(wsub.respondents, 0) as response_count,
     am.total as member_count,
-    case
-      when am.total > 0 then round((coalesce(wsub.respondents, 0)::numeric / am.total) * 100, 1)
-      else 0
-    end as response_rate,
-    coalesce(wsub.q_stats, '[]'::jsonb) as question_stats
+    case when am.total > 0
+      then round((coalesce(wsub.respondents, 0)::numeric / am.total) * 100, 1)
+      else 0 end as response_rate,
+    coalesce(qs.q_stats, '[]'::jsonb) as question_stats
   from week_series ws
   cross join active_members am
   left join weekly_submissions wsub on wsub.week = ws.wk
+  left join question_stats qs on qs.week = ws.wk
   order by ws.wk;
 end;
 $$;
