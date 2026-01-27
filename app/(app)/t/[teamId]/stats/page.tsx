@@ -16,52 +16,103 @@ export default async function StatsPage({
 }) {
   const { teamId } = await params
   const currentWeek = currentWeekNumberSimple()
-  const stats = await getYearStats(teamId, currentWeek)
+
+  let stats: Awaited<ReturnType<typeof getYearStats>> = []
+  try {
+    stats = await getYearStats(teamId, currentWeek)
+  } catch (error) {
+    console.error('Error fetching stats:', error)
+    stats = []
+  }
 
   return (
     <>
       <AppHeader teamId={teamId} />
-      <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1rem' }}>
-        <h1>Statistikk</h1>
+      <main style={{ flex: 1 }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: 'var(--space-3xl) var(--space-md)' }}>
+          <h1 style={{ marginBottom: 'var(--space-lg)' }}>📊 Statistikk</h1>
 
-        {stats.length === 0 ? (
-          <div
-            style={{
-              padding: '3rem 2rem',
-              textAlign: 'center',
-              backgroundColor: '#f9fafb',
-              borderRadius: 12,
-              marginTop: '2rem',
-            }}
-          >
-            <p style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>
-              Ingen data ennå
-            </p>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
-              Send inn din første måling for å se statistikk og trender.
-            </p>
-            <a
-              href={`/t/${teamId}/survey`}
+          {stats.length === 0 ? (
+            <div
               style={{
-                padding: '10px 20px',
-                backgroundColor: '#2563eb',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: 8,
-                fontWeight: 600,
+                padding: 'var(--space-3xl) var(--space-2xl)',
+                textAlign: 'center',
+                backgroundColor: 'white',
+                border: '2px dashed var(--color-neutral-300)',
+                borderRadius: 'var(--border-radius-lg)',
+                marginTop: 'var(--space-2xl)',
               }}
             >
-              Gå til Ny måling
+              <div style={{ fontSize: '48px', marginBottom: 'var(--space-lg)' }}>📈</div>
+              <h2 style={{ marginBottom: 'var(--space-md)', color: 'var(--color-neutral-900)' }}>
+                Ingen data ennå
+              </h2>
+              <p
+                style={{
+                  color: 'var(--color-neutral-600)',
+                  marginBottom: 'var(--space-xl)',
+                  maxWidth: '500px',
+                  margin: '0 auto var(--space-xl)',
+                }}
+              >
+                Send inn din første måling for å se statistikk, trends og gjennomsnitt over tid.
+              </p>
+              <a
+                href={`/t/${teamId}/survey`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-sm)',
+                  padding: 'var(--space-md) var(--space-xl)',
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: 'var(--border-radius-md)',
+                  fontWeight: '700',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary-dark)'
+                  ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = 'var(--shadow-lg)'
+                }}
+                onMouseLeave={(e) => {
+                  ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary)'
+                  ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none'
+                }}
+              >
+                📝 Gå til ny måling
+              </a>
+            </div>
+          ) : (
+            <YearStatsView data={stats} />
+          )}
+
+          <div style={{ marginTop: 'var(--space-3xl)' }}>
+            <a
+              href={`/t/${teamId}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 'var(--space-sm)',
+                color: 'var(--color-primary)',
+                fontWeight: '500',
+                textDecoration: 'none',
+                padding: 'var(--space-sm) var(--space-md)',
+                borderRadius: 'var(--border-radius-md)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-neutral-100)'
+              }}
+              onMouseLeave={(e) => {
+                ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent'
+              }}
+            >
+              ← Tilbake til team
             </a>
           </div>
-        ) : (
-          <YearStatsView data={stats} />
-        )}
-
-        <p style={{ marginTop: '2rem' }}>
-          <a href={`/t/${teamId}`}>← Til team</a>
-        </p>
-      </div>
+        </div>
+      </main>
     </>
   )
 }
