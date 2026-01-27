@@ -21,7 +21,7 @@ export function TeamHomeCards({ teamId }: { teamId: string }) {
           flexDirection: 'column',
           padding: 'var(--space-2xl)',
           backgroundColor: 'white',
-          border: '1px solid var(--color-neutral-200)',
+          border: '2px solid var(--color-primary)',
           borderRadius: 'var(--border-radius-lg)',
           textDecoration: 'none',
           color: 'inherit',
@@ -33,14 +33,14 @@ export function TeamHomeCards({ teamId }: { teamId: string }) {
           ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
             '0 20px 25px -5px rgba(37, 99, 235, 0.15), 0 10px 10px -5px rgba(37, 99, 235, 0.08)'
           ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
-            'var(--color-primary)'
+            'var(--color-primary-dark)'
           ;(e.currentTarget as HTMLAnchorElement).style.transform =
             'translateY(-4px)'
           const icon = e.currentTarget.querySelector(
-            '.icon-container'
+            '.survey-icon'
           ) as HTMLElement
           if (icon) {
-            icon.style.backgroundColor = 'var(--color-primary)'
+            icon.style.backgroundColor = 'var(--color-primary-dark)'
             icon.style.transform = 'scale(1.1)'
           }
         }}
@@ -48,11 +48,11 @@ export function TeamHomeCards({ teamId }: { teamId: string }) {
           ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
             'var(--shadow-md)'
           ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
-            'var(--color-neutral-200)'
+            'var(--color-primary)'
           ;(e.currentTarget as HTMLAnchorElement).style.transform =
             'translateY(0)'
           const icon = e.currentTarget.querySelector(
-            '.icon-container'
+            '.survey-icon'
           ) as HTMLElement
           if (icon) {
             icon.style.backgroundColor = 'var(--color-primary)'
@@ -61,7 +61,7 @@ export function TeamHomeCards({ teamId }: { teamId: string }) {
         }}
       >
         <div
-          className="icon-container"
+          className="survey-icon"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -120,7 +120,7 @@ export function TeamHomeCards({ teamId }: { teamId: string }) {
           flexDirection: 'column',
           padding: 'var(--space-2xl)',
           backgroundColor: 'white',
-          border: '1px solid var(--color-neutral-200)',
+          border: '2px solid var(--color-secondary)',
           borderRadius: 'var(--border-radius-lg)',
           textDecoration: 'none',
           color: 'inherit',
@@ -132,11 +132,11 @@ export function TeamHomeCards({ teamId }: { teamId: string }) {
           ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
             '0 20px 25px -5px rgba(16, 185, 129, 0.15), 0 10px 10px -5px rgba(16, 185, 129, 0.08)'
           ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
-            'var(--color-secondary)'
+            'var(--color-secondary-dark)'
           ;(e.currentTarget as HTMLAnchorElement).style.transform =
             'translateY(-4px)'
           const icon = e.currentTarget.querySelector(
-            '.icon-container'
+            '.stats-icon'
           ) as HTMLElement
           if (icon) {
             icon.style.backgroundColor = 'var(--color-secondary-dark)'
@@ -147,11 +147,11 @@ export function TeamHomeCards({ teamId }: { teamId: string }) {
           ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
             'var(--shadow-md)'
           ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
-            'var(--color-neutral-200)'
+            'var(--color-secondary)'
           ;(e.currentTarget as HTMLAnchorElement).style.transform =
             'translateY(0)'
           const icon = e.currentTarget.querySelector(
-            '.icon-container'
+            '.stats-icon'
           ) as HTMLElement
           if (icon) {
             icon.style.backgroundColor = 'var(--color-secondary)'
@@ -160,7 +160,7 @@ export function TeamHomeCards({ teamId }: { teamId: string }) {
         }}
       >
         <div
-          className="icon-container"
+          className="stats-icon"
           style={{
             display: 'flex',
             alignItems: 'center',
