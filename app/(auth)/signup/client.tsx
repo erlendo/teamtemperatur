@@ -50,9 +50,12 @@ export function SignupClient() {
     }
 
     const supabase = supabaseBrowser()
-    const { error: signupError } = await supabase.auth.signUp({
+    const { data, error: signupError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/teams`,
+      },
     })
 
     if (signupError) {
@@ -60,24 +63,23 @@ export function SignupClient() {
       return
     }
 
-    // After signup, automatically sign in the user
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (signInError) {
+    // Check if email confirmation is required
+    if (data.user && !data.session) {
       setMsg({
-        type: 'error',
-        text: `Konto opprettet, men innlogging feilet: ${signInError.message}. Prøv å logge inn manuelt.`,
+        type: 'success',
+        text: 'Konto opprettet! Sjekk e-posten din for å bekrefte kontoen før du logger inn.',
       })
-    } else {
+      return
+    }
+
+    // If session exists (email confirmation disabled), user is auto-logged in
+    if (data.session) {
       setMsg({
         type: 'success',
         text: 'Konto opprettet og du er logget inn! Videresender...',
       })
-      // Navigate to teams after successful login
       setTimeout(() => router.push('/teams'), 1500)
+    }
     }
   }
 
