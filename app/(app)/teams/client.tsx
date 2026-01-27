@@ -1,8 +1,8 @@
 'use client'
 
-import Link from 'next/link'
-import { useTransition, useState } from 'react'
 import { createTeam } from '@/server/actions/teams'
+import Link from 'next/link'
+import { useState, useTransition } from 'react'
 
 interface TeamsListProps {
   teams: Array<{ id: string; name: string; role: string }>
@@ -25,7 +25,9 @@ export function TeamsList({ teams }: TeamsListProps) {
         setError(result.error)
       } else {
         // Clear form and refetch
-        ;(document.querySelector('input[name="name"]') as HTMLInputElement).value = ''
+        ;(
+          document.querySelector('input[name="name"]') as HTMLInputElement
+        ).value = ''
       }
     })
   }
@@ -34,8 +36,16 @@ export function TeamsList({ teams }: TeamsListProps) {
     <div style={{ maxWidth: 720 }}>
       <h1>Teams</h1>
 
-      <form action={handleCreateTeam} style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-        <input name="name" placeholder="Nytt teamnavn" style={{ flex: 1, padding: 10 }} disabled={isPending} />
+      <form
+        action={handleCreateTeam}
+        style={{ display: 'flex', gap: 8, marginBottom: 18 }}
+      >
+        <input
+          name="name"
+          placeholder="Nytt teamnavn"
+          style={{ flex: 1, padding: 10 }}
+          disabled={isPending}
+        />
         <button style={{ padding: '10px 14px' }} disabled={isPending}>
           {isPending ? 'Opprett...' : 'Opprett'}
         </button>
@@ -46,7 +56,8 @@ export function TeamsList({ teams }: TeamsListProps) {
       <ul style={{ paddingLeft: 16 }}>
         {teams.map((t) => (
           <li key={t.id} style={{ marginBottom: 8 }}>
-            <Link href={`/t/${t.id}`}>{t.name}</Link> <span style={{ color: '#666' }}>({t.role})</span>
+            <Link href={`/t/${t.id}`}>{t.name}</Link>{' '}
+            <span style={{ color: '#666' }}>({t.role})</span>
           </li>
         ))}
       </ul>

@@ -107,6 +107,11 @@ create policy "teams_select_if_member"
 on public.teams for select
 using (public.is_team_member(id));
 
+drop policy if exists "teams_insert_authenticated" on public.teams;
+create policy "teams_insert_authenticated"
+on public.teams for insert
+with check (created_by = auth.uid());
+
 drop policy if exists "teams_update_if_admin" on public.teams;
 create policy "teams_update_if_admin"
 on public.teams for update

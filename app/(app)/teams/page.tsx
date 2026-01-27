@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
 import { listMyTeams } from '@/server/actions/teams'
+import { redirect } from 'next/navigation'
 import { TeamsList } from './client'
 
 export default async function TeamsPage() {
