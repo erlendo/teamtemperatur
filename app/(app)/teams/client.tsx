@@ -1,6 +1,6 @@
 'use client'
 
-import { createTeam } from '@/server/actions/teams'
+import { createTeam, joinTeam } from '@/server/actions/teams'
 import {
   Crown,
   LogOut,
@@ -14,18 +14,21 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 
 interface TeamsListProps {
-  teams: Array<{ id: string; name: string; role: string }>
+  myTeams: Array<{ id: string; name: string; role: string }> | null
+  availableTeams: Array<{ id: string; name: string }> | null
 }
 
-export function TeamsList({ teams }: TeamsListProps) {
+export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   function handleCreateTeam(formData: FormData) {
     const name = String(formData.get('name') || '').trim()
     if (!name) return
 
     setError(null)
+    setSuccessMessage(null)
 
     startTransition(async () => {
       const result = await createTeam(name)
@@ -33,10 +36,28 @@ export function TeamsList({ teams }: TeamsListProps) {
       if ('error' in result) {
         setError(result.error || 'Ukjent feil')
       } else {
+        setSuccessMessage('Team opprettet! Siden oppdateres snart...')
         setError(null)
         ;(
           document.querySelector('input[name="name"]') as HTMLInputElement
         ).value = ''
+        setTimeout(() => window.location.reload(), 1500)
+      }
+    })
+  }
+
+  function handleJoinTeam(teamId: string) {
+    setError(null)
+    setSuccessMessage(null)
+
+    startTransition(async () => {
+      const result = await joinTeam(teamId)
+
+      if ('error' in result) {
+        setError(result.error || 'Kunne ikke bli medlem av team')
+      } else {
+        setSuccessMessage('Du ble medlem av teamet! Siden oppdateres snart...')
+        setTimeout(() => window.location.reload(), 1500)
       }
     })
   }
@@ -225,8 +246,23 @@ export function TeamsList({ teams }: TeamsListProps) {
             </div>
           )}
 
-          {/* Teams List */}
-          {teams.length > 0 && (
+          {successMessage && (
+            <div
+              style={{
+                padding: 'var(--space-md)',
+                backgroundColor: 'var(--color-success-light)',
+                color: 'var(--color-success-dark)',
+                borderRadius: 'var(--border-radius-md)',
+                marginBottom: 'var(--space-lg)',
+                fontWeight: '500',
+              }}
+            >
+              ✓ {successMessage}
+            </div>
+          )}
+
+          {/* My Teams */}
+          {myTeams && myTeams.length > 0 && (
             <div style={{ display: 'grid', gap: 'var(--space-xl)' }}>
               <h2
                 style={{
@@ -239,7 +275,7 @@ export function TeamsList({ teams }: TeamsListProps) {
                 Dine Team
               </h2>
               <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
-                {teams.map((t) => (
+                {myTeams.map((t) => (
                   <Link
                     key={t.id}
                     href={`/t/${t.id}`}
@@ -349,6 +385,141 @@ export function TeamsList({ teams }: TeamsListProps) {
                   </Link>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Available Teams */}
+          {availableTeams && availableTeams.length > 0 && (
+            <div style={{ display: 'grid', gap: 'var(--space-xl)', marginTop: 'var(--space-3xl)' }}>
+              <h2
+                style={{
+                  fontSize: 'var(--font-size-2xl)',
+                  marginBottom: 'var(--space-md)',
+                  fontWeight: '700',
+                  color: 'var(--color-neutral-900)',
+                }}
+              >
+                Tilgjengelige Team
+              </h2>
+              <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
+                {availableTeams.map((t) => (
+                  <div
+                    key={t.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: 'var(--space-xl)',
+                      backgroundColor: 'white',
+                      border: '2px solid var(--color-neutral-300)',
+                      borderRadius: 'var(--border-radius-lg)',
+                      color: 'inherit',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: 'var(--shadow-md)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--space-md)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '48px',
+                          height: '48px',
+                          backgroundColor: 'var(--color-secondary-dark)',
+                          borderRadius: 'var(--border-radius-md)',
+                          color: 'white',
+                          opacity: 0.7,
+                        }}
+                      >
+                        <Thermometer size={24} strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div
+                          style={{
+                            fontWeight: '700',
+                            fontSize: 'var(--font-size-xl)',
+                            color: 'var(--color-neutral-900)',
+                            marginBottom: 'var(--space-xs)',
+                          }}
+                        >
+                          {t.name}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 'var(--font-size-sm)',
+                            color: 'var(--color-neutral-600)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'var(--space-xs)',
+                          }}
+                        >
+                          <Users size={14} />
+                          Åpent team
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleJoinTeam(t.id)}
+                      disabled={isPending}
+                      style={{
+                        padding: 'var(--space-md) var(--space-lg)',
+                        backgroundColor: isPending
+                          ? 'var(--color-neutral-300)'
+                          : 'var(--color-secondary)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 'var(--border-radius-md)',
+                        fontWeight: '700',
+                        cursor: isPending ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s ease',
+                        whiteSpace: 'nowrap',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isPending) {
+                          ;(
+                            e.currentTarget as HTMLButtonElement
+                          ).style.backgroundColor = 'var(--color-secondary-dark)'
+                          ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                            'var(--shadow-lg)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isPending) {
+                          ;(
+                            e.currentTarget as HTMLButtonElement
+                          ).style.backgroundColor = 'var(--color-secondary)'
+                          ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                            'none'
+                        }
+                      }}
+                    >
+                      {isPending ? '⏳ Blir medlem...' : '✨ Bli medlem'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!myTeams || (myTeams.length === 0 && (!availableTeams || availableTeams.length === 0)) && (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: 'var(--space-3xl) var(--space-xl)',
+                color: 'var(--color-neutral-600)',
+              }}
+            >
+              <p style={{ marginBottom: 'var(--space-md)' }}>
+                Ingen team funnet. Opprett ditt første team eller vent på invitasjon.
+              </p>
             </div>
           )}
 

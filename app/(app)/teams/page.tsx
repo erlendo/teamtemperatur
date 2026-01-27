@@ -1,10 +1,12 @@
-import { listMyTeams } from '@/server/actions/teams'
+import { listMyTeams, listAvailableTeams } from '@/server/actions/teams'
 import { TeamsList } from './client'
 
 export default async function TeamsPage() {
-  let teams
+  let myTeams
+  let availableTeams
   try {
-    teams = await listMyTeams()
+    myTeams = await listMyTeams()
+    availableTeams = await listAvailableTeams()
   } catch (error) {
     console.error('[TeamsPage] Error loading teams:', error)
     return (
@@ -67,8 +69,7 @@ export default async function TeamsPage() {
     )
   }
 
-  // If not authenticated, show explicit message instead of redirect to help debug prod auth
-  if (teams === null) {
+  if (myTeams === null) {
     return (
       <div
         style={{
@@ -124,5 +125,5 @@ export default async function TeamsPage() {
     )
   }
 
-  return <TeamsList teams={teams} />
+  return <TeamsList myTeams={myTeams} availableTeams={availableTeams} />
 }

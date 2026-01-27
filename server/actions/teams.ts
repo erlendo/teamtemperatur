@@ -28,6 +28,70 @@ export async function listMyTeams() {
   }))
 }
 
+export async function listAvailableTeams() {
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !u.user) {
+    return null // Return null when not authenticated
+  }
+
+  // Get all teams the user is NOT a member of
+  const { data, error } = await supabase
+    .from('tt_teams')
+    .select('id, name')
+    .not(
+      'id',
+      'in',
+      `(select team_id from tt_team_memberships where user_id = '${u.user.id}' and status = 'active')`
+    )
+
+  if (error) {
+    console.error('listAvailableTeams error:', error)
+    return []
+  }
+
+  return data ?? []
+}
+
+export async function joinTeam(teamId: string) {
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !u.user) {
+    return { error: 'Ikke autentisert' }
+  }
+
+  // Check if user is already a member
+  const { data: existing } = await supabase
+    .from('tt_team_memberships')
+    .select('id')
+    .eq('team_id', teamId)
+    .eq('user_id', u.user.id)
+    .single()
+
+  if (existing) {
+    return { error: 'Du er allerede medlem av dette teamet' }
+  }
+
+  // Add user to team as member
+  const { error: memErr } = await supabase
+    .from('tt_team_memberships')
+    .insert({
+      team_id: teamId,
+      user_id: u.user.id,
+      role: 'member',
+      status: 'active',
+    })
+
+  if (memErr) {
+    console.error('joinTeam error:', memErr)
+    return { error: memErr.message }
+  }
+
+  return { success: true }
+}
+
 export async function createTeam(name: string) {
   const supabase = supabaseServer()
   const { data: u, error: authError } = await supabase.auth.getUser()
