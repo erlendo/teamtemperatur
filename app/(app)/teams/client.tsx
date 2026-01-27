@@ -141,7 +141,8 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
           >
             {myTeams && myTeams.length === 0
               ? 'Du er ikke medlem av noen team ennå. Opprett et nytt team for å komme i gang!'
-              : myTeams && `Du er medlem av ${myTeams.length} team${myTeams.length !== 1 ? '' : ''}.`}
+              : myTeams &&
+                `Du er medlem av ${myTeams.length} team${myTeams.length !== 1 ? '' : ''}.`}
           </p>
 
           {/* Create Team Form */}

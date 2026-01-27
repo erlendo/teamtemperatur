@@ -1,4 +1,4 @@
-import { listMyTeams, listAvailableTeams } from '@/server/actions/teams'
+import { listAvailableTeams, listMyTeams } from '@/server/actions/teams'
 import { TeamsList } from './client'
 
 export default async function TeamsPage() {

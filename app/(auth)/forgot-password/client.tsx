@@ -1,94 +1,39 @@
 'use client'
 
 import { supabaseBrowser } from '@/lib/supabase/browser'
-import { CheckCircle, Loader, Lock, Mail, Thermometer } from 'lucide-react'
+import { CheckCircle, Mail, Thermometer } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
-export function LoginClient() {
+export function ForgotPasswordClient() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [msg, setMsg] = useState<{
     type: 'error' | 'success'
     text: string
   } | null>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    // Check for error in URL
-    const error = searchParams.get('error')
-    if (error === 'auth_failed') {
-      setMsg({
-        type: 'error',
-        text: 'Innloggingslenken er ugyldig eller utløpt. Send en ny lenke.',
-      })
-    }
-
-    // Check if user is already logged in
-    const checkAuth = async () => {
-      const supabase = supabaseBrowser()
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (session) {
-        router.push('/teams')
-      } else {
-        setLoading(false)
-      }
-    }
-
-    void checkAuth()
-  }, [router, searchParams])
+  const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setMsg(null)
+    setLoading(true)
 
     const supabase = supabaseBrowser()
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
     })
+
+    setLoading(false)
 
     if (error) {
       setMsg({ type: 'error', text: `Feil: ${error.message}` })
     } else {
       setMsg({
         type: 'success',
-        text: 'Innlogging vellykket! Videresender...',
+        text: 'Sjekk e-posten din for en lenke til å tilbakestille passordet.',
       })
-      router.push('/teams')
+      setEmail('')
     }
-  }
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: 'var(--space-md)' }}>
-            <Loader
-              size={28}
-              className="animate-spin"
-              style={{ margin: '0 auto' }}
-            />
-          </div>
-          <p style={{ color: 'var(--color-neutral-600)' }}>
-            Sjekker innlogging...
-          </p>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -125,7 +70,7 @@ export function LoginClient() {
           </div>
           <h1 style={{ marginBottom: 'var(--space-sm)' }}>Teamtemperatur</h1>
           <p style={{ color: 'var(--color-neutral-600)' }}>
-            Måle teamhelse kontinuerlig
+            Tilbakestill passordet ditt
           </p>
         </div>
 
@@ -145,7 +90,7 @@ export function LoginClient() {
               fontSize: 'var(--font-size-xl)',
             }}
           >
-            Logg inn
+            Glemt passord
           </h2>
 
           <form
@@ -185,51 +130,7 @@ export function LoginClient() {
                   type="email"
                   placeholder="din@epost.com"
                   required
-                  style={{
-                    width: '100%',
-                    padding:
-                      'var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 28px)',
-                    border: '1px solid var(--color-neutral-300)',
-                    borderRadius: 'var(--border-radius-md)',
-                    fontSize: 'var(--font-size-base)',
-                  }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontWeight: '600',
-                  marginBottom: 'var(--space-sm)',
-                  color: 'var(--color-neutral-700)',
-                }}
-              >
-                Passord
-              </label>
-              <div
-                style={{
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <Lock
-                  size={18}
-                  style={{
-                    position: 'absolute',
-                    left: 'var(--space-md)',
-                    color: 'var(--color-neutral-400)',
-                    pointerEvents: 'none',
-                  }}
-                />
-                <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  type="password"
-                  placeholder="Ditt passord"
-                  required
+                  disabled={loading}
                   style={{
                     width: '100%',
                     padding:
@@ -244,15 +145,18 @@ export function LoginClient() {
 
             <button
               type="submit"
+              disabled={loading}
               style={{
                 padding: 'var(--space-md) var(--space-lg)',
-                backgroundColor: 'var(--color-primary)',
+                backgroundColor: loading
+                  ? 'var(--color-neutral-300)'
+                  : 'var(--color-primary)',
                 color: 'white',
                 border: 'none',
                 borderRadius: 'var(--border-radius-md)',
                 fontWeight: '700',
                 fontSize: 'var(--font-size-base)',
-                cursor: 'pointer',
+                cursor: loading ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s ease',
                 display: 'flex',
                 alignItems: 'center',
@@ -260,39 +164,28 @@ export function LoginClient() {
                 gap: 'var(--space-sm)',
               }}
               onMouseEnter={(e) => {
-                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  'var(--color-primary-dark)'
-                ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  'var(--shadow-lg)'
+                if (!loading) {
+                  ;(
+                    e.currentTarget as HTMLButtonElement
+                  ).style.backgroundColor = 'var(--color-primary-dark)'
+                  ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                    'var(--shadow-lg)'
+                }
               }}
               onMouseLeave={(e) => {
-                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  'var(--color-primary)'
-                ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'
+                if (!loading) {
+                  ;(
+                    e.currentTarget as HTMLButtonElement
+                  ).style.backgroundColor = 'var(--color-primary)'
+                  ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                    'none'
+                }
               }}
             >
-              Logg inn
+              <Mail size={18} />
+              {loading ? 'Sender...' : 'Send tilbakestillingslenke'}
             </button>
           </form>
-
-          <div
-            style={{
-              marginTop: 'var(--space-md)',
-              textAlign: 'center',
-            }}
-          >
-            <Link
-              href="/forgot-password"
-              style={{
-                color: 'var(--color-primary)',
-                fontSize: 'var(--font-size-sm)',
-                fontWeight: '500',
-                textDecoration: 'none',
-              }}
-            >
-              Glemt passord?
-            </Link>
-          </div>
 
           {msg && (
             <div
@@ -329,12 +222,12 @@ export function LoginClient() {
             }}
           >
             <p style={{ margin: 0 }}>
-              Har du ikke konto?{' '}
+              Husker du passordet?{' '}
               <Link
-                href="/signup"
+                href="/login"
                 style={{ color: 'var(--color-primary)', fontWeight: '600' }}
               >
-                Registrer deg
+                Logg inn
               </Link>
             </p>
           </div>
