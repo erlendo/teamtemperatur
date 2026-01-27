@@ -1,32 +1,23 @@
 'use client'
 
 import { supabaseBrowser } from '@/lib/supabase/browser'
-import { Thermometer, Loader, CheckCircle, Mail, Lock } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Thermometer, Loader, Mail, Lock, User } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
-export function LoginClient() {
+export function SignupClient() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [msg, setMsg] = useState<{
     type: 'error' | 'success'
     text: string
   } | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
-    // Check for error in URL
-    const error = searchParams.get('error')
-    if (error === 'auth_failed') {
-      setMsg({
-        type: 'error',
-        text: 'Innloggingslenken er ugyldig eller utløpt. Send en ny lenke.',
-      })
-    }
-
     // Check if user is already logged in
     const checkAuth = async () => {
       const supabase = supabaseBrowser()
@@ -42,14 +33,24 @@ export function LoginClient() {
     }
 
     void checkAuth()
-  }, [router, searchParams])
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setMsg(null)
 
+    if (password !== confirmPassword) {
+      setMsg({ type: 'error', text: 'Passordene matcher ikke' })
+      return
+    }
+
+    if (password.length < 6) {
+      setMsg({ type: 'error', text: 'Passordet må være minst 6 tegn' })
+      return
+    }
+
     const supabase = supabaseBrowser()
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
     })
@@ -59,9 +60,10 @@ export function LoginClient() {
     } else {
       setMsg({
         type: 'success',
-        text: 'Innlogging vellykket! Videresender...',
+        text: 'Konto opprettet! Logger deg inn...',
       })
-      router.push('/teams')
+      // Automatically sign in after signup
+      setTimeout(() => router.push('/teams'), 1500)
     }
   }
 
@@ -121,7 +123,7 @@ export function LoginClient() {
           </div>
           <h1 style={{ marginBottom: 'var(--space-sm)' }}>Teamtemperatur</h1>
           <p style={{ color: 'var(--color-neutral-600)' }}>
-            Måle teamhelse kontinuerlig
+            Opprett din konto
           </p>
         </div>
 
@@ -141,7 +143,7 @@ export function LoginClient() {
               fontSize: 'var(--font-size-xl)',
             }}
           >
-            Logg inn
+            Registrer deg
           </h2>
 
           <form
@@ -223,8 +225,54 @@ export function LoginClient() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   type="password"
-                  placeholder="Ditt passord"
+                  placeholder="Minst 6 tegn"
                   required
+                  minLength={6}
+                  style={{
+                    width: '100%',
+                    padding: 'var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 28px)',
+                    border: '1px solid var(--color-neutral-300)',
+                    borderRadius: 'var(--border-radius-md)',
+                    fontSize: 'var(--font-size-base)',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontWeight: '600',
+                  marginBottom: 'var(--space-sm)',
+                  color: 'var(--color-neutral-700)',
+                }}
+              >
+                Bekreft passord
+              </label>
+              <div
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <Lock
+                  size={18}
+                  style={{
+                    position: 'absolute',
+                    left: 'var(--space-md)',
+                    color: 'var(--color-neutral-400)',
+                    pointerEvents: 'none',
+                  }}
+                />
+                <input
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  type="password"
+                  placeholder="Gjenta passordet"
+                  required
+                  minLength={6}
                   style={{
                     width: '100%',
                     padding: 'var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 28px)',
@@ -265,7 +313,8 @@ export function LoginClient() {
                 ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'
               }}
             >
-              Logg inn
+              <User size={18} />
+              Opprett konto
             </button>
           </form>
 
@@ -276,12 +325,9 @@ export function LoginClient() {
                   ? 'alert alert-error'
                   : 'alert alert-success'
               }
-              style={{ marginTop: 'var(--space-lg)', display: 'flex', alignItems: 'flex-start', gap: 'var(--space-sm)' }}
+              style={{ marginTop: 'var(--space-lg)' }}
             >
-              {msg.type === 'success' ? (
-                <CheckCircle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
-              ) : null}
-              <span>{msg.text}</span>
+              {msg.text}
             </div>
           )}
 
@@ -296,9 +342,9 @@ export function LoginClient() {
             }}
           >
             <p style={{ margin: 0 }}>
-              Har du ikke konto?{' '}
-              <Link href="/signup" style={{ color: 'var(--color-primary)', fontWeight: '600' }}>
-                Registrer deg
+              Har du allerede konto?{' '}
+              <Link href="/login" style={{ color: 'var(--color-primary)', fontWeight: '600' }}>
+                Logg inn
               </Link>
             </p>
           </div>
