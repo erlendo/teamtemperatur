@@ -11,7 +11,7 @@ export async function listMyTeams() {
   }
 
   const { data, error } = await supabase
-    .from('team_memberships')
+    .from('tt_team_memberships')
     .select('team_id, role, teams:team_id(id, name)')
     .eq('user_id', u.user.id)
     .eq('status', 'active')
@@ -44,7 +44,7 @@ export async function createTeam(name: string) {
   )
 
   const { data: team, error: teamErr } = await supabase
-    .from('teams')
+    .from('tt_teams')
     .insert({ name, created_by: u.user.id, settings: { teamSize: 6 } })
     .select()
     .single()
@@ -59,7 +59,7 @@ export async function createTeam(name: string) {
 
   console.log('[createTeam] Team created:', team.id)
 
-  const { error: memErr } = await supabase.from('team_memberships').insert({
+  const { error: memErr } = await supabase.from('tt_team_memberships').insert({
     team_id: team.id,
     user_id: u.user.id,
     role: 'owner',

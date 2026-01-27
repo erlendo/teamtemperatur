@@ -33,7 +33,7 @@ export async function submitSurvey(input: {
   )
 
   const { data: membership, error: memCheckErr } = await supabase
-    .from('team_memberships')
+    .from('tt_team_memberships')
     .select('team_id')
     .eq('team_id', input.teamId)
     .eq('user_id', u.user.id)
@@ -65,7 +65,7 @@ export async function submitSurvey(input: {
     )
 
     const { data: submission, error: sErr } = await supabase
-      .from('submissions')
+      .from('tt_submissions')
       .insert({
         team_id: input.teamId,
         questionnaire_id: input.questionnaireId,
@@ -94,7 +94,7 @@ export async function submitSurvey(input: {
 
     console.log('[submitSurvey] Inserting', rows.length, 'answers')
 
-    const { error: aErr } = await supabase.from('answers').insert(rows)
+    const { error: aErr } = await supabase.from('tt_answers').insert(rows)
 
     console.log('[submitSurvey] Answers result:', { aErr: aErr?.message })
 
