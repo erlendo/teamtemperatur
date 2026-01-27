@@ -88,7 +88,9 @@ export function SurveyForm({
           setDraftStatus('saved')
           setTimeout(() => setDraftStatus('idle'), 2000)
         } else {
+          console.error('[SurveyForm] Draft save failed:', result.error)
           setDraftStatus('error')
+          setClientError(result.error || 'Kunne ikke lagre utkast')
         }
       }, 500)
     },
@@ -198,7 +200,9 @@ export function SurveyForm({
             {draftStatus === 'error' && (
               <>
                 <AlertCircle size={16} />
-                Kunne ikke lagre utkast
+                {clientError && clientError.includes('relation')
+                  ? 'Autosave er midlertidig utilgjengelig'
+                  : 'Kunne ikke lagre utkast'}
               </>
             )}
           </div>
