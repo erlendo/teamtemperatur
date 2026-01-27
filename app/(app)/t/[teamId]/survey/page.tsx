@@ -33,76 +33,77 @@ export default async function SurveyPage({
     return (
       <>
         <AppHeader teamId={teamId} />
-        <div style={{ maxWidth: 780, margin: '0 auto', padding: '0 1rem' }}>
-          <h1>Ny måling</h1>
-          <p style={{ color: '#d00', marginBottom: 10 }}>
-            Fant ingen aktiv spørreundersøkelse for dette teamet.
-          </p>
-          {error ? (
-            <p style={{ color: '#c33' }}>{error}</p>
-          ) : (
-            <p style={{ color: '#666' }}>
-              Vi prøvde å opprette standard skjema. Prøv igjen om et øyeblikk.
-            </p>
-          )}
-          <p style={{ marginTop: 14 }}>
-            <a href={`/t/${teamId}`}>← Til team</a>
-          </p>
-        </div>
+        <main style={{ flex: 1 }}>
+          <div
+            style={{
+              maxWidth: '800px',
+              margin: '0 auto',
+              padding: 'var(--space-xl) var(--space-md)',
+            }}
+          >
+            <h1 style={{ color: 'var(--color-error)' }}>❌ Feil</h1>
+            <p>Fant ingen aktiv spørreundersøkelse for dette teamet.</p>
+            {error ? (
+              <p
+                style={{ color: 'var(--color-error-dark)', fontWeight: '500' }}
+              >
+                {error}
+              </p>
+            ) : (
+              <p style={{ color: 'var(--color-neutral-600)' }}>
+                Vi prøvde å opprette standard skjema. Prøv igjen om et øyeblikk.
+              </p>
+            )}
+            <div style={{ marginTop: 'var(--space-xl)' }}>
+              <a
+                href={`/t/${teamId}`}
+                style={{ color: 'var(--color-primary)', fontWeight: '500' }}
+              >
+                ← Tilbake til team
+              </a>
+            </div>
+          </div>
+        </main>
       </>
     )
   }
 
   return (
     <>
-      <AppHeader teamId={teamId} />
-      <div style={{ maxWidth: 780, margin: '0 auto', padding: '0 1rem' }}>
-        <h1>Ny måling</h1>
-
-        {errorMsg ? (
-          <div
-            role="alert"
-            style={{
-              color: '#991b1b',
-              backgroundColor: '#fef2f2',
-              padding: '12px 16px',
-              borderRadius: 8,
-              marginBottom: 10,
-            }}
-          >
-            {errorMsg}
+      <AppHeader teamId={teamId} teamName={questionnaire.name} />
+      <main style={{ flex: 1 }}>
+        <div
+          style={{
+            maxWidth: '800px',
+            margin: '0 auto',
+            padding: 'var(--space-xl) var(--space-md)',
+          }}
+        >
+          <div style={{ marginBottom: 'var(--space-2xl)' }}>
+            <h1 style={{ marginBottom: 'var(--space-md)' }}>📝 Ny måling</h1>
+            <p style={{ color: 'var(--color-neutral-600)', marginBottom: 0 }}>
+              Versjon {questionnaire.version} av {questionnaire.name}
+            </p>
           </div>
-        ) : null}
-        {submittedWeek ? (
-          <div
-            role="status"
-            style={{
-              color: '#065f46',
-              backgroundColor: '#ecfdf5',
-              padding: '12px 16px',
-              borderRadius: 8,
-              marginBottom: 10,
-            }}
-          >
-            ✓ Lagret for uke {submittedWeek}. Se statistikk under «Statistikk».
-          </div>
-        ) : null}
-        <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-          {questionnaire.name} (v{questionnaire.version})
-        </p>
 
-        <SurveyForm
-          teamId={teamId}
-          questionnaireId={questionnaire.id}
-          questions={questions}
-          currentWeek={week}
-          initialDraft={draft}
-        />
+          {errorMsg ? (
+            <div className="alert alert-error">{errorMsg}</div>
+          ) : null}
+          {submittedWeek ? (
+            <div className="alert alert-success">
+              ✅ Lagret for uke {submittedWeek}. Takk for tilbakemeldingen!
+            </div>
+          ) : null}
 
-        <p style={{ marginTop: 14 }}>
-          <a href={`/t/${teamId}`}>← Til team</a>
-        </p>
-      </div>
+          <SurveyForm
+            teamId={teamId}
+            questionnaireId={questionnaire.id}
+            questions={questions}
+            currentWeek={week}
+            initialDraft={draft}
+          />
+        </div>
+      </main>
     </>
   )
 }

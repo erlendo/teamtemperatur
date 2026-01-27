@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 
 export function AppHeader({
@@ -10,66 +12,174 @@ export function AppHeader({
   return (
     <header
       style={{
-        borderBottom: '1px solid #e5e7eb',
-        padding: '1rem 0',
-        marginBottom: '2rem',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid var(--color-neutral-200)',
+        boxShadow: 'var(--shadow-sm)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
       }}
     >
-      <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1rem' }}>
+      <div
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: 'var(--space-lg) var(--space-md)',
+        }}
+      >
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
             alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 'var(--space-lg)',
           }}
         >
-          <div>
-            <Link
-              href="/teams"
+          {/* Logo */}
+          <Link
+            href="/teams"
+            style={{
+              fontSize: 'var(--font-size-2xl)',
+              fontWeight: '700',
+              color: 'var(--color-primary)',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-sm)',
+            }}
+          >
+            <span
               style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                textDecoration: 'none',
-                color: '#111',
+                width: '32px',
+                height: '32px',
+                borderRadius: 'var(--border-radius-md)',
+                background:
+                  'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: '700',
+                fontSize: '18px',
               }}
             >
-              Teamtemperatur
-            </Link>
+              🌡️
+            </span>
+            Teamtemperatur
+          </Link>
+
+          {/* Team Name + Nav */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-xl)',
+              flex: 1,
+            }}
+          >
             {teamName && (
-              <span
+              <div
                 style={{
-                  marginLeft: '1rem',
-                  color: '#6b7280',
-                  fontSize: '1rem',
+                  fontSize: 'var(--font-size-base)',
+                  fontWeight: '600',
+                  color: 'var(--color-neutral-700)',
+                  paddingLeft: 'var(--space-lg)',
+                  borderLeft: '2px solid var(--color-neutral-200)',
                 }}
               >
-                / {teamName}
-              </span>
+                {teamName}
+              </div>
+            )}
+
+            {teamId && (
+              <nav
+                style={{
+                  display: 'flex',
+                  gap: 'var(--space-lg)',
+                  marginLeft: 'auto',
+                }}
+              >
+                <Link
+                  href={`/t/${teamId}/survey`}
+                  style={{
+                    color: 'var(--color-neutral-600)',
+                    fontSize: 'var(--font-size-sm)',
+                    fontWeight: '500',
+                    padding: 'var(--space-sm) var(--space-md)',
+                    borderRadius: 'var(--border-radius-md)',
+                    transition: 'all 0.2s ease',
+                    textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => {
+                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
+                      'var(--color-neutral-100)'
+                    ;(e.target as HTMLAnchorElement).style.color =
+                      'var(--color-primary)'
+                  }}
+                  onMouseLeave={(e) => {
+                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
+                      'transparent'
+                    ;(e.target as HTMLAnchorElement).style.color =
+                      'var(--color-neutral-600)'
+                  }}
+                >
+                  📝 Ny måling
+                </Link>
+                <Link
+                  href={`/t/${teamId}/stats`}
+                  style={{
+                    color: 'var(--color-neutral-600)',
+                    fontSize: 'var(--font-size-sm)',
+                    fontWeight: '500',
+                    padding: 'var(--space-sm) var(--space-md)',
+                    borderRadius: 'var(--border-radius-md)',
+                    transition: 'all 0.2s ease',
+                    textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => {
+                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
+                      'var(--color-neutral-100)'
+                    ;(e.target as HTMLAnchorElement).style.color =
+                      'var(--color-primary)'
+                  }}
+                  onMouseLeave={(e) => {
+                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
+                      'transparent'
+                    ;(e.target as HTMLAnchorElement).style.color =
+                      'var(--color-neutral-600)'
+                  }}
+                >
+                  📊 Statistikk
+                </Link>
+                <Link
+                  href="/teams"
+                  style={{
+                    color: 'var(--color-neutral-600)',
+                    fontSize: 'var(--font-size-sm)',
+                    fontWeight: '500',
+                    padding: 'var(--space-sm) var(--space-md)',
+                    borderRadius: 'var(--border-radius-md)',
+                    transition: 'all 0.2s ease',
+                    textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => {
+                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
+                      'var(--color-neutral-100)'
+                    ;(e.target as HTMLAnchorElement).style.color =
+                      'var(--color-primary)'
+                  }}
+                  onMouseLeave={(e) => {
+                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
+                      'transparent'
+                    ;(e.target as HTMLAnchorElement).style.color =
+                      'var(--color-neutral-600)'
+                  }}
+                >
+                  👥 Team
+                </Link>
+              </nav>
             )}
           </div>
-
-          {teamId && (
-            <nav style={{ display: 'flex', gap: '1.5rem' }}>
-              <Link
-                href={`/t/${teamId}/survey`}
-                style={{ textDecoration: 'none', color: '#374151' }}
-              >
-                Ny måling
-              </Link>
-              <Link
-                href={`/t/${teamId}/stats`}
-                style={{ textDecoration: 'none', color: '#374151' }}
-              >
-                Statistikk
-              </Link>
-              <Link
-                href="/teams"
-                style={{ textDecoration: 'none', color: '#374151' }}
-              >
-                Mine teams
-              </Link>
-            </nav>
-          )}
         </div>
       </div>
     </header>

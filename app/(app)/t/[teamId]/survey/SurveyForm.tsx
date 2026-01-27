@@ -104,7 +104,9 @@ export function SurveyForm({
         return { question_id: q.id, value_num: raw ? Number(raw) : null }
       if (q.type === 'yes_no')
         return { question_id: q.id, value_bool: raw === 'ja' }
-      return { question_id: q.id, value_text: raw ? String(raw) : '' }
+      if (q.type === 'text')
+        return { question_id: q.id, value_text: String(raw || '') }
+      return { question_id: q.id }
     })
 
     startTransition(async () => {
@@ -117,14 +119,11 @@ export function SurveyForm({
         answers,
       })
 
-      if (result.success) {
-        // Delete draft on successful submission
-        await deleteDraft(teamId, weekVal)
-        router.push(`/t/${teamId}/survey?submitted=1&week=${result.week}`)
+      if ('error' in result) {
+        setClientError(result.error || 'En ukjent feil oppstod')
       } else {
-        router.push(
-          `/t/${teamId}/survey?error=${encodeURIComponent(result.error || 'Ukjent feil')}`
-        )
+        await deleteDraft(teamId, weekVal)
+        router.push(`/t/${teamId}/survey?submitted=true&week=${weekVal}`)
       }
     })
   }
@@ -135,143 +134,276 @@ export function SurveyForm({
         id="survey-form"
         action={handleSubmit}
         onChange={handleChange}
-        style={{ display: 'grid', gap: 14, paddingBottom: '100px' }}
+        style={{
+          display: 'grid',
+          gap: 'var(--space-xl)',
+          paddingBottom: '120px',
+        }}
       >
+        {/* Draft Status */}
         {draftStatus !== 'idle' && (
           <div
             role="status"
             aria-live="polite"
             style={{
-              padding: '8px 12px',
-              borderRadius: 6,
-              fontSize: '0.875rem',
+              padding: 'var(--space-sm) var(--space-md)',
+              borderRadius: 'var(--border-radius-md)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-sm)',
               backgroundColor:
                 draftStatus === 'saved'
-                  ? '#ecfdf5'
+                  ? 'var(--color-success-light)'
                   : draftStatus === 'error'
-                    ? '#fef2f2'
-                    : '#f9fafb',
+                    ? 'var(--color-error-light)'
+                    : '#f0f4ff',
               color:
                 draftStatus === 'saved'
-                  ? '#065f46'
+                  ? 'var(--color-success-dark)'
                   : draftStatus === 'error'
-                    ? '#991b1b'
-                    : '#6b7280',
+                    ? 'var(--color-error-dark)'
+                    : 'var(--color-primary-dark)',
+              borderLeft: '4px solid',
+              borderLeftColor:
+                draftStatus === 'saved'
+                  ? 'var(--color-success)'
+                  : draftStatus === 'error'
+                    ? 'var(--color-error)'
+                    : 'var(--color-primary)',
             }}
           >
             {draftStatus === 'saving' && '⏱️ Lagrer utkast…'}
-            {draftStatus === 'saved' && '✓ Lagret som utkast'}
+            {draftStatus === 'saved' && '✅ Lagret som utkast'}
             {draftStatus === 'error' && '⚠️ Kunne ikke lagre utkast'}
           </div>
         )}
 
-        {clientError && (
-          <p style={{ color: '#c33', marginBottom: 10 }}>{clientError}</p>
-        )}
+        {clientError && <div className="alert alert-error">{clientError}</div>}
 
-        <div>
-          <label>Uke (1-53, standard er inneværende uke)</label>
-          <input
-            name="week"
-            defaultValue={currentWeek}
-            type="number"
-            min={1}
-            max={53}
-            style={{ width: 120, padding: 10, display: 'block' }}
-            disabled={isPending}
-          />
-        </div>
+        {/* Metadata */}
+        <fieldset
+          style={{
+            border: 'none',
+            padding: 0,
+            margin: 0,
+            display: 'grid',
+            gap: 'var(--space-lg)',
+          }}
+        >
+          <legend
+            style={{
+              fontSize: 'var(--font-size-lg)',
+              fontWeight: '700',
+              marginBottom: 'var(--space-md)',
+              color: 'var(--color-neutral-900)',
+            }}
+          >
+            📋 Dine opplysninger
+          </legend>
 
-        <div>
-          <label>
-            Navn (valgfritt)
-            <small
+          <div>
+            <label
               style={{
                 display: 'block',
-                color: '#6b7280',
-                fontSize: '0.875rem',
+                fontWeight: '600',
+                marginBottom: 'var(--space-sm)',
+                color: 'var(--color-neutral-700)',
               }}
             >
-              Synlig for teamadmin. Huk av «Anonym» for å skjule i statistikk.
-            </small>
-          </label>
-          <input
-            name="name"
-            defaultValue={initialDraft?.displayName || ''}
-            placeholder="Tomt = anonym"
-            style={{ width: '100%', padding: 10 }}
-            disabled={isPending}
-          />
+              Uke (1-53)
+            </label>
+            <input
+              name="week"
+              defaultValue={currentWeek}
+              type="number"
+              min={1}
+              max={53}
+              style={{ width: '100%', maxWidth: '120px' }}
+              disabled={isPending}
+            />
+          </div>
+
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontWeight: '600',
+                marginBottom: 'var(--space-sm)',
+                color: 'var(--color-neutral-700)',
+              }}
+            >
+              Navn (valgfritt)
+              <small
+                style={{
+                  display: 'block',
+                  color: 'var(--color-neutral-600)',
+                  fontSize: 'var(--font-size-sm)',
+                  fontWeight: '400',
+                  marginTop: 'var(--space-xs)',
+                }}
+              >
+                Synlig for teamadmin. Huk av «Anonym» for å skjule i statistikk.
+              </small>
+            </label>
+            <input
+              name="name"
+              defaultValue={initialDraft?.displayName || ''}
+              type="text"
+              disabled={isPending}
+            />
+          </div>
+
           <label
             style={{
-              display: 'inline-flex',
-              gap: 8,
-              marginTop: 8,
+              display: 'flex',
               alignItems: 'center',
+              gap: 'var(--space-sm)',
+              cursor: 'pointer',
+              fontWeight: '500',
+              color: 'var(--color-neutral-700)',
             }}
           >
             <input
               name="anon"
               type="checkbox"
-              defaultChecked={initialDraft?.isAnonymous ?? true}
+              defaultChecked={initialDraft?.isAnonymous || false}
               disabled={isPending}
             />
-            Anonym besvarelse
+            ✔️ Anonym
           </label>
-        </div>
+        </fieldset>
 
-        <hr />
-
-        <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+        {/* Questions */}
+        <fieldset
+          style={{
+            border: 'none',
+            padding: 0,
+            margin: 0,
+            display: 'grid',
+            gap: 'var(--space-lg)',
+          }}
+        >
           <legend
-            style={{ fontWeight: 600, marginBottom: 12, fontSize: '1.125rem' }}
+            style={{
+              fontSize: 'var(--font-size-lg)',
+              fontWeight: '700',
+              marginBottom: 'var(--space-md)',
+              color: 'var(--color-neutral-900)',
+            }}
           >
-            Spørsmål
-            <small
-              style={{
-                display: 'block',
-                color: '#6b7280',
-                fontSize: '0.875rem',
-                fontWeight: 'normal',
-              }}
-            >
-              Skala: 1 = lav/dårlig, 5 = høy/god
-            </small>
+            🎯 Spørsmål
           </legend>
 
           {questions.map((q, index) => {
-            const draftAnswer = initialDraft?.answers?.find(
+            const draftAnswer = initialDraft?.answers.find(
               (a) => a.question_id === q.id
             )
+
             return (
-              <div
+              <fieldset
                 key={q.id}
                 style={{
-                  padding: 12,
-                  border: '1px solid #eee',
-                  borderRadius: 8,
-                  marginBottom: 14,
+                  border: '1px solid var(--color-neutral-200)',
+                  borderRadius: 'var(--border-radius-lg)',
+                  padding: 'var(--space-lg)',
+                  backgroundColor: 'white',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  ;(e.currentTarget as HTMLFieldSetElement).style.boxShadow =
+                    'var(--shadow-md)'
+                  ;(e.currentTarget as HTMLFieldSetElement).style.borderColor =
+                    'var(--color-primary-light)'
+                }}
+                onMouseLeave={(e) => {
+                  ;(e.currentTarget as HTMLFieldSetElement).style.boxShadow =
+                    'none'
+                  ;(e.currentTarget as HTMLFieldSetElement).style.borderColor =
+                    'var(--color-neutral-200)'
                 }}
               >
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>
-                  {index + 1}. {q.label}{' '}
-                  {q.required ? (
-                    <span style={{ color: '#dc2626' }}>*</span>
-                  ) : (
-                    ''
+                <legend
+                  style={{
+                    fontSize: 'var(--font-size-base)',
+                    fontWeight: '600',
+                    marginBottom: 'var(--space-md)',
+                    color: 'var(--color-neutral-900)',
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: 'var(--space-sm)',
+                  }}
+                >
+                  <span
+                    style={{
+                      color: 'var(--color-primary)',
+                      fontWeight: '700',
+                      minWidth: '30px',
+                    }}
+                  >
+                    {index + 1}.
+                  </span>
+                  {q.label}
+                  {q.required && (
+                    <span style={{ color: 'var(--color-error)' }}>*</span>
                   )}
-                </div>
+                </legend>
 
                 {q.type === 'scale_1_5' && (
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns:
+                        'repeat(auto-fit, minmax(80px, 1fr))',
+                      gap: 'var(--space-sm)',
+                    }}
+                  >
                     {[1, 2, 3, 4, 5].map((n) => (
                       <label
                         key={n}
                         style={{
                           display: 'flex',
-                          gap: 6,
                           alignItems: 'center',
-                          minWidth: 50,
+                          padding: 'var(--space-sm) var(--space-md)',
+                          borderRadius: 'var(--border-radius-md)',
+                          border: '2px solid var(--color-neutral-200)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          backgroundColor:
+                            draftAnswer?.value_num === n
+                              ? 'var(--color-primary-light)'
+                              : 'white',
+                          borderColor:
+                            draftAnswer?.value_num === n
+                              ? 'var(--color-primary)'
+                              : 'var(--color-neutral-200)',
+                          fontWeight:
+                            draftAnswer?.value_num === n ? '600' : '500',
+                          color:
+                            draftAnswer?.value_num === n
+                              ? 'white'
+                              : 'var(--color-neutral-900)',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (draftAnswer?.value_num !== n) {
+                            ;(
+                              e.currentTarget as HTMLLabelElement
+                            ).style.borderColor = 'var(--color-primary)'
+                            ;(
+                              e.currentTarget as HTMLLabelElement
+                            ).style.backgroundColor = 'var(--color-neutral-50)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (draftAnswer?.value_num !== n) {
+                            ;(
+                              e.currentTarget as HTMLLabelElement
+                            ).style.borderColor = 'var(--color-neutral-200)'
+                            ;(
+                              e.currentTarget as HTMLLabelElement
+                            ).style.backgroundColor = 'white'
+                          }
                         }}
                       >
                         <input
@@ -281,41 +413,96 @@ export function SurveyForm({
                           required={q.required}
                           disabled={isPending}
                           defaultChecked={draftAnswer?.value_num === n}
+                          style={{
+                            marginRight: 'var(--space-sm)',
+                            cursor: 'pointer',
+                          }}
                         />
-                        {n}
+                        {n === 1 && '❌ Lav'}
+                        {n === 2 && '😕'}
+                        {n === 3 && '😐 Middels'}
+                        {n === 4 && '🙂'}
+                        {n === 5 && '✅ Høy'}
                       </label>
                     ))}
                   </div>
                 )}
 
                 {q.type === 'yes_no' && (
-                  <div style={{ display: 'flex', gap: 12 }}>
-                    <label
-                      style={{ display: 'flex', gap: 6, alignItems: 'center' }}
-                    >
-                      <input
-                        name={`q_${q.id}`}
-                        value="ja"
-                        type="radio"
-                        required={q.required}
-                        disabled={isPending}
-                        defaultChecked={draftAnswer?.value_bool === true}
-                      />
-                      Ja
-                    </label>
-                    <label
-                      style={{ display: 'flex', gap: 6, alignItems: 'center' }}
-                    >
-                      <input
-                        name={`q_${q.id}`}
-                        value="nei"
-                        type="radio"
-                        required={q.required}
-                        disabled={isPending}
-                        defaultChecked={draftAnswer?.value_bool === false}
-                      />
-                      Nei
-                    </label>
+                  <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
+                    {[
+                      { val: 'ja', label: '✅ Ja' },
+                      { val: 'nei', label: '❌ Nei' },
+                    ].map((opt) => (
+                      <label
+                        key={opt.val}
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: 'var(--space-md)',
+                          borderRadius: 'var(--border-radius-md)',
+                          border: '2px solid var(--color-neutral-200)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          backgroundColor:
+                            draftAnswer?.value_bool === (opt.val === 'ja')
+                              ? 'var(--color-primary-light)'
+                              : 'white',
+                          borderColor:
+                            draftAnswer?.value_bool === (opt.val === 'ja')
+                              ? 'var(--color-primary)'
+                              : 'var(--color-neutral-200)',
+                          color:
+                            draftAnswer?.value_bool === (opt.val === 'ja')
+                              ? 'white'
+                              : 'var(--color-neutral-900)',
+                          fontWeight:
+                            draftAnswer?.value_bool === (opt.val === 'ja')
+                              ? '600'
+                              : '500',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (draftAnswer?.value_bool !== (opt.val === 'ja')) {
+                            ;(
+                              e.currentTarget as HTMLLabelElement
+                            ).style.borderColor = 'var(--color-primary)'
+                            ;(
+                              e.currentTarget as HTMLLabelElement
+                            ).style.backgroundColor = 'var(--color-neutral-50)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (draftAnswer?.value_bool !== (opt.val === 'ja')) {
+                            ;(
+                              e.currentTarget as HTMLLabelElement
+                            ).style.borderColor = 'var(--color-neutral-200)'
+                            ;(
+                              e.currentTarget as HTMLLabelElement
+                            ).style.backgroundColor = 'white'
+                          }
+                        }}
+                      >
+                        <input
+                          name={`q_${q.id}`}
+                          value={opt.val}
+                          type="radio"
+                          required={q.required}
+                          disabled={isPending}
+                          defaultChecked={
+                            opt.val === 'ja'
+                              ? draftAnswer?.value_bool === true
+                              : draftAnswer?.value_bool === false
+                          }
+                          style={{
+                            marginRight: 'var(--space-sm)',
+                            cursor: 'pointer',
+                          }}
+                        />
+                        {opt.label}
+                      </label>
+                    ))}
                   </div>
                 )}
 
@@ -323,29 +510,60 @@ export function SurveyForm({
                   <textarea
                     name={`q_${q.id}`}
                     defaultValue={draftAnswer?.value_text || ''}
-                    style={{ width: '100%', padding: 10, minHeight: 70 }}
+                    style={{
+                      width: '100%',
+                      padding: 'var(--space-md)',
+                      minHeight: '100px',
+                      resize: 'vertical',
+                    }}
                     disabled={isPending}
                   />
                 )}
-              </div>
+              </fieldset>
             )
           })}
         </fieldset>
 
+        {/* Submit */}
         <button
           type="submit"
           disabled={isPending}
           style={{
-            padding: '10px 14px',
-            width: 160,
-            opacity: isPending ? 0.6 : 1,
+            padding: 'var(--space-md) var(--space-xl)',
+            backgroundColor: isPending
+              ? 'var(--color-neutral-300)'
+              : 'var(--color-primary)',
+            color: 'white',
+            border: 'none',
+            borderRadius: 'var(--border-radius-md)',
+            fontSize: 'var(--font-size-base)',
+            fontWeight: '700',
+            cursor: isPending ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s ease',
+            alignSelf: 'flex-start',
+            marginTop: 'var(--space-lg)',
+          }}
+          onMouseEnter={(e) => {
+            if (!isPending) {
+              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                'var(--color-primary-dark)'
+              ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                'var(--shadow-lg)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isPending) {
+              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                'var(--color-primary)'
+              ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'
+            }
           }}
         >
-          {isPending ? 'Sender inn...' : 'Send inn'}
+          {isPending ? '⏳ Sender inn...' : '🚀 Send inn'}
         </button>
       </form>
 
-      {/* Mobile sticky bar */}
+      {/* Mobile Sticky Bar */}
       <div
         style={{
           position: 'fixed',
@@ -353,11 +571,12 @@ export function SurveyForm({
           left: 0,
           right: 0,
           backgroundColor: 'white',
-          borderTop: '1px solid #e5e7eb',
-          padding: '12px 16px',
+          borderTop: '1px solid var(--color-neutral-200)',
+          boxShadow: 'var(--shadow-lg)',
+          padding: 'var(--space-md)',
+          paddingBottom: 'max(var(--space-md), env(safe-area-inset-bottom))',
           display: 'none',
           justifyContent: 'center',
-          paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         }}
         className="mobile-sticky-bar"
       >
@@ -366,20 +585,21 @@ export function SurveyForm({
           form="survey-form"
           disabled={isPending}
           style={{
-            padding: '12px 24px',
             width: '100%',
-            maxWidth: 400,
-            backgroundColor: '#2563eb',
+            maxWidth: '400px',
+            padding: 'var(--space-md) var(--space-xl)',
+            backgroundColor: isPending
+              ? 'var(--color-neutral-300)'
+              : 'var(--color-primary)',
             color: 'white',
             border: 'none',
-            borderRadius: 8,
-            fontSize: '1rem',
-            fontWeight: 600,
-            opacity: isPending ? 0.6 : 1,
+            borderRadius: 'var(--border-radius-md)',
+            fontSize: 'var(--font-size-base)',
+            fontWeight: '700',
             cursor: isPending ? 'not-allowed' : 'pointer',
           }}
         >
-          {isPending ? 'Sender inn...' : 'Send inn'}
+          {isPending ? '⏳ Sender inn...' : '🚀 Send inn'}
         </button>
         <style jsx>{`
           @media (max-width: 768px) {
