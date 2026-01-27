@@ -163,7 +163,16 @@ export function TeamsList({ teams }: TeamsListProps) {
                 <input
                   name="name"
                   placeholder="f.eks. «Produktteam»"
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    padding: 'var(--space-md)',
+                    border: '1px solid var(--color-neutral-300)',
+                    borderRadius: 'var(--border-radius-md)',
+                    backgroundColor: 'white',
+                    fontSize: 'var(--font-size-base)',
+                    transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+                    boxShadow: 'var(--shadow-sm)',
+                  }}
                   disabled={isPending}
                 />
               </div>

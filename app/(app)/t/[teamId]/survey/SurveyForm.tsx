@@ -51,6 +51,17 @@ export function SurveyForm({
   const [draftStatus, setDraftStatus] = useState<
     'saved' | 'saving' | 'idle' | 'error'
   >('idle')
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: 'var(--space-md)',
+    border: '1px solid var(--color-neutral-300)',
+    borderRadius: 'var(--border-radius-md)',
+    backgroundColor: 'white',
+    fontSize: 'var(--font-size-base)',
+    color: 'var(--color-neutral-900)',
+    transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+    boxShadow: 'var(--shadow-sm)',
+  }
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const debouncedSave = useCallback(
@@ -248,7 +259,7 @@ export function SurveyForm({
               type="number"
               min={1}
               max={53}
-              style={{ width: '100%', maxWidth: '120px' }}
+              style={{ ...inputStyle, maxWidth: '140px' }}
               disabled={isPending}
             />
           </div>
@@ -282,6 +293,7 @@ export function SurveyForm({
               defaultValue={initialDraft?.displayName || ''}
               type="text"
               disabled={isPending}
+              style={inputStyle}
             />
           </div>
 
