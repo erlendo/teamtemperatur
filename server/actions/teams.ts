@@ -52,7 +52,6 @@ export async function createTeam(name: string) {
     console.error('[createTeam] Insert error:', {
       message: teamErr.message,
       code: teamErr.code,
-      status: teamErr.status,
       details: teamErr.details,
     })
     return { error: `Database error: ${teamErr.message}` }
