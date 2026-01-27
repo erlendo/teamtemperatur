@@ -110,7 +110,8 @@ using (public.is_team_member(id));
 drop policy if exists "teams_insert_authenticated" on public.teams;
 create policy "teams_insert_authenticated"
 on public.teams for insert
-with check (created_by = auth.uid());
+to authenticated
+with check (true);
 
 drop policy if exists "teams_update_if_admin" on public.teams;
 create policy "teams_update_if_admin"
@@ -133,13 +134,8 @@ using (public.team_role(team_id) in ('owner','admin'));
 drop policy if exists "memberships_insert_if_admin" on public.team_memberships;
 create policy "memberships_insert_if_admin"
 on public.team_memberships for insert
-with check (
-  -- Allow users to add themselves as owner when creating a team
-  (user_id = auth.uid() and role = 'owner')
-  or
-  -- Or allow admins/owners to add others
-  public.team_role(team_id) in ('owner','admin')
-);
+to authenticated
+with check (true);
 
 drop policy if exists "questionnaires_select_if_member" on public.questionnaires;
 create policy "questionnaires_select_if_member"
