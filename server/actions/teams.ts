@@ -70,5 +70,17 @@ export async function createTeam(name: string) {
     return { error: memErr.message }
   }
 
+  console.log('[createTeam] Creating default questionnaire')
+
+  // Create default questionnaire
+  const { error: qErr } = await supabase.rpc('create_default_questionnaire', {
+    p_team_id: team.id,
+    p_created_by: u.user.id,
+  })
+  if (qErr) {
+    console.error('[createTeam] Questionnaire creation error:', qErr)
+    // Don't fail team creation if questionnaire fails
+  }
+
   return { success: true, team }
 }
