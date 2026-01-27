@@ -1,4 +1,6 @@
-import { getWeekStats } from '@/server/actions/stats'
+import { getYearStats } from '@/server/actions/stats'
+import { AppHeader } from '@/components/AppHeader'
+import { YearStatsView } from '@/components/YearStatsView'
 
 function currentWeekNumberSimple() {
   const d = new Date()
@@ -7,92 +9,59 @@ function currentWeekNumberSimple() {
   return Math.ceil((days + start.getDay() + 1) / 7)
 }
 
-export default async function StatsPage({ params, searchParams }: any) {
-  const teamId = params.teamId as string
-  const week = Number(searchParams?.week ?? currentWeekNumberSimple())
-  const stats = await getWeekStats(teamId, week)
+export default async function StatsPage({
+  params,
+}: {
+  params: Promise<{ teamId: string }>
+}) {
+  const { teamId } = await params
+  const currentWeek = currentWeekNumberSimple()
+  const stats = await getYearStats(teamId, currentWeek)
 
   return (
-    <div style={{ maxWidth: 720 }}>
-      <h1>Statistikk</h1>
+    <>
+      <AppHeader teamId={teamId} />
+      <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1rem' }}>
+        <h1>Statistikk</h1>
 
-      <form
-        method="get"
-        style={{
-          display: 'flex',
-          gap: 8,
-          alignItems: 'center',
-          marginBottom: 14,
-        }}
-      >
-        <label>Uke</label>
-        <input
-          name="week"
-          defaultValue={week}
-          type="number"
-          min={1}
-          max={53}
-          style={{ width: 120, padding: 10 }}
-        />
-        <button style={{ padding: '10px 14px' }}>Vis</button>
-      </form>
+        {stats.length === 0 ? (
+          <div
+            style={{
+              padding: '3rem 2rem',
+              textAlign: 'center',
+              backgroundColor: '#f9fafb',
+              borderRadius: 12,
+              marginTop: '2rem',
+            }}
+          >
+            <p style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>
+              Ingen data ennå
+            </p>
+            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+              Send inn din første måling for å se statistikk og trender.
+            </p>
+            <a
+              href={`/t/${teamId}/survey`}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#2563eb',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: 8,
+                fontWeight: 600,
+              }}
+            >
+              Gå til Ny måling
+            </a>
+          </div>
+        ) : (
+          <YearStatsView data={stats} />
+        )}
 
-      {stats.length === 0 ? (
-        <p>Ingen data for uke {week}.</p>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th
-                style={{
-                  textAlign: 'left',
-                  borderBottom: '1px solid #ddd',
-                  padding: 8,
-                }}
-              >
-                Spørsmål
-              </th>
-              <th
-                style={{
-                  textAlign: 'left',
-                  borderBottom: '1px solid #ddd',
-                  padding: 8,
-                }}
-              >
-                Snitt
-              </th>
-              <th
-                style={{
-                  textAlign: 'left',
-                  borderBottom: '1px solid #ddd',
-                  padding: 8,
-                }}
-              >
-                Antall
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats.map((r) => (
-              <tr key={r.question_key}>
-                <td style={{ borderBottom: '1px solid #f0f0f0', padding: 8 }}>
-                  {r.question_label || r.question_key}
-                </td>
-                <td style={{ borderBottom: '1px solid #f0f0f0', padding: 8 }}>
-                  {Number(r.avg_score).toFixed(2)}
-                </td>
-                <td style={{ borderBottom: '1px solid #f0f0f0', padding: 8 }}>
-                  {r.n_answers}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <p style={{ marginTop: 14 }}>
-        <a href={`/t/${teamId}`}>← Til team</a>
-      </p>
-    </div>
+        <p style={{ marginTop: '2rem' }}>
+          <a href={`/t/${teamId}`}>← Til team</a>
+        </p>
+      </div>
+    </>
   )
 }
