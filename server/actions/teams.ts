@@ -30,30 +30,30 @@ export async function listMyTeams() {
 }
 
 export async function createTeam(name: string) {
-  const supabase = supabaseServer();
-  const { data: u, error: authError } = await supabase.auth.getUser();
-  
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+
   if (authError || !u.user) {
-    throw new Error("Not authenticated");
+    return { error: 'Ikke autentisert' }
   }
 
   const { data: team, error: teamErr } = await supabase
-    .from("teams")
+    .from('teams')
     .insert({ name, created_by: u.user.id, settings: { teamSize: 6 } })
     .select()
-    .single();
+    .single()
   if (teamErr) {
-    console.error("createTeam error:", teamErr);
-    throw teamErr;
+    console.error('createTeam error:', teamErr)
+    return { error: teamErr.message }
   }
 
   const { error: memErr } = await supabase
-    .from("team_memberships")
-    .insert({ team_id: team.id, user_id: u.user.id, role: "owner", status: "active" });
+    .from('team_memberships')
+    .insert({ team_id: team.id, user_id: u.user.id, role: 'owner', status: 'active' })
   if (memErr) {
-    console.error("createTeam membership error:", memErr);
-    throw memErr;
+    console.error('createTeam membership error:', memErr)
+    return { error: memErr.message }
   }
 
-  return team;
+  return { success: true, team }
 }

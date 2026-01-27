@@ -1,42 +1,14 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { listMyTeams, createTeam } from "@/server/actions/teams";
+import { redirect } from 'next/navigation'
+import { listMyTeams } from '@/server/actions/teams'
+import { TeamsList } from './client'
 
 export default async function TeamsPage() {
-  const teams = await listMyTeams();
+  const teams = await listMyTeams()
 
   // If not authenticated, redirect to login
   if (teams === null) {
-    redirect("/login");
+    redirect('/login')
   }
 
-  return (
-    <div style={{ maxWidth: 720 }}>
-      <h1>Teams</h1>
-
-      <form
-        action={async (formData) => {
-          "use server";
-          const name = String(formData.get("name") || "").trim();
-          if (name) await createTeam(name);
-        }}
-        style={{ display: "flex", gap: 8, marginBottom: 18 }}
-      >
-        <input name="name" placeholder="Nytt teamnavn" style={{ flex: 1, padding: 10 }} />
-        <button style={{ padding: "10px 14px" }}>Opprett</button>
-      </form>
-
-      <ul style={{ paddingLeft: 16 }}>
-        {teams.map((t) => (
-          <li key={t.id} style={{ marginBottom: 8 }}>
-            <Link href={`/t/${t.id}`}>{t.name}</Link> <span style={{ color: "#666" }}>({t.role})</span>
-          </li>
-        ))}
-      </ul>
-
-      <form action="/logout" method="post" style={{ marginTop: 18 }}>
-        <button style={{ padding: "8px 12px" }}>Logg ut</button>
-      </form>
-    </div>
-  );
+  return <TeamsList teams={teams} />
 }
