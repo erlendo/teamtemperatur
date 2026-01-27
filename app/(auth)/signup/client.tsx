@@ -1,10 +1,10 @@
 'use client'
 
 import { supabaseBrowser } from '@/lib/supabase/browser'
-import { Thermometer, Loader, Mail, Lock, User } from 'lucide-react'
+import { Loader, Lock, Mail, Thermometer, User } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 
 export function SignupClient() {
   const [email, setEmail] = useState('')
@@ -50,19 +50,33 @@ export function SignupClient() {
     }
 
     const supabase = supabaseBrowser()
-    const { error } = await supabase.auth.signUp({
+    const { error: signupError } = await supabase.auth.signUp({
       email,
       password,
     })
 
-    if (error) {
-      setMsg({ type: 'error', text: `Feil: ${error.message}` })
+    if (signupError) {
+      setMsg({ type: 'error', text: `Feil: ${signupError.message}` })
+      return
+    }
+
+    // After signup, automatically sign in the user
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (signInError) {
+      setMsg({
+        type: 'error',
+        text: `Konto opprettet, men innlogging feilet: ${signInError.message}. Prøv å logge inn manuelt.`,
+      })
     } else {
       setMsg({
         type: 'success',
-        text: 'Konto opprettet! Logger deg inn...',
+        text: 'Konto opprettet og du er logget inn! Videresender...',
       })
-      // Automatically sign in after signup
+      // Navigate to teams after successful login
       setTimeout(() => router.push('/teams'), 1500)
     }
   }
@@ -79,7 +93,11 @@ export function SignupClient() {
       >
         <div style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: 'var(--space-md)' }}>
-            <Loader size={28} className="animate-spin" style={{ margin: '0 auto' }} />
+            <Loader
+              size={28}
+              className="animate-spin"
+              style={{ margin: '0 auto' }}
+            />
           </div>
           <p style={{ color: 'var(--color-neutral-600)' }}>
             Sjekker innlogging...
@@ -122,9 +140,7 @@ export function SignupClient() {
             <Thermometer size={32} />
           </div>
           <h1 style={{ marginBottom: 'var(--space-sm)' }}>Teamtemperatur</h1>
-          <p style={{ color: 'var(--color-neutral-600)' }}>
-            Opprett din konto
-          </p>
+          <p style={{ color: 'var(--color-neutral-600)' }}>Opprett din konto</p>
         </div>
 
         {/* Form Card */}
@@ -185,7 +201,8 @@ export function SignupClient() {
                   required
                   style={{
                     width: '100%',
-                    padding: 'var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 28px)',
+                    padding:
+                      'var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 28px)',
                     border: '1px solid var(--color-neutral-300)',
                     borderRadius: 'var(--border-radius-md)',
                     fontSize: 'var(--font-size-base)',
@@ -230,7 +247,8 @@ export function SignupClient() {
                   minLength={6}
                   style={{
                     width: '100%',
-                    padding: 'var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 28px)',
+                    padding:
+                      'var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 28px)',
                     border: '1px solid var(--color-neutral-300)',
                     borderRadius: 'var(--border-radius-md)',
                     fontSize: 'var(--font-size-base)',
@@ -275,7 +293,8 @@ export function SignupClient() {
                   minLength={6}
                   style={{
                     width: '100%',
-                    padding: 'var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 28px)',
+                    padding:
+                      'var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 28px)',
                     border: '1px solid var(--color-neutral-300)',
                     borderRadius: 'var(--border-radius-md)',
                     fontSize: 'var(--font-size-base)',
@@ -343,7 +362,10 @@ export function SignupClient() {
           >
             <p style={{ margin: 0 }}>
               Har du allerede konto?{' '}
-              <Link href="/login" style={{ color: 'var(--color-primary)', fontWeight: '600' }}>
+              <Link
+                href="/login"
+                style={{ color: 'var(--color-primary)', fontWeight: '600' }}
+              >
                 Logg inn
               </Link>
             </p>
