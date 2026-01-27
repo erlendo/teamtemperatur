@@ -139,9 +139,9 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
               marginBottom: 'var(--space-2xl)',
             }}
           >
-            {teams.length === 0
+            {myTeams && myTeams.length === 0
               ? 'Du er ikke medlem av noen team ennå. Opprett et nytt team for å komme i gang!'
-              : `Du er medlem av ${teams.length} team${teams.length !== 1 ? '' : ''}.`}
+              : myTeams && `Du er medlem av ${myTeams.length} team${myTeams.length !== 1 ? '' : ''}.`}
           </p>
 
           {/* Create Team Form */}
@@ -390,7 +390,13 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
 
           {/* Available Teams */}
           {availableTeams && availableTeams.length > 0 && (
-            <div style={{ display: 'grid', gap: 'var(--space-xl)', marginTop: 'var(--space-3xl)' }}>
+            <div
+              style={{
+                display: 'grid',
+                gap: 'var(--space-xl)',
+                marginTop: 'var(--space-3xl)',
+              }}
+            >
               <h2
                 style={{
                   fontSize: 'var(--font-size-2xl)',
@@ -486,9 +492,11 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                         if (!isPending) {
                           ;(
                             e.currentTarget as HTMLButtonElement
-                          ).style.backgroundColor = 'var(--color-secondary-dark)'
-                          ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
-                            'var(--shadow-lg)'
+                          ).style.backgroundColor =
+                            'var(--color-secondary-dark)'
+                          ;(
+                            e.currentTarget as HTMLButtonElement
+                          ).style.boxShadow = 'var(--shadow-lg)'
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -496,8 +504,9 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                           ;(
                             e.currentTarget as HTMLButtonElement
                           ).style.backgroundColor = 'var(--color-secondary)'
-                          ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
-                            'none'
+                          ;(
+                            e.currentTarget as HTMLButtonElement
+                          ).style.boxShadow = 'none'
                         }
                       }}
                     >
@@ -509,19 +518,22 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
             </div>
           )}
 
-          {!myTeams || (myTeams.length === 0 && (!availableTeams || availableTeams.length === 0)) && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: 'var(--space-3xl) var(--space-xl)',
-                color: 'var(--color-neutral-600)',
-              }}
-            >
-              <p style={{ marginBottom: 'var(--space-md)' }}>
-                Ingen team funnet. Opprett ditt første team eller vent på invitasjon.
-              </p>
-            </div>
-          )}
+          {!myTeams ||
+            (myTeams.length === 0 &&
+              (!availableTeams || availableTeams.length === 0) && (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: 'var(--space-3xl) var(--space-xl)',
+                    color: 'var(--color-neutral-600)',
+                  }}
+                >
+                  <p style={{ marginBottom: 'var(--space-md)' }}>
+                    Ingen team funnet. Opprett ditt første team eller vent på
+                    invitasjon.
+                  </p>
+                </div>
+              ))}
 
           {/* Logout */}
           <form
