@@ -10,7 +10,7 @@ export async function loadActiveQuestionnaire(teamId: string) {
   }
 
   const { data: membership, error: membershipError } = await supabase
-      .from('tt_team_memberships')
+    .from('tt_team_memberships')
     .select('team_id')
     .eq('team_id', teamId)
     .eq('user_id', authUser.user.id)
@@ -22,7 +22,7 @@ export async function loadActiveQuestionnaire(teamId: string) {
 
   const fetchActiveQuestionnaire = async () =>
     supabase
-        .from('tt_questionnaires')
+      .from('tt_questionnaires')
       .select('id, name, version')
       .eq('team_id', teamId)
       .eq('is_active', true)
@@ -57,7 +57,7 @@ export async function loadActiveQuestionnaire(teamId: string) {
   }
 
   const { data: questions, error: quErr } = await supabase
-      .from('tt_questions')
+    .from('tt_questions')
     .select('id, key, label, type, required, sort_order')
     .eq('questionnaire_id', questionnaire.id)
     .order('sort_order', { ascending: true })
