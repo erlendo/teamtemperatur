@@ -36,7 +36,12 @@ export async function createTeam(name: string) {
     return { error: 'Ikke autentisert' }
   }
 
-  console.log('[createTeam] Creating team for user:', u.user.id, 'with name:', name)
+  console.log(
+    '[createTeam] Creating team for user:',
+    u.user.id,
+    'with name:',
+    name
+  )
 
   const { data: team, error: teamErr } = await supabase
     .from('teams')
@@ -55,14 +60,12 @@ export async function createTeam(name: string) {
 
   console.log('[createTeam] Team created:', team.id)
 
-  const { error: memErr } = await supabase
-    .from('team_memberships')
-    .insert({
-      team_id: team.id,
-      user_id: u.user.id,
-      role: 'owner',
-      status: 'active',
-    })
+  const { error: memErr } = await supabase.from('team_memberships').insert({
+    team_id: team.id,
+    user_id: u.user.id,
+    role: 'owner',
+    status: 'active',
+  })
   if (memErr) {
     console.error('createTeam membership error:', memErr)
     return { error: memErr.message }

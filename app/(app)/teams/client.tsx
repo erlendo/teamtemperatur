@@ -22,9 +22,10 @@ export function TeamsList({ teams }: TeamsListProps) {
       const result = await createTeam(name)
 
       if ('error' in result) {
-        setError(result.error)
+        setError(result.error || 'Unknown error')
       } else {
         // Clear form and refetch
+        setError(null)
         ;(
           document.querySelector('input[name="name"]') as HTMLInputElement
         ).value = ''
