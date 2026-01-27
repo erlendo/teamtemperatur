@@ -2,7 +2,15 @@
 
 import { deleteDraft, saveDraft } from '@/server/actions/drafts'
 import { submitSurvey } from '@/server/actions/submissions'
-import { AlertCircle, Check, CheckCircle, Loader, Send, Target, X } from 'lucide-react'
+import {
+  AlertCircle,
+  Check,
+  CheckCircle,
+  Loader,
+  Send,
+  Target,
+  X,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState, useTransition } from 'react'
 
@@ -299,21 +307,21 @@ export function SurveyForm({
             padding: 0,
             margin: 0,
             display: 'grid',
-            gap: 'var(--space-lg)',
+            gap: 'var(--space-2xl)',
           }}
         >
           <legend
             style={{
-              fontSize: 'var(--font-size-lg)',
+              fontSize: 'var(--font-size-xl)',
               fontWeight: '700',
-              marginBottom: 'var(--space-md)',
+              marginBottom: 'var(--space-lg)',
               color: 'var(--color-neutral-900)',
               display: 'flex',
               alignItems: 'center',
               gap: 'var(--space-sm)',
             }}
           >
-            <Target size={20} />
+            <Target size={24} />
             Spørsmål
           </legend>
 
@@ -326,17 +334,17 @@ export function SurveyForm({
               <fieldset
                 key={q.id}
                 style={{
-                  border: '1px solid var(--color-neutral-200)',
+                  border: '2px solid var(--color-neutral-200)',
                   borderRadius: 'var(--border-radius-lg)',
-                  padding: 'var(--space-lg)',
+                  padding: 'var(--space-xl)',
                   backgroundColor: 'white',
                   transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
                   ;(e.currentTarget as HTMLFieldSetElement).style.boxShadow =
-                    'var(--shadow-md)'
+                    'var(--shadow-lg)'
                   ;(e.currentTarget as HTMLFieldSetElement).style.borderColor =
-                    'var(--color-primary-light)'
+                    'var(--color-primary)'
                 }}
                 onMouseLeave={(e) => {
                   ;(e.currentTarget as HTMLFieldSetElement).style.boxShadow =
@@ -347,7 +355,7 @@ export function SurveyForm({
               >
                 <legend
                   style={{
-                    fontSize: 'var(--font-size-base)',
+                    fontSize: 'var(--font-size-lg)',
                     fontWeight: '600',
                     marginBottom: 'var(--space-md)',
                     color: 'var(--color-neutral-900)',

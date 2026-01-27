@@ -1,7 +1,15 @@
 'use client'
 
 import { createTeam } from '@/server/actions/teams'
-import { Thermometer, Users, Plus, LogOut, Crown, Settings, User } from 'lucide-react'
+import {
+  Crown,
+  LogOut,
+  Plus,
+  Settings,
+  Thermometer,
+  User,
+  Users,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 
@@ -93,7 +101,14 @@ export function TeamsList({ teams }: TeamsListProps) {
         }}
       >
         <div style={{ maxWidth: '600px' }}>
-          <h1 style={{ marginBottom: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <h1
+            style={{
+              marginBottom: 'var(--space-lg)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-sm)',
+            }}
+          >
             <Users size={28} />
             Mine Team
           </h1>
@@ -203,94 +218,128 @@ export function TeamsList({ teams }: TeamsListProps) {
 
           {/* Teams List */}
           {teams.length > 0 && (
-            <div style={{ display: 'grid', gap: 'var(--space-md)' }}>
+            <div style={{ display: 'grid', gap: 'var(--space-xl)' }}>
               <h2
                 style={{
-                  fontSize: 'var(--font-size-lg)',
+                  fontSize: 'var(--font-size-2xl)',
                   marginBottom: 'var(--space-md)',
+                  fontWeight: '700',
+                  color: 'var(--color-neutral-900)',
                 }}
               >
                 Dine Team
               </h2>
-              {teams.map((t) => (
-                <Link
-                  key={t.id}
-                  href={`/t/${t.id}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: 'var(--space-lg)',
-                    backgroundColor: 'white',
-                    border: '1px solid var(--color-neutral-200)',
-                    borderRadius: 'var(--border-radius-lg)',
-                    textDecoration: 'none',
-                    color: 'inherit',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
-                      'var(--shadow-md)'
-                    ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
-                      'var(--color-primary-light)'
-                  }}
-                  onMouseLeave={(e) => {
-                    ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
-                      'none'
-                    ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
-                      'var(--color-neutral-200)'
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: '700',
-                        fontSize: 'var(--font-size-lg)',
-                        color: 'var(--color-neutral-900)',
-                      }}
-                    >
-                      {t.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 'var(--font-size-sm)',
-                        color: 'var(--color-neutral-600)',
-                        marginTop: 'var(--space-xs)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 'var(--space-xs)',
-                      }}
-                    >
-                      {t.role === 'owner' && (
-                        <>
-                          <Crown size={14} />
-                          Eier
-                        </>
-                      )}
-                      {t.role === 'admin' && (
-                        <>
-                          <Settings size={14} />
-                          Admin
-                        </>
-                      )}
-                      {t.role === 'member' && (
-                        <>
-                          <User size={14} />
-                          Medlem
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <span
+              <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
+                {teams.map((t) => (
+                  <Link
+                    key={t.id}
+                    href={`/t/${t.id}`}
                     style={{
-                      fontSize: 'var(--font-size-xl)',
-                      color: 'var(--color-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: 'var(--space-xl)',
+                      backgroundColor: 'white',
+                      border: '2px solid var(--color-neutral-300)',
+                      borderRadius: 'var(--border-radius-lg)',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: 'var(--shadow-md)',
+                    }}
+                    onMouseEnter={(e) => {
+                      ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                        'var(--shadow-lg)'
+                      ;(
+                        e.currentTarget as HTMLAnchorElement
+                      ).style.borderColor = 'var(--color-primary)'
+                      ;(e.currentTarget as HTMLAnchorElement).style.transform =
+                        'translateY(-2px)'
+                    }}
+                    onMouseLeave={(e) => {
+                      ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                        'var(--shadow-md)'
+                      ;(
+                        e.currentTarget as HTMLAnchorElement
+                      ).style.borderColor = 'var(--color-neutral-300)'
+                      ;(e.currentTarget as HTMLAnchorElement).style.transform =
+                        'translateY(0)'
                     }}
                   >
-                    →
-                  </span>
-                </Link>
-              ))}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--space-md)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '48px',
+                          height: '48px',
+                          backgroundColor: 'var(--color-primary-light)',
+                          borderRadius: 'var(--border-radius-md)',
+                          color: 'var(--color-primary)',
+                        }}
+                      >
+                        <Thermometer size={24} strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div
+                          style={{
+                            fontWeight: '700',
+                            fontSize: 'var(--font-size-xl)',
+                            color: 'var(--color-neutral-900)',
+                            marginBottom: 'var(--space-xs)',
+                          }}
+                        >
+                          {t.name}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 'var(--font-size-sm)',
+                            color: 'var(--color-neutral-600)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'var(--space-xs)',
+                          }}
+                        >
+                          {t.role === 'owner' && (
+                            <>
+                              <Crown size={14} />
+                              Eier
+                            </>
+                          )}
+                          {t.role === 'admin' && (
+                            <>
+                              <Settings size={14} />
+                              Admin
+                            </>
+                          )}
+                          {t.role === 'member' && (
+                            <>
+                              <User size={14} />
+                              Medlem
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 'var(--font-size-2xl)',
+                        color: 'var(--color-primary)',
+                        fontWeight: '700',
+                      }}
+                    >
+                      →
+                    </span>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
 
