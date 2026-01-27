@@ -12,14 +12,14 @@ export default async function SurveyPage({
   params,
   searchParams,
 }: {
-  params: { teamId: string }
+  params: Promise<{ teamId: string }>
   searchParams: Promise<{ error?: string; submitted?: string; week?: string }>
 }) {
-  const { teamId } = params
+  const { teamId } = await params
   const { questionnaire, questions, error } =
     await loadActiveQuestionnaire(teamId)
   const week = currentWeekNumberSimple()
-  
+
   const sp = await searchParams
   const errorMsg = sp?.error
   const submittedWeek = sp?.submitted ? sp.week : undefined
