@@ -36,22 +36,32 @@ export async function listAvailableTeams() {
     return null // Return null when not authenticated
   }
 
-  // Get all teams the user is NOT a member of
-  const { data, error } = await supabase
+  // Get all teams
+  const { data: allTeams, error: allError } = await supabase
     .from('tt_teams')
     .select('id, name')
-    .not(
-      'id',
-      'in',
-      `(select team_id from tt_team_memberships where user_id = '${u.user.id}' and status = 'active')`
-    )
 
-  if (error) {
-    console.error('listAvailableTeams error:', error)
+  if (allError) {
+    console.error('listAvailableTeams allTeams error:', allError)
     return []
   }
 
-  return data ?? []
+  // Get user's team IDs
+  const { data: userTeams, error: userError } = await supabase
+    .from('tt_team_memberships')
+    .select('team_id')
+    .eq('user_id', u.user.id)
+    .eq('status', 'active')
+
+  if (userError) {
+    console.error('listAvailableTeams userTeams error:', userError)
+    return []
+  }
+
+  const userTeamIds = new Set((userTeams ?? []).map((t: any) => t.team_id))
+
+  // Return teams the user is NOT a member of
+  return (allTeams ?? []).filter((team: any) => !userTeamIds.has(team.id))
 }
 
 export async function joinTeam(teamId: string) {
@@ -75,14 +85,12 @@ export async function joinTeam(teamId: string) {
   }
 
   // Add user to team as member
-  const { error: memErr } = await supabase
-    .from('tt_team_memberships')
-    .insert({
-      team_id: teamId,
-      user_id: u.user.id,
-      role: 'member',
-      status: 'active',
-    })
+  const { error: memErr } = await supabase.from('tt_team_memberships').insert({
+    team_id: teamId,
+    user_id: u.user.id,
+    role: 'member',
+    status: 'active',
+  })
 
   if (memErr) {
     console.error('joinTeam error:', memErr)
