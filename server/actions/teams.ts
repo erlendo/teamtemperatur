@@ -36,15 +36,24 @@ export async function createTeam(name: string) {
     return { error: 'Ikke autentisert' }
   }
 
+  console.log('[createTeam] Creating team for user:', u.user.id, 'with name:', name)
+
   const { data: team, error: teamErr } = await supabase
     .from('teams')
     .insert({ name, created_by: u.user.id, settings: { teamSize: 6 } })
     .select()
     .single()
   if (teamErr) {
-    console.error('createTeam error:', teamErr)
-    return { error: teamErr.message }
+    console.error('[createTeam] Insert error:', {
+      message: teamErr.message,
+      code: teamErr.code,
+      status: teamErr.status,
+      details: teamErr.details,
+    })
+    return { error: `Database error: ${teamErr.message}` }
   }
+
+  console.log('[createTeam] Team created:', team.id)
 
   const { error: memErr } = await supabase
     .from('team_memberships')
