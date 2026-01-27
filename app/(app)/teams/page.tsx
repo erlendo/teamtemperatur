@@ -1,5 +1,4 @@
 import { listMyTeams } from '@/server/actions/teams'
-import { redirect } from 'next/navigation'
 import { TeamsList } from './client'
 
 export default async function TeamsPage() {
@@ -29,9 +28,17 @@ export default async function TeamsPage() {
             padding: 'var(--space-xl)',
           }}
         >
-          <h1 style={{ marginBottom: 'var(--space-md)' }}>Du er ikke innlogget</h1>
-          <p style={{ color: 'var(--color-neutral-700)', marginBottom: 'var(--space-lg)' }}>
-            Vi finner ingen aktiv Supabase-session. Logg inn på nytt med den nyeste magiske lenken.
+          <h1 style={{ marginBottom: 'var(--space-md)' }}>
+            Du er ikke innlogget
+          </h1>
+          <p
+            style={{
+              color: 'var(--color-neutral-700)',
+              marginBottom: 'var(--space-lg)',
+            }}
+          >
+            Vi finner ingen aktiv Supabase-session. Logg inn på nytt med den
+            nyeste magiske lenken.
           </p>
           <a
             href="/login"
