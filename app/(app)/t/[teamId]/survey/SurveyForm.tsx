@@ -1,9 +1,9 @@
 'use client'
 
+import { deleteDraft, saveDraft } from '@/server/actions/drafts'
 import { submitSurvey } from '@/server/actions/submissions'
-import { saveDraft, deleteDraft } from '@/server/actions/drafts'
 import { useRouter } from 'next/navigation'
-import { useState, useTransition, useEffect, useCallback, useRef } from 'react'
+import { useCallback, useRef, useState, useTransition } from 'react'
 
 type Question = {
   id: string
@@ -179,180 +179,216 @@ export function SurveyForm({
             max={53}
             style={{ width: 120, padding: 10, display: 'block' }}
             disabled={isPending}
-        />
-      </div>
+          />
+        </div>
 
-      <div>
-        <label>
-          Navn (valgfritt)
-          <small style={{ display: 'block', color: '#6b7280', fontSize: '0.875rem' }}>
-            Synlig for teamadmin. Huk av «Anonym» for å skjule i statistikk.
-          </small>
-        </label>
-        <input
-          name="name"
-          defaultValue={initialDraft?.displayName || ''}
-          placeholder="Tomt = anonym"
-          style={{ width: '100%', padding: 10 }}
-          disabled={isPending}
-        />
-        <label
-          style={{
-            display: 'inline-flex',
-            gap: 8,
-            marginTop: 8,
-            alignItems: 'center',
-          }}
-        >
+        <div>
+          <label>
+            Navn (valgfritt)
+            <small
+              style={{
+                display: 'block',
+                color: '#6b7280',
+                fontSize: '0.875rem',
+              }}
+            >
+              Synlig for teamadmin. Huk av «Anonym» for å skjule i statistikk.
+            </small>
+          </label>
           <input
-            name="anon"
-            type="checkbox"
-            defaultChecked={initialDraft?.isAnonymous ?? true}
+            name="name"
+            defaultValue={initialDraft?.displayName || ''}
+            placeholder="Tomt = anonym"
+            style={{ width: '100%', padding: 10 }}
             disabled={isPending}
           />
-          Anonym besvarelse
-        </label>
-      </div>
-
-      <hr />
-
-      <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-        <legend style={{ fontWeight: 600, marginBottom: 12, fontSize: '1.125rem' }}>
-          Spørsmål
-          <small style={{ display: 'block', color: '#6b7280', fontSize: '0.875rem', fontWeight: 'normal' }}>
-            Skala: 1 = lav/dårlig, 5 = høy/god
-          </small>
-        </legend>
-
-      {questions.map((q, index) => {
-        const draftAnswer = initialDraft?.answers?.find(a => a.question_id === q.id)
-        return (
-        <div
-          key={q.id}
-          style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, marginBottom: 14 }}
-        >
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>
-            {index + 1}. {q.label} {q.required ? <span style={{color: '#dc2626'}}>*</span> : ''}
-          </div>
-
-          {q.type === 'scale_1_5' && (
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <label
-                  key={n}
-                  style={{ display: 'flex', gap: 6, alignItems: 'center', minWidth: 50 }}
-                >
-                  <input
-                    name={`q_${q.id}`}
-                    value={n}
-                    type="radio"
-                    required={q.required}
-                    disabled={isPending}
-                    defaultChecked={draftAnswer?.value_num === n}
-                  />
-                  {n}
-                </label>
-              ))}
-            </div>
-          )}
-
-          {q.type === 'yes_no' && (
-            <div style={{ display: 'flex', gap: 12 }}>
-              <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <input
-                  name={`q_${q.id}`}
-                  value="ja"
-                  type="radio"
-                  required={q.required}
-                  disabled={isPending}
-                  defaultChecked={draftAnswer?.value_bool === true}
-                />
-                Ja
-              </label>
-              <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <input
-                  name={`q_${q.id}`}
-                  value="nei"
-                  type="radio"
-                  required={q.required}
-                  disabled={isPending}
-                  defaultChecked={draftAnswer?.value_bool === false}
-                />
-                Nei
-              </label>
-            </div>
-          )}
-
-          {q.type === 'text' && (
-            <textarea
-              name={`q_${q.id}`}
-              defaultValue={draftAnswer?.value_text || ''}
-              style={{ width: '100%', padding: 10, minHeight: 70 }}
+          <label
+            style={{
+              display: 'inline-flex',
+              gap: 8,
+              marginTop: 8,
+              alignItems: 'center',
+            }}
+          >
+            <input
+              name="anon"
+              type="checkbox"
+              defaultChecked={initialDraft?.isAnonymous ?? true}
               disabled={isPending}
             />
-          )}
+            Anonym besvarelse
+          </label>
         </div>
-        )
-      })}
-      </fieldset>
 
-      <button
-        type="submit"
-        disabled={isPending}
-        style={{
-          padding: '10px 14px',
-          width: 160,
-          opacity: isPending ? 0.6 : 1,
-        }}
-      >
-        {isPending ? 'Sender inn...' : 'Send inn'}
-      </button>
-    </form>
+        <hr />
 
-    {/* Mobile sticky bar */}
-    <div
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: 'white',
-        borderTop: '1px solid #e5e7eb',
-        padding: '12px 16px',
-        display: 'none',
-        justifyContent: 'center',
-        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-      }}
-      className="mobile-sticky-bar"
-    >
-      <button
-        type="submit"
-        form="survey-form"
-        disabled={isPending}
+        <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+          <legend
+            style={{ fontWeight: 600, marginBottom: 12, fontSize: '1.125rem' }}
+          >
+            Spørsmål
+            <small
+              style={{
+                display: 'block',
+                color: '#6b7280',
+                fontSize: '0.875rem',
+                fontWeight: 'normal',
+              }}
+            >
+              Skala: 1 = lav/dårlig, 5 = høy/god
+            </small>
+          </legend>
+
+          {questions.map((q, index) => {
+            const draftAnswer = initialDraft?.answers?.find(
+              (a) => a.question_id === q.id
+            )
+            return (
+              <div
+                key={q.id}
+                style={{
+                  padding: 12,
+                  border: '1px solid #eee',
+                  borderRadius: 8,
+                  marginBottom: 14,
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>
+                  {index + 1}. {q.label}{' '}
+                  {q.required ? (
+                    <span style={{ color: '#dc2626' }}>*</span>
+                  ) : (
+                    ''
+                  )}
+                </div>
+
+                {q.type === 'scale_1_5' && (
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <label
+                        key={n}
+                        style={{
+                          display: 'flex',
+                          gap: 6,
+                          alignItems: 'center',
+                          minWidth: 50,
+                        }}
+                      >
+                        <input
+                          name={`q_${q.id}`}
+                          value={n}
+                          type="radio"
+                          required={q.required}
+                          disabled={isPending}
+                          defaultChecked={draftAnswer?.value_num === n}
+                        />
+                        {n}
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {q.type === 'yes_no' && (
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <label
+                      style={{ display: 'flex', gap: 6, alignItems: 'center' }}
+                    >
+                      <input
+                        name={`q_${q.id}`}
+                        value="ja"
+                        type="radio"
+                        required={q.required}
+                        disabled={isPending}
+                        defaultChecked={draftAnswer?.value_bool === true}
+                      />
+                      Ja
+                    </label>
+                    <label
+                      style={{ display: 'flex', gap: 6, alignItems: 'center' }}
+                    >
+                      <input
+                        name={`q_${q.id}`}
+                        value="nei"
+                        type="radio"
+                        required={q.required}
+                        disabled={isPending}
+                        defaultChecked={draftAnswer?.value_bool === false}
+                      />
+                      Nei
+                    </label>
+                  </div>
+                )}
+
+                {q.type === 'text' && (
+                  <textarea
+                    name={`q_${q.id}`}
+                    defaultValue={draftAnswer?.value_text || ''}
+                    style={{ width: '100%', padding: 10, minHeight: 70 }}
+                    disabled={isPending}
+                  />
+                )}
+              </div>
+            )
+          })}
+        </fieldset>
+
+        <button
+          type="submit"
+          disabled={isPending}
+          style={{
+            padding: '10px 14px',
+            width: 160,
+            opacity: isPending ? 0.6 : 1,
+          }}
+        >
+          {isPending ? 'Sender inn...' : 'Send inn'}
+        </button>
+      </form>
+
+      {/* Mobile sticky bar */}
+      <div
         style={{
-          padding: '12px 24px',
-          width: '100%',
-          maxWidth: 400,
-          backgroundColor: '#2563eb',
-          color: 'white',
-          border: 'none',
-          borderRadius: 8,
-          fontSize: '1rem',
-          fontWeight: 600,
-          opacity: isPending ? 0.6 : 1,
-          cursor: isPending ? 'not-allowed' : 'pointer',
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: 'white',
+          borderTop: '1px solid #e5e7eb',
+          padding: '12px 16px',
+          display: 'none',
+          justifyContent: 'center',
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         }}
+        className="mobile-sticky-bar"
       >
-        {isPending ? 'Sender inn...' : 'Send inn'}
-      </button>
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .mobile-sticky-bar {
-            display: flex !important;
+        <button
+          type="submit"
+          form="survey-form"
+          disabled={isPending}
+          style={{
+            padding: '12px 24px',
+            width: '100%',
+            maxWidth: 400,
+            backgroundColor: '#2563eb',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            fontSize: '1rem',
+            fontWeight: 600,
+            opacity: isPending ? 0.6 : 1,
+            cursor: isPending ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {isPending ? 'Sender inn...' : 'Send inn'}
+        </button>
+        <style jsx>{`
+          @media (max-width: 768px) {
+            .mobile-sticky-bar {
+              display: flex !important;
+            }
           }
-        }
-      `}</style>
-    </div>
-  </>
+        `}</style>
+      </div>
+    </>
   )
 }

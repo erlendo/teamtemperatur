@@ -1,6 +1,6 @@
-import { loadActiveQuestionnaire } from '@/server/queries/questionnaires'
-import { loadDraft } from '@/server/actions/drafts'
 import { AppHeader } from '@/components/AppHeader'
+import { loadDraft } from '@/server/actions/drafts'
+import { loadActiveQuestionnaire } from '@/server/queries/questionnaires'
 import { SurveyForm } from './SurveyForm'
 
 function currentWeekNumberSimple() {
@@ -99,9 +99,10 @@ export default async function SurveyPage({
           initialDraft={draft}
         />
 
-      <p style={{ marginTop: 14 }}>
-        <a href={`/t/${teamId}`}>← Til team</a>
-      </p>
-    </div>
+        <p style={{ marginTop: 14 }}>
+          <a href={`/t/${teamId}`}>← Til team</a>
+        </p>
+      </div>
+    </>
   )
 }

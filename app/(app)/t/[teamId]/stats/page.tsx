@@ -1,6 +1,6 @@
-import { getYearStats } from '@/server/actions/stats'
 import { AppHeader } from '@/components/AppHeader'
 import { YearStatsView } from '@/components/YearStatsView'
+import { getYearStats } from '@/server/actions/stats'
 
 function currentWeekNumberSimple() {
   const d = new Date()

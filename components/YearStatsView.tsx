@@ -1,18 +1,18 @@
 'use client'
 
+import { useState } from 'react'
 import {
-  AreaChart,
   Area,
-  XAxis,
-  YAxis,
+  AreaChart,
   CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Line,
   ComposedChart,
   Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts'
-import { useState } from 'react'
 
 type QuestionStat = {
   question_key: string
@@ -58,7 +58,9 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
   const getQuestionTrend = (questionKey: string) => {
     const last12 = data.slice(-12)
     return last12.map((w) => {
-      const qStat = w.question_stats?.find((q) => q.question_key === questionKey)
+      const qStat = w.question_stats?.find(
+        (q) => q.question_key === questionKey
+      )
       return {
         week: w.week,
         score: qStat ? Number(qStat.avg_score.toFixed(2)) : null,
@@ -128,7 +130,8 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
               {currentWeek.response_rate.toFixed(0)}%
             </div>
             <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-              {currentWeek.response_count} av {currentWeek.member_count} medlemmer
+              {currentWeek.response_count} av {currentWeek.member_count}{' '}
+              medlemmer
             </div>
           </div>
         </div>
@@ -146,7 +149,11 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
             />
             <YAxis
               yAxisId="left"
-              label={{ value: 'Helse (1-5)', angle: -90, position: 'insideLeft' }}
+              label={{
+                value: 'Helse (1-5)',
+                angle: -90,
+                position: 'insideLeft',
+              }}
               domain={[0, 5]}
             />
             <YAxis
@@ -202,9 +209,7 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
               <div key={q.question_key}>
                 <button
                   onClick={() =>
-                    setExpandedQuestion(
-                      isExpanded ? null : q.question_key
-                    )
+                    setExpandedQuestion(isExpanded ? null : q.question_key)
                   }
                   style={{
                     width: '100%',
@@ -240,8 +245,7 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
                           style={{
                             fontSize: '0.875rem',
                             marginLeft: '0.5rem',
-                            color:
-                              Number(qDelta) >= 0 ? '#059669' : '#dc2626',
+                            color: Number(qDelta) >= 0 ? '#059669' : '#dc2626',
                           }}
                         >
                           {Number(qDelta) >= 0 ? '↑' : '↓'}{' '}
@@ -293,7 +297,9 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
                           )
                           return {
                             week: w.week,
-                            score: qStat ? Number(qStat.avg_score.toFixed(2)) : null,
+                            score: qStat
+                              ? Number(qStat.avg_score.toFixed(2))
+                              : null,
                           }
                         })}
                       >

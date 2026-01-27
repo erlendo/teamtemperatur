@@ -33,7 +33,7 @@ export function LoginClient() {
       }
     }
 
-    checkAuth()
+    void checkAuth()
   }, [router, searchParams])
 
   async function handleSubmit(e: React.FormEvent) {

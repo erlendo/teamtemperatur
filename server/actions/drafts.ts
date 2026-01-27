@@ -56,7 +56,10 @@ export async function saveDraft(
   }
 }
 
-export async function loadDraft(teamId: string, week: number): Promise<{
+export async function loadDraft(
+  teamId: string,
+  week: number
+): Promise<{
   draft: DraftPayload | null
   error?: string
 }> {
