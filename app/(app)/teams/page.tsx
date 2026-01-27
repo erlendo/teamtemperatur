@@ -29,11 +29,22 @@ export default async function TeamsPage() {
             padding: 'var(--space-xl)',
           }}
         >
-          <h1 style={{ marginBottom: 'var(--space-md)', color: 'var(--color-error)' }}>
+          <h1
+            style={{
+              marginBottom: 'var(--space-md)',
+              color: 'var(--color-error)',
+            }}
+          >
             Teknisk feil
           </h1>
-          <p style={{ color: 'var(--color-neutral-700)', marginBottom: 'var(--space-lg)' }}>
-            Kunne ikke laste teams: {error instanceof Error ? error.message : 'Ukjent feil'}
+          <p
+            style={{
+              color: 'var(--color-neutral-700)',
+              marginBottom: 'var(--space-lg)',
+            }}
+          >
+            Kunne ikke laste teams:{' '}
+            {error instanceof Error ? error.message : 'Ukjent feil'}
           </p>
           <a
             href="/login"
