@@ -1,6 +1,7 @@
 import { AppHeader } from '@/components/AppHeader'
 import { YearStatsView } from '@/components/YearStatsView'
 import { getYearStats } from '@/server/actions/stats'
+import { BarChart3, PenTool } from 'lucide-react'
 
 function currentWeekNumberSimple() {
   const d = new Date()
@@ -29,8 +30,17 @@ export default async function StatsPage({
     <>
       <AppHeader teamId={teamId} />
       <main style={{ flex: 1 }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: 'var(--space-3xl) var(--space-md)' }}>
-          <h1 style={{ marginBottom: 'var(--space-lg)' }}>📊 Statistikk</h1>
+        <div
+          style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: 'var(--space-3xl) var(--space-md)',
+          }}
+        >
+          <h1 style={{ marginBottom: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+            <BarChart3 size={28} />
+            Statistikk
+          </h1>
 
           {stats.length === 0 ? (
             <div
@@ -43,8 +53,27 @@ export default async function StatsPage({
                 marginTop: 'var(--space-2xl)',
               }}
             >
-              <div style={{ fontSize: '48px', marginBottom: 'var(--space-lg)' }}>📈</div>
-              <h2 style={{ marginBottom: 'var(--space-md)', color: 'var(--color-neutral-900)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '64px',
+                  height: '64px',
+                  backgroundColor: 'var(--color-neutral-100)',
+                  borderRadius: 'var(--border-radius-md)',
+                  margin: '0 auto var(--space-lg)',
+                  color: 'var(--color-neutral-400)',
+                }}
+              >
+                <BarChart3 size={32} />
+              </div>
+              <h2
+                style={{
+                  marginBottom: 'var(--space-md)',
+                  color: 'var(--color-neutral-900)',
+                }}
+              >
                 Ingen data ennå
               </h2>
               <p
@@ -55,7 +84,8 @@ export default async function StatsPage({
                   margin: '0 auto var(--space-xl)',
                 }}
               >
-                Send inn din første måling for å se statistikk, trends og gjennomsnitt over tid.
+                Send inn din første måling for å se statistikk, trends og
+                gjennomsnitt over tid.
               </p>
               <a
                 href={`/t/${teamId}/survey`}
@@ -72,15 +102,22 @@ export default async function StatsPage({
                   transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
-                  ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary-dark)'
-                  ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = 'var(--shadow-lg)'
+                  ;(
+                    e.currentTarget as HTMLAnchorElement
+                  ).style.backgroundColor = 'var(--color-primary-dark)'
+                  ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                    'var(--shadow-lg)'
                 }}
                 onMouseLeave={(e) => {
-                  ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary)'
-                  ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none'
+                  ;(
+                    e.currentTarget as HTMLAnchorElement
+                  ).style.backgroundColor = 'var(--color-primary)'
+                  ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                    'none'
                 }}
               >
-                📝 Gå til ny måling
+                <PenTool size={18} />
+                Gå til ny måling
               </a>
             </div>
           ) : (
@@ -102,10 +139,12 @@ export default async function StatsPage({
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-neutral-100)'
+                ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                  'var(--color-neutral-100)'
               }}
               onMouseLeave={(e) => {
-                ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent'
+                ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                  'transparent'
               }}
             >
               ← Tilbake til team

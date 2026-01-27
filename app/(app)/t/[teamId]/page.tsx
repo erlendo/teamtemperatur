@@ -1,20 +1,46 @@
-import { AppHeader } from "@/components/AppHeader"
-import Link from "next/link"
+import { AppHeader } from '@/components/AppHeader'
+import { PenTool, BarChart3 } from 'lucide-react'
+import Link from 'next/link'
 
-export default async function TeamHome({ params }: { params: Promise<{ teamId: string }> }) {
+export default async function TeamHome({
+  params,
+}: {
+  params: Promise<{ teamId: string }>
+}) {
   const { teamId } = await params
 
   return (
     <>
       <AppHeader teamId={teamId} />
       <main style={{ flex: 1 }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: 'var(--space-3xl) var(--space-md)' }}>
-          <h1 style={{ marginBottom: 'var(--space-lg)' }}>🎯 Teamoversikt</h1>
-          <p style={{ color: 'var(--color-neutral-600)', marginBottom: 'var(--space-2xl)', fontSize: 'var(--font-size-lg)' }}>
+        <div
+          style={{
+            maxWidth: '1000px',
+            margin: '0 auto',
+            padding: 'var(--space-3xl) var(--space-md)',
+          }}
+        >
+          <h1 style={{ marginBottom: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+            📍 Teamoversikt
+          </h1>
+          <p
+            style={{
+              color: 'var(--color-neutral-600)',
+              marginBottom: 'var(--space-2xl)',
+              fontSize: 'var(--font-size-lg)',
+            }}
+          >
             Velg en aktivitet for å komme i gang
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-lg)', marginBottom: 'var(--space-2xl)' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: 'var(--space-lg)',
+              marginBottom: 'var(--space-2xl)',
+            }}
+          >
             {/* Survey Card */}
             <Link
               href={`/t/${teamId}/survey`}
@@ -31,21 +57,51 @@ export default async function TeamHome({ params }: { params: Promise<{ teamId: s
                 cursor: 'pointer',
               }}
               onMouseEnter={(e) => {
-                ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = 'var(--shadow-lg)'
-                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--color-primary)'
-                ;(e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-2px)'
+                ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                  'var(--shadow-lg)'
+                ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
+                  'var(--color-primary)'
+                ;(e.currentTarget as HTMLAnchorElement).style.transform =
+                  'translateY(-2px)'
               }}
               onMouseLeave={(e) => {
                 ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none'
-                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--color-neutral-200)'
-                ;(e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)'
+                ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
+                  'var(--color-neutral-200)'
+                ;(e.currentTarget as HTMLAnchorElement).style.transform =
+                  'translateY(0)'
               }}
             >
-              <div style={{ fontSize: '48px', marginBottom: 'var(--space-lg)' }}>📝</div>
-              <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-sm)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '48px',
+                  height: '48px',
+                  backgroundColor: 'var(--color-primary-light)',
+                  borderRadius: 'var(--border-radius-md)',
+                  marginBottom: 'var(--space-lg)',
+                  color: 'var(--color-primary)',
+                }}
+              >
+                <PenTool size={28} />
+              </div>
+              <h2
+                style={{
+                  fontSize: 'var(--font-size-xl)',
+                  marginBottom: 'var(--space-sm)',
+                }}
+              >
                 Ny måling
               </h2>
-              <p style={{ color: 'var(--color-neutral-600)', flex: 1, marginBottom: 'var(--space-md)' }}>
+              <p
+                style={{
+                  color: 'var(--color-neutral-600)',
+                  flex: 1,
+                  marginBottom: 'var(--space-md)',
+                }}
+              >
                 Fyll ut ukentlig spørreundersøkelse for å måle teamhelse
               </p>
               <div style={{ color: 'var(--color-primary)', fontWeight: '700' }}>
@@ -69,24 +125,56 @@ export default async function TeamHome({ params }: { params: Promise<{ teamId: s
                 cursor: 'pointer',
               }}
               onMouseEnter={(e) => {
-                ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = 'var(--shadow-lg)'
-                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--color-secondary)'
-                ;(e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-2px)'
+                ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                  'var(--shadow-lg)'
+                ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
+                  'var(--color-secondary)'
+                ;(e.currentTarget as HTMLAnchorElement).style.transform =
+                  'translateY(-2px)'
               }}
               onMouseLeave={(e) => {
                 ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none'
-                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--color-neutral-200)'
-                ;(e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)'
+                ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
+                  'var(--color-neutral-200)'
+                ;(e.currentTarget as HTMLAnchorElement).style.transform =
+                  'translateY(0)'
               }}
             >
-              <div style={{ fontSize: '48px', marginBottom: 'var(--space-lg)' }}>📊</div>
-              <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-sm)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '48px',
+                  height: '48px',
+                  backgroundColor: 'var(--color-secondary-light)',
+                  borderRadius: 'var(--border-radius-md)',
+                  marginBottom: 'var(--space-lg)',
+                  color: 'var(--color-secondary)',
+                }}
+              >
+                <BarChart3 size={28} />
+              </div>
+              <h2
+                style={{
+                  fontSize: 'var(--font-size-xl)',
+                  marginBottom: 'var(--space-sm)',
+                }}
+              >
                 Statistikk
               </h2>
-              <p style={{ color: 'var(--color-neutral-600)', flex: 1, marginBottom: 'var(--space-md)' }}>
+              <p
+                style={{
+                  color: 'var(--color-neutral-600)',
+                  flex: 1,
+                  marginBottom: 'var(--space-md)',
+                }}
+              >
                 Se trends, gjennomsnitt og respons over tid
               </p>
-              <div style={{ color: 'var(--color-secondary)', fontWeight: '700' }}>
+              <div
+                style={{ color: 'var(--color-secondary)', fontWeight: '700' }}
+              >
                 Vis statistikk →
               </div>
             </Link>
@@ -107,10 +195,12 @@ export default async function TeamHome({ params }: { params: Promise<{ teamId: s
               transition: 'all 0.2s ease',
             }}
             onMouseEnter={(e) => {
-              ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-neutral-100)'
+              ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                'var(--color-neutral-100)'
             }}
             onMouseLeave={(e) => {
-              ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent'
+              ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                'transparent'
             }}
           >
             ← Tilbake til teams

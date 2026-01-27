@@ -1,5 +1,4 @@
-'use client'
-
+import { BarChart3, PenTool, Thermometer, Users } from 'lucide-react'
 import Link from 'next/link'
 
 export function AppHeader({
@@ -60,10 +59,9 @@ export function AppHeader({
                 justifyContent: 'center',
                 color: 'white',
                 fontWeight: '700',
-                fontSize: '18px',
               }}
             >
-              🌡️
+              <Thermometer size={18} />
             </span>
             Teamtemperatur
           </Link>
@@ -109,21 +107,27 @@ export function AppHeader({
                     borderRadius: 'var(--border-radius-md)',
                     transition: 'all 0.2s ease',
                     textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-xs)',
                   }}
                   onMouseEnter={(e) => {
-                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
-                      'var(--color-neutral-100)'
-                    ;(e.target as HTMLAnchorElement).style.color =
+                    ;(
+                      e.currentTarget as HTMLAnchorElement
+                    ).style.backgroundColor = 'var(--color-neutral-100)'
+                    ;(e.currentTarget as HTMLAnchorElement).style.color =
                       'var(--color-primary)'
                   }}
                   onMouseLeave={(e) => {
-                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
-                      'transparent'
-                    ;(e.target as HTMLAnchorElement).style.color =
+                    ;(
+                      e.currentTarget as HTMLAnchorElement
+                    ).style.backgroundColor = 'transparent'
+                    ;(e.currentTarget as HTMLAnchorElement).style.color =
                       'var(--color-neutral-600)'
                   }}
                 >
-                  📝 Ny måling
+                  <PenTool size={16} />
+                  Ny måling
                 </Link>
                 <Link
                   href={`/t/${teamId}/stats`}
@@ -135,21 +139,27 @@ export function AppHeader({
                     borderRadius: 'var(--border-radius-md)',
                     transition: 'all 0.2s ease',
                     textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-xs)',
                   }}
                   onMouseEnter={(e) => {
-                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
-                      'var(--color-neutral-100)'
-                    ;(e.target as HTMLAnchorElement).style.color =
+                    ;(
+                      e.currentTarget as HTMLAnchorElement
+                    ).style.backgroundColor = 'var(--color-neutral-100)'
+                    ;(e.currentTarget as HTMLAnchorElement).style.color =
                       'var(--color-primary)'
                   }}
                   onMouseLeave={(e) => {
-                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
-                      'transparent'
-                    ;(e.target as HTMLAnchorElement).style.color =
+                    ;(
+                      e.currentTarget as HTMLAnchorElement
+                    ).style.backgroundColor = 'transparent'
+                    ;(e.currentTarget as HTMLAnchorElement).style.color =
                       'var(--color-neutral-600)'
                   }}
                 >
-                  📊 Statistikk
+                  <BarChart3 size={16} />
+                  Statistikk
                 </Link>
                 <Link
                   href="/teams"
@@ -161,21 +171,27 @@ export function AppHeader({
                     borderRadius: 'var(--border-radius-md)',
                     transition: 'all 0.2s ease',
                     textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-xs)',
                   }}
                   onMouseEnter={(e) => {
-                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
-                      'var(--color-neutral-100)'
-                    ;(e.target as HTMLAnchorElement).style.color =
+                    ;(
+                      e.currentTarget as HTMLAnchorElement
+                    ).style.backgroundColor = 'var(--color-neutral-100)'
+                    ;(e.currentTarget as HTMLAnchorElement).style.color =
                       'var(--color-primary)'
                   }}
                   onMouseLeave={(e) => {
-                    ;(e.target as HTMLAnchorElement).style.backgroundColor =
-                      'transparent'
-                    ;(e.target as HTMLAnchorElement).style.color =
+                    ;(
+                      e.currentTarget as HTMLAnchorElement
+                    ).style.backgroundColor = 'transparent'
+                    ;(e.currentTarget as HTMLAnchorElement).style.color =
                       'var(--color-neutral-600)'
                   }}
                 >
-                  👥 Team
+                  <Users size={16} />
+                  Team
                 </Link>
               </nav>
             )}

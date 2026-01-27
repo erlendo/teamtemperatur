@@ -1,6 +1,7 @@
 'use client'
 
 import { createTeam } from '@/server/actions/teams'
+import { Thermometer, Users, Plus, LogOut, Crown, Settings, User } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 
@@ -33,7 +34,9 @@ export function TeamsList({ teams }: TeamsListProps) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-neutral-50)' }}>
+    <div
+      style={{ minHeight: '100vh', backgroundColor: 'var(--color-neutral-50)' }}
+    >
       {/* Header */}
       <header
         style={{
@@ -42,7 +45,13 @@ export function TeamsList({ teams }: TeamsListProps) {
           boxShadow: 'var(--shadow-sm)',
         }}
       >
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: 'var(--space-lg) var(--space-md)' }}>
+        <div
+          style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: 'var(--space-lg) var(--space-md)',
+          }}
+        >
           <Link
             href="/teams"
             style={{
@@ -60,26 +69,40 @@ export function TeamsList({ teams }: TeamsListProps) {
                 width: '32px',
                 height: '32px',
                 borderRadius: 'var(--border-radius-md)',
-                background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+                background:
+                  'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
                 fontWeight: '700',
-                fontSize: '18px',
               }}
             >
-              🌡️
+              <Thermometer size={18} />
             </span>
             Teamtemperatur
           </Link>
         </div>
       </header>
 
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: 'var(--space-3xl) var(--space-md)' }}>
+      <main
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: 'var(--space-3xl) var(--space-md)',
+        }}
+      >
         <div style={{ maxWidth: '600px' }}>
-          <h1 style={{ marginBottom: 'var(--space-lg)' }}>👥 Mine Team</h1>
-          <p style={{ color: 'var(--color-neutral-600)', marginBottom: 'var(--space-2xl)' }}>
+          <h1 style={{ marginBottom: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+            <Users size={28} />
+            Mine Team
+          </h1>
+          <p
+            style={{
+              color: 'var(--color-neutral-600)',
+              marginBottom: 'var(--space-2xl)',
+            }}
+          >
             {teams.length === 0
               ? 'Du er ikke medlem av noen team ennå. Opprett et nytt team for å komme i gang!'
               : `Du er medlem av ${teams.length} team${teams.length !== 1 ? '' : ''}.`}
@@ -95,15 +118,31 @@ export function TeamsList({ teams }: TeamsListProps) {
               marginBottom: 'var(--space-2xl)',
             }}
           >
-            <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-lg)' }}>
-              ➕ Opprett Nytt Team
+            <h2
+              style={{
+                fontSize: 'var(--font-size-lg)',
+                marginBottom: 'var(--space-lg)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-sm)',
+              }}
+            >
+              <Plus size={20} />
+              Opprett Nytt Team
             </h2>
             <form
               action={handleCreateTeam}
               style={{ display: 'grid', gap: 'var(--space-md)' }}
             >
               <div>
-                <label style={{ display: 'block', fontWeight: '600', marginBottom: 'var(--space-sm)', color: 'var(--color-neutral-700)' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontWeight: '600',
+                    marginBottom: 'var(--space-sm)',
+                    color: 'var(--color-neutral-700)',
+                  }}
+                >
                   Teamnavn
                 </label>
                 <input
@@ -118,7 +157,9 @@ export function TeamsList({ teams }: TeamsListProps) {
                 disabled={isPending}
                 style={{
                   padding: 'var(--space-md) var(--space-xl)',
-                  backgroundColor: isPending ? 'var(--color-neutral-300)' : 'var(--color-primary)',
+                  backgroundColor: isPending
+                    ? 'var(--color-neutral-300)'
+                    : 'var(--color-primary)',
                   color: 'white',
                   border: 'none',
                   borderRadius: 'var(--border-radius-md)',
@@ -129,14 +170,20 @@ export function TeamsList({ teams }: TeamsListProps) {
                 }}
                 onMouseEnter={(e) => {
                   if (!isPending) {
-                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-primary-dark)'
-                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'var(--shadow-lg)'
+                    ;(
+                      e.currentTarget as HTMLButtonElement
+                    ).style.backgroundColor = 'var(--color-primary-dark)'
+                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                      'var(--shadow-lg)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isPending) {
-                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-primary)'
-                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'
+                    ;(
+                      e.currentTarget as HTMLButtonElement
+                    ).style.backgroundColor = 'var(--color-primary)'
+                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                      'none'
                   }
                 }}
               >
@@ -146,7 +193,10 @@ export function TeamsList({ teams }: TeamsListProps) {
           </div>
 
           {error && (
-            <div className="alert alert-error" style={{ marginBottom: 'var(--space-lg)' }}>
+            <div
+              className="alert alert-error"
+              style={{ marginBottom: 'var(--space-lg)' }}
+            >
               {error}
             </div>
           )}
@@ -154,7 +204,12 @@ export function TeamsList({ teams }: TeamsListProps) {
           {/* Teams List */}
           {teams.length > 0 && (
             <div style={{ display: 'grid', gap: 'var(--space-md)' }}>
-              <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-md)' }}>
+              <h2
+                style={{
+                  fontSize: 'var(--font-size-lg)',
+                  marginBottom: 'var(--space-md)',
+                }}
+              >
                 Dine Team
               </h2>
               {teams.map((t) => (
@@ -174,27 +229,66 @@ export function TeamsList({ teams }: TeamsListProps) {
                     transition: 'all 0.2s ease',
                   }}
                   onMouseEnter={(e) => {
-                    ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = 'var(--shadow-md)'
-                    ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--color-primary-light)'
+                    ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                      'var(--shadow-md)'
+                    ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
+                      'var(--color-primary-light)'
                   }}
                   onMouseLeave={(e) => {
-                    ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none'
-                    ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--color-neutral-200)'
+                    ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                      'none'
+                    ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
+                      'var(--color-neutral-200)'
                   }}
                 >
                   <div>
-                    <div style={{ fontWeight: '700', fontSize: 'var(--font-size-lg)', color: 'var(--color-neutral-900)' }}>
+                    <div
+                      style={{
+                        fontWeight: '700',
+                        fontSize: 'var(--font-size-lg)',
+                        color: 'var(--color-neutral-900)',
+                      }}
+                    >
                       {t.name}
                     </div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)', marginTop: 'var(--space-xs)' }}>
-                      {t.role === 'owner'
-                        ? '👑 Eier'
-                        : t.role === 'admin'
-                          ? '🔧 Admin'
-                          : '👤 Medlem'}
+                    <div
+                      style={{
+                        fontSize: 'var(--font-size-sm)',
+                        color: 'var(--color-neutral-600)',
+                        marginTop: 'var(--space-xs)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--space-xs)',
+                      }}
+                    >
+                      {t.role === 'owner' && (
+                        <>
+                          <Crown size={14} />
+                          Eier
+                        </>
+                      )}
+                      {t.role === 'admin' && (
+                        <>
+                          <Settings size={14} />
+                          Admin
+                        </>
+                      )}
+                      {t.role === 'member' && (
+                        <>
+                          <User size={14} />
+                          Medlem
+                        </>
+                      )}
                     </div>
                   </div>
-                  <span style={{ fontSize: 'var(--font-size-xl)', color: 'var(--color-primary)' }}>→</span>
+                  <span
+                    style={{
+                      fontSize: 'var(--font-size-xl)',
+                      color: 'var(--color-primary)',
+                    }}
+                  >
+                    →
+                  </span>
                 </Link>
               ))}
             </div>
@@ -217,17 +311,25 @@ export function TeamsList({ teams }: TeamsListProps) {
                 fontWeight: '500',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-xs)',
               }}
               onMouseEnter={(e) => {
-                ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-error)'
-                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-error)'
+                ;(e.currentTarget as HTMLButtonElement).style.borderColor =
+                  'var(--color-error)'
+                ;(e.currentTarget as HTMLButtonElement).style.color =
+                  'var(--color-error)'
               }}
               onMouseLeave={(e) => {
-                ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-neutral-300)'
-                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-neutral-600)'
+                ;(e.currentTarget as HTMLButtonElement).style.borderColor =
+                  'var(--color-neutral-300)'
+                ;(e.currentTarget as HTMLButtonElement).style.color =
+                  'var(--color-neutral-600)'
               }}
             >
-              🚪 Logg ut
+              <LogOut size={16} />
+              Logg ut
             </button>
           </form>
         </div>

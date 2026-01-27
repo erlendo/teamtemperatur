@@ -2,6 +2,7 @@
 
 import { deleteDraft, saveDraft } from '@/server/actions/drafts'
 import { submitSurvey } from '@/server/actions/submissions'
+import { AlertCircle, Check, CheckCircle, Loader, Send, Target, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState, useTransition } from 'react'
 
@@ -174,9 +175,24 @@ export function SurveyForm({
                     : 'var(--color-primary)',
             }}
           >
-            {draftStatus === 'saving' && '⏱️ Lagrer utkast…'}
-            {draftStatus === 'saved' && '✅ Lagret som utkast'}
-            {draftStatus === 'error' && '⚠️ Kunne ikke lagre utkast'}
+            {draftStatus === 'saving' && (
+              <>
+                <Loader size={16} className="animate-spin" />
+                Lagrer utkast…
+              </>
+            )}
+            {draftStatus === 'saved' && (
+              <>
+                <CheckCircle size={16} />
+                Lagret som utkast
+              </>
+            )}
+            {draftStatus === 'error' && (
+              <>
+                <AlertCircle size={16} />
+                Kunne ikke lagre utkast
+              </>
+            )}
           </div>
         )}
 
@@ -271,7 +287,8 @@ export function SurveyForm({
               defaultChecked={initialDraft?.isAnonymous || false}
               disabled={isPending}
             />
-            ✔️ Anonym
+            <Check size={16} />
+            Anonym
           </label>
         </fieldset>
 
@@ -291,9 +308,13 @@ export function SurveyForm({
               fontWeight: '700',
               marginBottom: 'var(--space-md)',
               color: 'var(--color-neutral-900)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-sm)',
             }}
           >
-            🎯 Spørsmål
+            <Target size={20} />
+            Spørsmål
           </legend>
 
           {questions.map((q, index) => {
@@ -384,6 +405,7 @@ export function SurveyForm({
                             draftAnswer?.value_num === n
                               ? 'white'
                               : 'var(--color-neutral-900)',
+                          gap: 'var(--space-xs)',
                         }}
                         onMouseEnter={(e) => {
                           if (draftAnswer?.value_num !== n) {
@@ -414,15 +436,25 @@ export function SurveyForm({
                           disabled={isPending}
                           defaultChecked={draftAnswer?.value_num === n}
                           style={{
-                            marginRight: 'var(--space-sm)',
+                            marginRight: 0,
                             cursor: 'pointer',
                           }}
                         />
-                        {n === 1 && '❌ Lav'}
-                        {n === 2 && '😕'}
-                        {n === 3 && '😐 Middels'}
-                        {n === 4 && '🙂'}
-                        {n === 5 && '✅ Høy'}
+                        {n === 1 && (
+                          <>
+                            <X size={16} />
+                            Lav
+                          </>
+                        )}
+                        {n === 2 && <AlertCircle size={16} />}
+                        {n === 3 && <span>• Middels</span>}
+                        {n === 4 && <CheckCircle size={16} />}
+                        {n === 5 && (
+                          <>
+                            <Check size={16} />
+                            Høy
+                          </>
+                        )}
                       </label>
                     ))}
                   </div>
@@ -431,8 +463,8 @@ export function SurveyForm({
                 {q.type === 'yes_no' && (
                   <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
                     {[
-                      { val: 'ja', label: '✅ Ja' },
-                      { val: 'nei', label: '❌ Nei' },
+                      { val: 'ja', label: 'Ja' },
+                      { val: 'nei', label: 'Nei' },
                     ].map((opt) => (
                       <label
                         key={opt.val}
@@ -542,6 +574,9 @@ export function SurveyForm({
             transition: 'all 0.2s ease',
             alignSelf: 'flex-start',
             marginTop: 'var(--space-lg)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-sm)',
           }}
           onMouseEnter={(e) => {
             if (!isPending) {
@@ -559,7 +594,17 @@ export function SurveyForm({
             }
           }}
         >
-          {isPending ? '⏳ Sender inn...' : '🚀 Send inn'}
+          {isPending ? (
+            <>
+              <Loader size={16} className="animate-spin" />
+              Sender inn...
+            </>
+          ) : (
+            <>
+              <Send size={16} />
+              Send inn
+            </>
+          )}
         </button>
       </form>
 
@@ -597,9 +642,23 @@ export function SurveyForm({
             fontSize: 'var(--font-size-base)',
             fontWeight: '700',
             cursor: isPending ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 'var(--space-sm)',
           }}
         >
-          {isPending ? '⏳ Sender inn...' : '🚀 Send inn'}
+          {isPending ? (
+            <>
+              <Loader size={16} className="animate-spin" />
+              Sender inn...
+            </>
+          ) : (
+            <>
+              <Send size={16} />
+              Send inn
+            </>
+          )}
         </button>
         <style jsx>{`
           @media (max-width: 768px) {
