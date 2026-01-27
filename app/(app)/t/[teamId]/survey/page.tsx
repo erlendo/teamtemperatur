@@ -48,6 +48,15 @@ export default async function SurveyPage({
   return (
     <div style={{ maxWidth: 780 }}>
       <h1>Ny måling</h1>
+      
+      {/* DEBUG - Vis alle searchParams */}
+      <details style={{ marginBottom: 10, padding: 8, background: '#f0f0f0' }}>
+        <summary style={{ cursor: 'pointer' }}>🐛 Debug info</summary>
+        <pre style={{ fontSize: 11, overflow: 'auto' }}>
+          {JSON.stringify({ sp, errorMsg, submittedWeek }, null, 2)}
+        </pre>
+      </details>
+      
       {errorMsg ? (
         <p style={{ color: '#c33', marginBottom: 10 }}>{errorMsg}</p>
       ) : null}
