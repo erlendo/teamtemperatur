@@ -80,7 +80,6 @@ export function SignupClient() {
       })
       setTimeout(() => router.push('/teams'), 1500)
     }
-    }
   }
 
   if (loading) {
