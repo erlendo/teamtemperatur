@@ -26,7 +26,9 @@ export async function POST(request: Request) {
     const sql = readFileSync(migrationPath, 'utf8')
 
     // Execute SQL
-    const { data: _data, error } = await supabase.rpc('exec_sql', { sql_query: sql })
+    const { data: _data, error } = await supabase.rpc('exec_sql', {
+      sql_query: sql,
+    })
 
     if (error) {
       console.error('[Migration] Error:', error)

@@ -195,15 +195,15 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0700;
-  margin-bottom: var(--space-md);
-  color: var(--color-neutral-800);
-  font-size: var(--font-size-sm
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 label {
   display: block;
-  font-weight: 600;
-  margin-bottom: var(--space-sm);
-  color: var(--color-neutral-700);
+  font-weight: 700;
+  margin-bottom: var(--space-md);
+  color: var(--color-neutral-800);
+  font-size: var(--font-size-sm);
 }
 
 /* Alerts */
@@ -228,15 +228,15 @@ label {
 
 /* Responsive */
 @media (max-width: 768px) {
-  h1 {3xl);
+  h1 {
+    font-size: var(--font-size-3xl);
   }
 
   h2 {
     font-size: var(--font-size-2xl);
   }
 
-  h3
-  h2 {
+  h3 {
     font-size: var(--font-size-xl);
   }
 }
