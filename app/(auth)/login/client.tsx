@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 
 export function LoginClient() {
   const [email, setEmail] = useState('')
-  const [msg, setMsg] = useState<string | null>(null)
+  const [msg, setMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -16,7 +16,10 @@ export function LoginClient() {
     // Check for error in URL
     const error = searchParams.get('error')
     if (error === 'auth_failed') {
-      setMsg('Innloggingslenken er ugyldig eller utløpt. Send en ny lenke.')
+      setMsg({
+        type: 'error',
+        text: 'Innloggingslenken er ugyldig eller utløpt. Send en ny lenke.',
+      })
     }
 
     // Check if user is already logged in
@@ -43,37 +46,124 @@ export function LoginClient() {
     const result = await sendMagicLink(email)
 
     if ('error' in result) {
-      setMsg(`Feil: ${result.error}`)
+      setMsg({ type: 'error', text: `Feil: ${result.error}` })
     } else {
-      setMsg('Sjekk e-post for innloggingslenke.')
+      setMsg({ type: 'success', text: '✅ Sjekk e-posten din for innloggingslenke' })
+      setEmail('')
     }
   }
 
   if (loading) {
     return (
-      <div style={{ maxWidth: 420 }}>
-        <p>Sjekker innlogging...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', marginBottom: 'var(--space-md)' }}>⏳</div>
+          <p style={{ color: 'var(--color-neutral-600)' }}>Sjekker innlogging...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: 420 }}>
-      <h1>Logg inn</h1>
-      <form onSubmit={handleSubmit}>
-        <label>E-post</label>
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: 10, marginTop: 6 }}
-          type="email"
-          required
-        />
-        <button style={{ marginTop: 12, padding: '10px 14px' }}>
-          Send innloggingslenke
-        </button>
-      </form>
-      {msg && <p style={{ marginTop: 12 }}>{msg}</p>}
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-neutral-50)' }}>
+      <div style={{ maxWidth: '420px', width: '100%', padding: 'var(--space-lg)' }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 'var(--space-3xl)' }}>
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: 'var(--border-radius-lg)',
+              background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto',
+              marginBottom: 'var(--space-lg)',
+              fontSize: '32px',
+            }}
+          >
+            🌡️
+          </div>
+          <h1 style={{ marginBottom: 'var(--space-sm)' }}>Teamtemperatur</h1>
+          <p style={{ color: 'var(--color-neutral-600)' }}>Måle teamhelse kontinuerlig</p>
+        </div>
+
+        {/* Form Card */}
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: 'var(--border-radius-lg)',
+            border: '1px solid var(--color-neutral-200)',
+            padding: 'var(--space-xl)',
+            boxShadow: 'var(--shadow-md)',
+          }}
+        >
+          <h2 style={{ marginBottom: 'var(--space-lg)', fontSize: 'var(--font-size-xl)' }}>
+            Logg inn
+          </h2>
+
+          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--space-lg)' }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: '600', marginBottom: 'var(--space-sm)', color: 'var(--color-neutral-700)' }}>
+                E-postadresse
+              </label>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="din@epost.com"
+                required
+                style={{
+                  width: '100%',
+                  padding: 'var(--space-md)',
+                  border: '1px solid var(--color-neutral-300)',
+                  borderRadius: 'var(--border-radius-md)',
+                  fontSize: 'var(--font-size-base)',
+                }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              style={{
+                padding: 'var(--space-md) var(--space-lg)',
+                backgroundColor: 'var(--color-primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 'var(--border-radius-md)',
+                fontWeight: '700',
+                fontSize: 'var(--font-size-base)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-primary-dark)'
+                ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'var(--shadow-lg)'
+              }}
+              onMouseLeave={(e) => {
+                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-primary)'
+                ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'
+              }}
+            >
+              🔗 Send innloggingslenke
+            </button>
+          </form>
+
+          {msg && (
+            <div
+              className={msg.type === 'error' ? 'alert alert-error' : 'alert alert-success'}
+              style={{ marginTop: 'var(--space-lg)' }}
+            >
+              {msg.text}
+            </div>
+          )}
+
+          <div style={{ marginTop: 'var(--space-lg)', paddingTop: 'var(--space-lg)', borderTop: '1px solid var(--color-neutral-200)', color: 'var(--color-neutral-600)', fontSize: 'var(--font-size-sm)' }}>
+            <p style={{ margin: 0 }}>Vi sender en sikker innloggingslenke til e-posten din. Ingen passord nødvendig!</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
