@@ -147,7 +147,7 @@ export function SurveyForm({
         onChange={handleChange}
         style={{
           display: 'grid',
-          gap: 'var(--space-xl)',
+          gap: 'var(--space-3xl)',
           paddingBottom: '120px',
         }}
       >
@@ -157,13 +157,13 @@ export function SurveyForm({
             role="status"
             aria-live="polite"
             style={{
-              padding: 'var(--space-sm) var(--space-md)',
+              padding: 'var(--space-md) var(--space-lg)',
               borderRadius: 'var(--border-radius-md)',
-              fontSize: 'var(--font-size-sm)',
-              fontWeight: '500',
+              fontSize: 'var(--font-size-base)',
+              fontWeight: '600',
               display: 'flex',
               alignItems: 'center',
-              gap: 'var(--space-sm)',
+              gap: 'var(--space-md)',
               backgroundColor:
                 draftStatus === 'saved'
                   ? 'var(--color-success-light)'
@@ -217,21 +217,21 @@ export function SurveyForm({
             padding: 0,
             margin: 0,
             display: 'grid',
-            gap: 'var(--space-lg)',
+            gap: 'var(--space-2xl)',
           }}
         >
           <legend
             style={{
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: '700',
-              marginBottom: 'var(--space-md)',
+              fontSize: 'var(--font-size-xl)',
+              fontWeight: '800',
+              marginBottom: 'var(--space-lg)',
               color: 'var(--color-neutral-900)',
             }}
           >
             📋 Dine opplysninger
           </legend>
 
-          <div>
+          <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
             <label
               style={{
                 display: 'block',
@@ -257,9 +257,10 @@ export function SurveyForm({
             <label
               style={{
                 display: 'block',
-                fontWeight: '600',
-                marginBottom: 'var(--space-sm)',
-                color: 'var(--color-neutral-700)',
+                fontWeight: '700',
+                marginBottom: 'var(--space-md)',
+                color: 'var(--color-neutral-800)',
+                fontSize: 'var(--font-size-base)',
               }}
             >
               Navn (valgfritt)
@@ -267,9 +268,10 @@ export function SurveyForm({
                 style={{
                   display: 'block',
                   color: 'var(--color-neutral-600)',
-                  fontSize: 'var(--font-size-sm)',
+                  fontSize: 'var(--font-size-base)',
                   fontWeight: '400',
-                  marginTop: 'var(--space-xs)',
+                  marginTop: 'var(--space-sm)',
+                  lineHeight: 'var(--line-height-relaxed)',
                 }}
               >
                 Synlig for teamadmin. Huk av «Anonym» for å skjule i statistikk.
@@ -287,10 +289,11 @@ export function SurveyForm({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 'var(--space-sm)',
+              gap: 'var(--space-md)',
               cursor: 'pointer',
-              fontWeight: '500',
-              color: 'var(--color-neutral-700)',
+              fontWeight: '600',
+              color: 'var(--color-neutral-800)',
+              fontSize: 'var(--font-size-base)',
             }}
           >
             <input
@@ -298,8 +301,9 @@ export function SurveyForm({
               type="checkbox"
               defaultChecked={initialDraft?.isAnonymous || false}
               disabled={isPending}
+              style={{ width: '20px', height: '20px', cursor: 'pointer' }}
             />
-            <Check size={16} />
+            <Check size={18} />
             Anonym
           </label>
         </fieldset>
@@ -311,21 +315,21 @@ export function SurveyForm({
             padding: 0,
             margin: 0,
             display: 'grid',
-            gap: 'var(--space-2xl)',
+            gap: 'var(--space-3xl)',
           }}
         >
           <legend
             style={{
-              fontSize: 'var(--font-size-xl)',
-              fontWeight: '700',
-              marginBottom: 'var(--space-lg)',
+              fontSize: 'var(--font-size-2xl)',
+              fontWeight: '800',
+              marginBottom: 'var(--space-xl)',
               color: 'var(--color-neutral-900)',
               display: 'flex',
               alignItems: 'center',
-              gap: 'var(--space-sm)',
+              gap: 'var(--space-md)',
             }}
           >
-            <Target size={24} />
+            <Target size={28} />
             Spørsmål
           </legend>
 
@@ -338,9 +342,9 @@ export function SurveyForm({
               <fieldset
                 key={q.id}
                 style={{
-                  border: '2px solid var(--color-neutral-200)',
+                  border: '2px solid var(--color-neutral-300)',
                   borderRadius: 'var(--border-radius-lg)',
-                  padding: 'var(--space-xl)',
+                  padding: 'var(--space-2xl)',
                   backgroundColor: 'white',
                   transition: 'all 0.2s ease',
                 }}
@@ -354,32 +358,38 @@ export function SurveyForm({
                   ;(e.currentTarget as HTMLFieldSetElement).style.boxShadow =
                     'none'
                   ;(e.currentTarget as HTMLFieldSetElement).style.borderColor =
-                    'var(--color-neutral-200)'
+                    'var(--color-neutral-300)'
                 }}
               >
                 <legend
                   style={{
                     fontSize: 'var(--font-size-lg)',
-                    fontWeight: '600',
-                    marginBottom: 'var(--space-md)',
+                    fontWeight: '700',
+                    marginBottom: 'var(--space-lg)',
                     color: 'var(--color-neutral-900)',
                     display: 'flex',
                     alignItems: 'baseline',
-                    gap: 'var(--space-sm)',
+                    gap: 'var(--space-md)',
+                    lineHeight: 'var(--line-height-relaxed)',
                   }}
                 >
                   <span
                     style={{
                       color: 'var(--color-primary)',
-                      fontWeight: '700',
-                      minWidth: '30px',
+                      fontWeight: '800',
+                      minWidth: '40px',
+                      fontSize: 'var(--font-size-lg)',
                     }}
                   >
                     {index + 1}.
                   </span>
                   {q.label}
                   {q.required && (
-                    <span style={{ color: 'var(--color-error)' }}>*</span>
+                    <span
+                      style={{ color: 'var(--color-error)', fontWeight: '800' }}
+                    >
+                      *
+                    </span>
                   )}
                 </legend>
 
@@ -388,8 +398,8 @@ export function SurveyForm({
                     style={{
                       display: 'grid',
                       gridTemplateColumns:
-                        'repeat(auto-fit, minmax(80px, 1fr))',
-                      gap: 'var(--space-sm)',
+                        'repeat(auto-fit, minmax(90px, 1fr))',
+                      gap: 'var(--space-md)',
                     }}
                   >
                     {[1, 2, 3, 4, 5].map((n) => (
@@ -398,9 +408,10 @@ export function SurveyForm({
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          padding: 'var(--space-sm) var(--space-md)',
+                          justifyContent: 'center',
+                          padding: 'var(--space-md) var(--space-lg)',
                           borderRadius: 'var(--border-radius-md)',
-                          border: '2px solid var(--color-neutral-200)',
+                          border: '2px solid var(--color-neutral-300)',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
                           backgroundColor:
@@ -410,9 +421,9 @@ export function SurveyForm({
                           borderColor:
                             draftAnswer?.value_num === n
                               ? 'var(--color-primary)'
-                              : 'var(--color-neutral-200)',
+                              : 'var(--color-neutral-300)',
                           fontWeight:
-                            draftAnswer?.value_num === n ? '600' : '500',
+                            draftAnswer?.value_num === n ? '700' : '600',
                           color:
                             draftAnswer?.value_num === n
                               ? 'white'
@@ -433,7 +444,7 @@ export function SurveyForm({
                           if (draftAnswer?.value_num !== n) {
                             ;(
                               e.currentTarget as HTMLLabelElement
-                            ).style.borderColor = 'var(--color-neutral-200)'
+                            ).style.borderColor = 'var(--color-neutral-300)'
                             ;(
                               e.currentTarget as HTMLLabelElement
                             ).style.backgroundColor = 'white'
