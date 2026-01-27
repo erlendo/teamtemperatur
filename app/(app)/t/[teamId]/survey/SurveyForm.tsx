@@ -97,7 +97,12 @@ export function SurveyForm({
             alignItems: 'center',
           }}
         >
-          <input name="anon" type="checkbox" defaultChecked disabled={isPending} />
+          <input
+            name="anon"
+            type="checkbox"
+            defaultChecked
+            disabled={isPending}
+          />
           Anonym besvarelse
         </label>
       </div>

@@ -36,8 +36,12 @@ export default async function StatsPage({ params, searchParams }: any) {
           <tbody>
             {stats.map((r) => (
               <tr key={r.question_key}>
-                <td style={{ borderBottom: "1px solid #f0f0f0", padding: 8 }}>{r.question_key}</td>
-                <td style={{ borderBottom: "1px solid #f0f0f0", padding: 8 }}>{Number(r.avg_score).toFixed(2)}</td>
+                <td style={{ borderBottom: "1px solid #f0f0f0", padding: 8 }}>
+                  {r.question_label || r.question_key}
+                </td>
+                <td style={{ borderBottom: "1px solid #f0f0f0", padding: 8 }}>
+                  {Number(r.avg_score).toFixed(2)}
+                </td>
                 <td style={{ borderBottom: "1px solid #f0f0f0", padding: 8 }}>{r.n_answers}</td>
               </tr>
             ))}
