@@ -1,5 +1,5 @@
-import { submitSurvey } from '@/server/actions/submissions'
 import { loadActiveQuestionnaire } from '@/server/queries/questionnaires'
+import { SurveyForm } from './SurveyForm'
 
 function currentWeekNumberSimple() {
   const d = new Date()
@@ -48,15 +48,7 @@ export default async function SurveyPage({
   return (
     <div style={{ maxWidth: 780 }}>
       <h1>Ny måling</h1>
-      
-      {/* DEBUG - Vis alle searchParams */}
-      <details style={{ marginBottom: 10, padding: 8, background: '#f0f0f0' }}>
-        <summary style={{ cursor: 'pointer' }}>🐛 Debug info</summary>
-        <pre style={{ fontSize: 11, overflow: 'auto' }}>
-          {JSON.stringify({ sp, errorMsg, submittedWeek }, null, 2)}
-        </pre>
-      </details>
-      
+
       {errorMsg ? (
         <p style={{ color: '#c33', marginBottom: 10 }}>{errorMsg}</p>
       ) : null}
@@ -69,134 +61,12 @@ export default async function SurveyPage({
         {questionnaire.name} (v{questionnaire.version})
       </p>
 
-      <form
-        action={async (formData) => {
-          'use server'
-
-          const weekVal = Number(formData.get('week'))
-          const name = String(formData.get('name') || '').trim()
-          const isAnonymous = formData.get('anon') === 'on'
-
-          const answers = questions.map((q) => {
-            const raw = formData.get(`q_${q.id}`)
-            if (q.type === 'scale_1_5')
-              return { question_id: q.id, value_num: raw ? Number(raw) : null }
-            if (q.type === 'yes_no')
-              return { question_id: q.id, value_bool: raw === 'ja' }
-            return { question_id: q.id, value_text: raw ? String(raw) : '' }
-          })
-
-          await submitSurvey({
-            teamId,
-            questionnaireId: questionnaire.id,
-            week: weekVal,
-            displayName: name || undefined,
-            isAnonymous,
-            answers,
-          })
-        }}
-        style={{ display: 'grid', gap: 14 }}
-      >
-        <div>
-          <label>Uke</label>
-          <input
-            name="week"
-            defaultValue={week}
-            type="number"
-            min={1}
-            max={53}
-            style={{ width: 120, padding: 10, display: 'block' }}
-          />
-        </div>
-
-        <div>
-          <label>Navn (valgfritt)</label>
-          <input
-            name="name"
-            placeholder="Tomt = anonym"
-            style={{ width: '100%', padding: 10 }}
-          />
-          <label
-            style={{
-              display: 'inline-flex',
-              gap: 8,
-              marginTop: 8,
-              alignItems: 'center',
-            }}
-          >
-            <input name="anon" type="checkbox" defaultChecked />
-            Anonym besvarelse
-          </label>
-        </div>
-
-        <hr />
-
-        {questions.map((q) => (
-          <div
-            key={q.id}
-            style={{ padding: 12, border: '1px solid #eee', borderRadius: 8 }}
-          >
-            <div style={{ fontWeight: 600, marginBottom: 8 }}>
-              {q.label} {q.required ? ' *' : ''}
-            </div>
-
-            {q.type === 'scale_1_5' && (
-              <div style={{ display: 'flex', gap: 10 }}>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <label
-                    key={n}
-                    style={{ display: 'flex', gap: 6, alignItems: 'center' }}
-                  >
-                    <input
-                      name={`q_${q.id}`}
-                      value={n}
-                      type="radio"
-                      required={q.required}
-                    />
-                    {n}
-                  </label>
-                ))}
-              </div>
-            )}
-
-            {q.type === 'yes_no' && (
-              <div style={{ display: 'flex', gap: 12 }}>
-                <label
-                  style={{ display: 'flex', gap: 6, alignItems: 'center' }}
-                >
-                  <input
-                    name={`q_${q.id}`}
-                    value="ja"
-                    type="radio"
-                    required={q.required}
-                  />
-                  Ja
-                </label>
-                <label
-                  style={{ display: 'flex', gap: 6, alignItems: 'center' }}
-                >
-                  <input
-                    name={`q_${q.id}`}
-                    value="nei"
-                    type="radio"
-                    required={q.required}
-                  />
-                  Nei
-                </label>
-              </div>
-            )}
-
-            {q.type === 'text' && (
-              <textarea
-                name={`q_${q.id}`}
-                style={{ width: '100%', padding: 10, minHeight: 70 }}
-              />
-            )}
-          </div>
-        ))}
-
-        <button style={{ padding: '10px 14px', width: 160 }}>Lagre</button>
-      </form>
+      <SurveyForm
+        teamId={teamId}
+        questionnaireId={questionnaire.id}
+        questions={questions}
+        currentWeek={week}
+      />
 
       <p style={{ marginTop: 14 }}>
         <a href={`/t/${teamId}`}>← Til team</a>

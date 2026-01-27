@@ -1,7 +1,6 @@
 'use server'
 
 import { supabaseServer } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 
 type AnswerPayload = {
   question_id: string
@@ -17,12 +16,12 @@ export async function submitSurvey(input: {
   displayName?: string
   isAnonymous: boolean
   answers: AnswerPayload[]
-}) {
+}): Promise<{ success: boolean; error?: string; week?: number }> {
   const supabase = supabaseServer()
   const { data: u, error: authError } = await supabase.auth.getUser()
 
   if (authError || !u.user) {
-    redirect('/login')
+    return { success: false, error: 'Du må være logget inn' }
   }
 
   // Verify membership BEFORE attempting insert
@@ -43,24 +42,18 @@ export async function submitSurvey(input: {
 
   if (memCheckErr) {
     console.error('[submitSurvey] Membership check error:', memCheckErr)
-    redirect(
-      `/t/${input.teamId}/survey?error=${encodeURIComponent('Kunne ikke verifisere medlemskap')}`
-    )
+    return {
+      success: false,
+      error: 'Kunne ikke verifisere medlemskap',
+    }
   }
 
   if (!membership) {
     console.log('[submitSurvey] User not a member of team')
-    redirect(
-      `/t/${input.teamId}/survey?error=${encodeURIComponent('Du er ikke medlem av dette teamet')}`
-    )
-  }
-
-  const errorMessageFromUnknown = (err: unknown) => {
-    if (typeof err === 'object' && err !== null) {
-      const maybeMessage = (err as { message?: unknown }).message
-      if (typeof maybeMessage === 'string') return maybeMessage
+    return {
+      success: false,
+      error: 'Du er ikke medlem av dette teamet',
     }
-    return 'Ukjent feil'
   }
 
   try {
@@ -107,16 +100,19 @@ export async function submitSurvey(input: {
 
     if (aErr) throw aErr
 
-    console.log('[submitSurvey] SUCCESS - redirecting to stats')
-    redirect(`/t/${input.teamId}/stats?submitted=1&week=${input.week}`)
+    console.log('[submitSurvey] SUCCESS')
+    return { success: true, week: input.week }
   } catch (err) {
     console.error('[submitSurvey] CAUGHT ERROR:', err)
-    const msg = errorMessageFromUnknown(err)
+    const msg =
+      err && typeof err === 'object' && 'message' in err
+        ? String(err.message)
+        : 'Ukjent feil'
     console.log('[submitSurvey] Error message:', msg)
     const friendly = msg.includes('unique')
       ? 'Du har allerede svart for denne uken'
       : msg
     console.log('[submitSurvey] Friendly error:', friendly)
-    redirect(`/t/${input.teamId}/survey?error=${encodeURIComponent(friendly)}`)
+    return { success: false, error: friendly }
   }
 }
