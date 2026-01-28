@@ -9,7 +9,6 @@ import {
   Loader,
   Send,
   Target,
-  X,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState, useTransition } from 'react'
@@ -410,86 +409,91 @@ export function SurveyForm({
                     style={{
                       display: 'grid',
                       gridTemplateColumns:
-                        'repeat(auto-fit, minmax(90px, 1fr))',
+                        'repeat(auto-fit, minmax(100px, 1fr))',
                       gap: 'var(--space-md)',
                     }}
                   >
-                    {[1, 2, 3, 4, 5].map((n) => (
+                    {[
+                      { val: 1, emoji: '😞', label: 'Lav' },
+                      { val: 2, emoji: '😕', label: 'Delvis lav' },
+                      { val: 3, emoji: '😐', label: 'Middels' },
+                      { val: 4, emoji: '🙂', label: 'Bra' },
+                      { val: 5, emoji: '😄', label: 'Høy' },
+                    ].map(({ val, emoji, label }) => (
                       <label
-                        key={n}
+                        key={val}
                         style={{
                           display: 'flex',
+                          flexDirection: 'column',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          padding: 'var(--space-md) var(--space-lg)',
-                          borderRadius: 'var(--border-radius-md)',
-                          border: '2px solid var(--color-neutral-300)',
+                          padding: 'var(--space-lg)',
+                          borderRadius: 'var(--border-radius-lg)',
+                          border:
+                            draftAnswer?.value_num === val
+                              ? '3px solid var(--color-primary)'
+                              : '2px solid var(--color-neutral-200)',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
                           backgroundColor:
-                            draftAnswer?.value_num === n
+                            draftAnswer?.value_num === val
                               ? 'var(--color-primary-light)'
                               : 'white',
-                          borderColor:
-                            draftAnswer?.value_num === n
-                              ? 'var(--color-primary)'
-                              : 'var(--color-neutral-300)',
-                          fontWeight:
-                            draftAnswer?.value_num === n ? '700' : '600',
-                          color:
-                            draftAnswer?.value_num === n
-                              ? 'white'
-                              : 'var(--color-neutral-900)',
-                          gap: 'var(--space-xs)',
+                          boxShadow:
+                            draftAnswer?.value_num === val
+                              ? 'var(--shadow-lg)'
+                              : 'none',
+                          gap: 'var(--space-sm)',
                         }}
                         onMouseEnter={(e) => {
-                          if (draftAnswer?.value_num !== n) {
-                            ;(
-                              e.currentTarget as HTMLLabelElement
-                            ).style.borderColor = 'var(--color-primary)'
-                            ;(
-                              e.currentTarget as HTMLLabelElement
-                            ).style.backgroundColor = 'var(--color-neutral-50)'
+                          const el = e.currentTarget as HTMLLabelElement
+                          if (draftAnswer?.value_num !== val) {
+                            el.style.borderColor = 'var(--color-primary)'
+                            el.style.backgroundColor = 'var(--color-neutral-50)'
+                            el.style.transform = 'scale(1.05)'
                           }
                         }}
                         onMouseLeave={(e) => {
-                          if (draftAnswer?.value_num !== n) {
-                            ;(
-                              e.currentTarget as HTMLLabelElement
-                            ).style.borderColor = 'var(--color-neutral-300)'
-                            ;(
-                              e.currentTarget as HTMLLabelElement
-                            ).style.backgroundColor = 'white'
+                          const el = e.currentTarget as HTMLLabelElement
+                          if (draftAnswer?.value_num !== val) {
+                            el.style.borderColor = 'var(--color-neutral-200)'
+                            el.style.backgroundColor = 'white'
+                            el.style.transform = 'scale(1)'
                           }
                         }}
                       >
                         <input
                           name={`q_${q.id}`}
-                          value={n}
+                          value={val}
                           type="radio"
                           required={q.required}
                           disabled={isPending}
-                          defaultChecked={draftAnswer?.value_num === n}
+                          defaultChecked={draftAnswer?.value_num === val}
                           style={{
-                            marginRight: 0,
-                            cursor: 'pointer',
+                            display: 'none',
                           }}
                         />
-                        {n === 1 && (
-                          <>
-                            <X size={16} />
-                            Lav
-                          </>
-                        )}
-                        {n === 2 && <AlertCircle size={16} />}
-                        {n === 3 && <span>• Middels</span>}
-                        {n === 4 && <CheckCircle size={16} />}
-                        {n === 5 && (
-                          <>
-                            <Check size={16} />
-                            Høy
-                          </>
-                        )}
+                        <span
+                          style={{
+                            fontSize: '48px',
+                            lineHeight: '1',
+                            display: 'block',
+                          }}
+                        >
+                          {emoji}
+                        </span>
+                        <span
+                          style={{
+                            fontWeight: '700',
+                            fontSize: 'var(--font-size-sm)',
+                            color:
+                              draftAnswer?.value_num === val
+                                ? 'var(--color-primary)'
+                                : 'var(--color-neutral-700)',
+                          }}
+                        >
+                          {label}
+                        </span>
                       </label>
                     ))}
                   </div>
