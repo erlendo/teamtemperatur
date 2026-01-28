@@ -34,9 +34,8 @@ export async function listMyTeams() {
       // Get user emails for each member
       const membersWithEmails = await Promise.all(
         (members || []).map(async (m: any) => {
-          const { data: userData, error: userError } = await supabase.auth.admin.getUserById(
-            m.user_id
-          )
+          const { data: userData, error: userError } =
+            await supabase.auth.admin.getUserById(m.user_id)
           if (userError) {
             console.error('Error fetching user:', m.user_id, userError)
           }

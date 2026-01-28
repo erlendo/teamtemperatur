@@ -25,6 +25,7 @@ interface TeamsListProps {
 }
 
 export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
+  const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
