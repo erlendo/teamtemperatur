@@ -16,31 +16,38 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
+  WITH user_submissions AS (
+    SELECT 
+      s.user_id,
+      COUNT(s.id) as submission_count,
+      MAX(s.created_at) as latest_submission
+    FROM public.submissions s
+    WHERE s.team_id = p_team_id
+    GROUP BY s.user_id
+  )
   SELECT 
-    s.user_id,
+    us.user_id,
     COALESCE(au.email, 'Ukjent bruker') as email,
-    COUNT(s.id) as submission_count,
-    MAX(s.created_at) as latest_submission,
+    us.submission_count,
+    us.latest_submission,
     EXISTS(
       SELECT 1 FROM public.team_memberships tm 
       WHERE tm.team_id = p_team_id 
-        AND tm.user_id = s.user_id 
+        AND tm.user_id = us.user_id 
         AND tm.status = 'active'
     ) as is_current_member,
     (
       SELECT tm.role FROM public.team_memberships tm 
       WHERE tm.team_id = p_team_id 
-        AND tm.user_id = s.user_id 
+        AND tm.user_id = us.user_id 
         AND tm.status = 'active'
       LIMIT 1
     ) as member_role
-  FROM public.submissions s
-  LEFT JOIN auth.users au ON au.id = s.user_id
-  WHERE s.team_id = p_team_id
-  GROUP BY s.user_id, au.email
+  FROM user_submissions us
+  LEFT JOIN auth.users au ON au.id = us.user_id
   ORDER BY 
     is_current_member DESC,
-    latest_submission DESC;
+    us.latest_submission DESC;
 $$;
 
 -- Grant execute permission to authenticated users
