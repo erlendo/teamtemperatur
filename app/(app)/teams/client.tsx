@@ -1,14 +1,16 @@
 'use client'
 
-import { createTeam, joinTeam } from '@/server/actions/teams'
+import { createTeam, joinTeam, removeMember } from '@/server/actions/teams'
 import {
   Crown,
   LogOut,
   Plus,
   Settings,
   Thermometer,
+  Trash2,
   User,
   Users,
+  X,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
@@ -28,6 +30,8 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
+  const [deleteSubmissions, setDeleteSubmissions] = useState(false)
 
   function handleCreateTeam(formData: FormData) {
     const name = String(formData.get('name') || '').trim()
@@ -433,12 +437,54 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                               borderRadius: 'var(--border-radius-md)',
                               fontSize: 'var(--font-size-sm)',
                               color: 'var(--color-neutral-700)',
+                              position: 'relative',
+                              paddingRight:
+                                t.role === 'owner' && m.role !== 'owner'
+                                  ? 'calc(var(--space-sm) + 24px)'
+                                  : 'var(--space-sm)',
                             }}
                           >
                             {m.role === 'owner' && <Crown size={12} />}
                             {m.role === 'admin' && <Settings size={12} />}
                             {m.role === 'member' && <User size={12} />}
                             <span>{m.email}</span>
+
+                            {/* Remove button - only show for owner, and not for other owners */}
+                            {t.role === 'owner' && m.role !== 'owner' && (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  setRemovingMemberId(m.user_id)
+                                  setDeleteSubmissions(false)
+                                }}
+                                style={{
+                                  position: 'absolute',
+                                  right: 'var(--space-xs)',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  padding: '2px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: 'var(--color-error)',
+                                  opacity: '0.6',
+                                  transition: 'opacity 0.2s',
+                                }}
+                                onMouseEnter={(e) => {
+                                  ;(
+                                    e.target as HTMLButtonElement
+                                  ).style.opacity = '1'
+                                }}
+                                onMouseLeave={(e) => {
+                                  ;(
+                                    e.target as HTMLButtonElement
+                                  ).style.opacity = '0.6'
+                                }}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -636,6 +682,225 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
           </form>
         </div>
       </main>
+
+      {/* Member removal dialog */}
+      {removingMemberId && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setRemovingMemberId(null)}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: 'var(--border-radius-lg)',
+              padding: 'var(--space-xl)',
+              maxWidth: '400px',
+              width: '90%',
+              boxShadow: 'var(--shadow-lg)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 'var(--space-lg)',
+              }}
+            >
+              <h2
+                style={{ fontSize: 'var(--font-size-xl)', fontWeight: '700' }}
+              >
+                Fjern medlem
+              </h2>
+              <button
+                onClick={() => setRemovingMemberId(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  color: 'var(--color-neutral-600)',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p
+              style={{
+                marginBottom: 'var(--space-lg)',
+                color: 'var(--color-neutral-700)',
+                lineHeight: '1.5',
+              }}
+            >
+              Du er i ferd med å fjerne dette medlemmet fra teamet. Hva skal
+              gjøres med deres tidligere innsendte svar?
+            </p>
+
+            <div
+              style={{
+                backgroundColor: 'var(--color-neutral-50)',
+                border: '1px solid var(--color-neutral-200)',
+                borderRadius: 'var(--border-radius-md)',
+                padding: 'var(--space-md)',
+                marginBottom: 'var(--space-lg)',
+              }}
+            >
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-sm)',
+                  cursor: 'pointer',
+                  marginBottom: 'var(--space-md)',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="deleteSubmissions"
+                  value="false"
+                  checked={!deleteSubmissions}
+                  onChange={() => setDeleteSubmissions(false)}
+                  style={{ cursor: 'pointer' }}
+                />
+                <div>
+                  <div
+                    style={{
+                      fontWeight: '600',
+                      color: 'var(--color-neutral-900)',
+                    }}
+                  >
+                    Behold svarene
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 'var(--font-size-sm)',
+                      color: 'var(--color-neutral-600)',
+                    }}
+                  >
+                    Medlemmets tidligere svar vil forbli i systemet
+                  </div>
+                </div>
+              </label>
+
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-sm)',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="deleteSubmissions"
+                  value="true"
+                  checked={deleteSubmissions}
+                  onChange={() => setDeleteSubmissions(true)}
+                  style={{ cursor: 'pointer' }}
+                />
+                <div>
+                  <div
+                    style={{ fontWeight: '600', color: 'var(--color-error)' }}
+                  >
+                    Slett svarene
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 'var(--font-size-sm)',
+                      color: 'var(--color-neutral-600)',
+                    }}
+                  >
+                    Alle tidligere innsendte svar fra medlemmet slettes
+                    permanent
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 'var(--space-md)',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <button
+                onClick={() => setRemovingMemberId(null)}
+                style={{
+                  padding: 'var(--space-md) var(--space-lg)',
+                  backgroundColor: 'var(--color-neutral-200)',
+                  color: 'var(--color-neutral-900)',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-md)',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  ;(
+                    e.currentTarget as HTMLButtonElement
+                  ).style.backgroundColor = 'var(--color-neutral-300)'
+                }}
+                onMouseLeave={(e) => {
+                  ;(
+                    e.currentTarget as HTMLButtonElement
+                  ).style.backgroundColor = 'var(--color-neutral-200)'
+                }}
+              >
+                Avbryt
+              </button>
+              <button
+                onClick={() => {
+                  startTransition(async () => {
+                    const result = await removeMember(
+                      myTeams.find((t) =>
+                        t.members?.some((m) => m.user_id === removingMemberId)
+                      )?.id || '',
+                      removingMemberId || '',
+                      deleteSubmissions
+                    )
+
+                    if ('error' in result) {
+                      setError(result.error || 'Ukjent feil')
+                    } else {
+                      setSuccessMessage('Medlem fjernet fra teamet')
+                      setRemovingMemberId(null)
+                      setTimeout(() => window.location.reload(), 1500)
+                    }
+                  })
+                }}
+                disabled={isPending}
+                style={{
+                  padding: 'var(--space-md) var(--space-lg)',
+                  backgroundColor: 'var(--color-error)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-md)',
+                  cursor: isPending ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  opacity: isPending ? 0.6 : 1,
+                  transition: 'opacity 0.2s',
+                }}
+              >
+                {isPending ? 'Fjerner...' : 'Fjern medlem'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

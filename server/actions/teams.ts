@@ -178,3 +178,54 @@ export async function createTeam(name: string) {
 
   return { success: true, team }
 }
+
+export async function removeMember(
+  teamId: string,
+  memberId: string,
+  deleteSubmissions: boolean
+) {
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !u.user) {
+    return { error: 'Ikke autentisert' }
+  }
+
+  // Verify caller is team owner
+  const { data: callerRole, error: roleError } = await supabase.rpc(
+    'team_role',
+    { p_team_id: teamId }
+  )
+
+  if (roleError || callerRole !== 'owner') {
+    return { error: 'Du har ikke tillatelse til å fjerne medlemmer' }
+  }
+
+  // Delete submissions if requested
+  if (deleteSubmissions) {
+    const { error: submissionError } = await supabase
+      .from('tt_submissions')
+      .delete()
+      .eq('team_id', teamId)
+      .eq('user_id', memberId)
+
+    if (submissionError) {
+      console.error('Error deleting submissions:', submissionError)
+      return { error: 'Kunne ikke slette tidligere svar' }
+    }
+  }
+
+  // Remove member from team
+  const { error: deleteError } = await supabase
+    .from('tt_team_memberships')
+    .delete()
+    .eq('team_id', teamId)
+    .eq('user_id', memberId)
+
+  if (deleteError) {
+    console.error('Error removing member:', deleteError)
+    return { error: 'Kunne ikke fjerne medlem' }
+  }
+
+  return { success: true }
+}
