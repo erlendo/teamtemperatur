@@ -46,6 +46,17 @@ export default async function DebugPage() {
       
       <h2>is_team_member() Tests</h2>
       <div>NOKUT: {String(isMemberNokut)}</div>
-      {nokutError && <pre style={{ color: 'red' }}>Error: {JSON.stringify(nokutError, null, 2)}</pre>}
+      {nokutError && (
+        <pre style={{ color: 'red' }}>
+          Error: {JSON.stringify(nokutError, null, 2)}
+        </pre>
+      )}
       <div>Fagsystemer FT: {String(isMemberFagsystemer)}</div>
-      {fagsystError && <pre style={{ color: 'red' }}>Error: {JSON.stringify(fagsystError, null, 2)}</pre>}
+      {fagsystError && (
+        <pre style={{ color: 'red' }}>
+          Error: {JSON.stringify(fagsystError, null, 2)}
+        </pre>
+      )}
+    </div>
+  )
+}
