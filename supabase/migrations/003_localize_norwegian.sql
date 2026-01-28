@@ -57,7 +57,8 @@ $$;
 grant execute on function public.create_default_questionnaire(uuid, uuid) to authenticated;
 
 -- Replacer stats-RPC til å returnere label og sortering
-create or replace function public.get_team_week_stats(p_team_id uuid, p_week int)
+DROP FUNCTION IF EXISTS public.get_team_week_stats(uuid, int);
+create function public.get_team_week_stats(p_team_id uuid, p_week int)
 returns table (
   question_key text,
   question_label text,
