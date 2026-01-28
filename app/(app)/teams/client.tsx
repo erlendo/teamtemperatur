@@ -321,7 +321,10 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        marginBottom: t.members && t.members.length > 0 ? 'var(--space-md)' : '0',
+                        marginBottom:
+                          t.members && t.members.length > 0
+                            ? 'var(--space-md)'
+                            : '0',
                       }}
                     >
                       <div
@@ -406,7 +409,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                         →
                       </span>
                     </div>
-                    
+
                     {/* Member list */}
                     {t.members && t.members.length > 0 && (
                       <div
@@ -440,11 +443,6 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                         ))}
                       </div>
                     )}
-                        fontWeight: '700',
-                      }}
-                    >
-                      →
-                    </span>
                   </Link>
                 ))}
               </div>

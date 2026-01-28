@@ -1,6 +1,8 @@
 import { listAvailableTeams, listMyTeams } from '@/server/actions/teams'
 import { TeamsList } from './client'
 
+export const dynamic = 'force-dynamic'
+
 export default async function TeamsPage() {
   let myTeams
   let availableTeams
@@ -125,5 +127,5 @@ export default async function TeamsPage() {
     )
   }
 
-  return <TeamsList myTeams={myTeams} availableTeams={availableTeams} />
+  return <TeamsList myTeams={myTeams ?? []} availableTeams={availableTeams ?? []} />
 }
