@@ -1,9 +1,9 @@
 'use client'
 
-import { BarChart3, PenTool } from 'lucide-react'
+import { BarChart3, PenTool, Settings } from 'lucide-react'
 import Link from 'next/link'
 
-export function TeamHomeCards({ teamId }: { teamId: string }) {
+export function TeamHomeCards({ teamId, isOwner }: { teamId: string, isOwner?: boolean }) {
   return (
     <div
       style={{
@@ -210,6 +210,107 @@ export function TeamHomeCards({ teamId }: { teamId: string }) {
           Vis statistikk →
         </div>
       </Link>
+
+      {/* Admin Card - Only show for owners */}
+      {isOwner && (
+        <Link
+          href={`/t/${teamId}/admin`}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            padding: 'var(--space-2xl)',
+            backgroundColor: 'white',
+            border: '2px solid var(--color-warning)',
+            borderRadius: 'var(--border-radius-lg)',
+            textDecoration: 'none',
+            color: 'inherit',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            cursor: 'pointer',
+            boxShadow: 'var(--shadow-md)',
+          }}
+          onMouseEnter={(e) => {
+            ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
+              '0 20px 25px -5px rgba(245, 158, 11, 0.15), 0 10px 10px -5px rgba(245, 158, 11, 0.08)'
+            ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
+              '#d97706'
+            ;(e.currentTarget as HTMLAnchorElement).style.transform =
+              'translateY(-4px)'
+            const icon = e.currentTarget.querySelector(
+              '.admin-icon'
+            ) as HTMLElement
+            if (icon) {
+              icon.style.backgroundColor = '#d97706'
+              icon.style.transform = 'scale(1.1)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            ;(e.currentTarget as HTMLAnchorElement).style.boxShadow =
+              'var(--shadow-md)'
+            ;(e.currentTarget as HTMLAnchorElement).style.borderColor =
+              'var(--color-warning)'
+            ;(e.currentTarget as HTMLAnchorElement).style.transform =
+              'translateY(0)'
+            const icon = e.currentTarget.querySelector(
+              '.admin-icon'
+            ) as HTMLElement
+            if (icon) {
+              icon.style.backgroundColor = 'var(--color-warning)'
+              icon.style.transform = 'scale(1)'
+            }
+          }}
+        >
+          <div
+            className="admin-icon"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '64px',
+              height: '64px',
+              backgroundColor: 'var(--color-warning)',
+              borderRadius: 'var(--border-radius-md)',
+              marginBottom: 'var(--space-xl)',
+              color: 'white',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
+            <Settings size={32} strokeWidth={2} />
+          </div>
+          <h2
+            style={{
+              fontSize: 'var(--font-size-2xl)',
+              marginBottom: 'var(--space-md)',
+              fontWeight: '700',
+              color: 'var(--color-neutral-900)',
+            }}
+          >
+            Admin
+          </h2>
+          <p
+            style={{
+              color: 'var(--color-neutral-600)',
+              flex: 1,
+              marginBottom: 'var(--space-xl)',
+              fontSize: 'var(--font-size-base)',
+              lineHeight: 'var(--line-height-relaxed)',
+            }}
+          >
+            Administrer medlemmer og besvarelser
+          </p>
+          <div
+            style={{
+              color: 'var(--color-warning)',
+              fontWeight: '700',
+              fontSize: 'var(--font-size-lg)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-sm)',
+            }}
+          >
+            Åpne admin →
+          </div>
+        </Link>
+      )}
     </div>
   )
 }

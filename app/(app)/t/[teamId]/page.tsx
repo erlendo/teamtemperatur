@@ -1,5 +1,6 @@
 import { AppHeader } from '@/components/AppHeader'
 import { TeamHomeCards } from '@/components/TeamHomeCards'
+import { supabaseServer } from '@/lib/supabase/server'
 import Link from 'next/link'
 
 export default async function TeamHome({
@@ -8,6 +9,14 @@ export default async function TeamHome({
   params: Promise<{ teamId: string }>
 }) {
   const { teamId } = await params
+
+  // Check if user is owner
+  const supabase = supabaseServer()
+  const { data: role } = await supabase.rpc('team_role', {
+    p_team_id: teamId,
+  })
+
+  const isOwner = role === 'owner'
 
   return (
     <>
@@ -46,7 +55,7 @@ export default async function TeamHome({
             Velg en aktivitet for å komme i gang
           </p>
 
-          <TeamHomeCards teamId={teamId} />
+          <TeamHomeCards teamId={teamId} isOwner={isOwner} />
 
           {/* Back Link */}
           <Link

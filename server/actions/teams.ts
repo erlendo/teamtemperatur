@@ -246,3 +246,72 @@ export async function removeMember(
   console.log('[removeMember] Success!')
   return { success: true }
 }
+
+export async function getUsersWithSubmissions(teamId: string) {
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !u.user) {
+    return { error: 'Ikke autentisert' }
+  }
+
+  // Verify caller is team owner
+  const { data: callerRole, error: roleError } = await supabase.rpc(
+    'team_role',
+    { p_team_id: teamId }
+  )
+
+  if (roleError || callerRole !== 'owner') {
+    return { error: 'Du har ikke tillatelse til å se denne informasjonen' }
+  }
+
+  const { data, error } = await supabase.rpc('get_users_with_submissions', {
+    p_team_id: teamId,
+  })
+
+  if (error) {
+    console.error('[getUsersWithSubmissions] Error:', error)
+    return { error: 'Kunne ikke hente brukere' }
+  }
+
+  return { data }
+}
+
+export async function deleteUserSubmissions(teamId: string, userId: string) {
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !u.user) {
+    return { error: 'Ikke autentisert' }
+  }
+
+  // Verify caller is team owner
+  const { data: callerRole, error: roleError } = await supabase.rpc(
+    'team_role',
+    { p_team_id: teamId }
+  )
+
+  if (roleError || callerRole !== 'owner') {
+    return { error: 'Du har ikke tillatelse til å slette besvarelser' }
+  }
+
+  console.log('[deleteUserSubmissions] Deleting submissions:', {
+    teamId,
+    userId,
+  })
+
+  const { error: deleteError, count } = await supabase
+    .from('submissions')
+    .delete()
+    .eq('team_id', teamId)
+    .eq('user_id', userId)
+    .select()
+
+  console.log('[deleteUserSubmissions] Submissions deleted:', count)
+  if (deleteError) {
+    console.error('[deleteUserSubmissions] Error:', deleteError)
+    return { error: 'Kunne ikke slette besvarelser' }
+  }
+
+  return { success: true, count }
+}
