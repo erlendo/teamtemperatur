@@ -31,12 +31,26 @@ export async function listMyTeams() {
         .eq('status', 'active')
         .order('role', { ascending: true })
 
+      // Get user emails for each member
+      const membersWithEmails = await Promise.all(
+        (members || []).map(async (m: any) => {
+          const { data: userData } = await supabase.auth.admin.getUserById(
+            m.user_id
+          )
+          return {
+            user_id: m.user_id,
+            role: m.role,
+            email: userData?.user?.email || 'Ukjent',
+          }
+        })
+      )
+
       return {
         id: r.teams.id as string,
         name: r.teams.name as string,
         role: r.role as string,
         memberCount: members?.length || 0,
-        members: members || [],
+        members: membersWithEmails,
       }
     })
   )

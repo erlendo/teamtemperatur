@@ -14,18 +14,12 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 
 interface TeamsListProps {
-  myTeams: Array<{ 
+  myTeams: Array<{
     id: string
     name: string
     role: string
     memberCount?: number
-    members?: Array<{ user_id: string; role: string; status: string }>
-  }> | null
-  availableTeams: Array<{ id: string; name: string }> | null
-}
-
-export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
-  const [isPending, startTransition] = useTransition()
+    members?: Array<{ user_id: string; role: string; email: string }>
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -287,9 +281,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                     key={t.id}
                     href={`/t/${t.id}`}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
+                      display: 'block',
                       padding: 'var(--space-xl)',
                       backgroundColor: 'white',
                       border: '2px solid var(--color-neutral-300)',
@@ -322,75 +314,126 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 'var(--space-md)',
+                        justifyContent: 'space-between',
+                        marginBottom: t.members && t.members.length > 0 ? 'var(--space-md)' : '0',
                       }}
                     >
                       <div
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '48px',
-                          height: '48px',
-                          backgroundColor: 'var(--color-primary-light)',
-                          borderRadius: 'var(--border-radius-md)',
-                          color: 'var(--color-primary)',
+                          gap: 'var(--space-md)',
                         }}
                       >
-                        <Thermometer size={24} strokeWidth={2} />
-                      </div>
-                      <div>
                         <div
                           style={{
-                            fontWeight: '700',
-                            fontSize: 'var(--font-size-xl)',
-                            color: 'var(--color-neutral-900)',
-                            marginBottom: 'var(--space-xs)',
-                          }}
-                        >
-                          {t.name}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 'var(--font-size-sm)',
-                            color: 'var(--color-neutral-600)',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 'var(--space-xs)',
+                            justifyContent: 'center',
+                            width: '48px',
+                            height: '48px',
+                            backgroundColor: 'var(--color-primary-light)',
+                            borderRadius: 'var(--border-radius-md)',
+                            color: 'var(--color-primary)',
                           }}
                         >
-                          {t.role === 'owner' && (
-                            <>
-                              <Crown size={14} />
-                              Eier
-                            </>
-                          )}
-                          {t.role === 'admin' && (
-                            <>
-                              <Settings size={14} />
-                              Admin
-                            </>
-                          )}
-                          {t.role === 'member' && (
-                            <>
-                              <User size={14} />
-                              Medlem
-                            </>
-                          )}
-                          {t.memberCount !== undefined && (
-                            <>
-                              <span style={{ margin: '0 var(--space-xs)' }}>·</span>
-                              <Users size={14} />
-                              {t.memberCount} {t.memberCount === 1 ? 'medlem' : 'medlemmer'}
-                            </>
-                          )}
+                          <Thermometer size={24} strokeWidth={2} />
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              fontWeight: '700',
+                              fontSize: 'var(--font-size-xl)',
+                              color: 'var(--color-neutral-900)',
+                              marginBottom: 'var(--space-xs)',
+                            }}
+                          >
+                            {t.name}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 'var(--font-size-sm)',
+                              color: 'var(--color-neutral-600)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 'var(--space-xs)',
+                            }}
+                          >
+                            {t.role === 'owner' && (
+                              <>
+                                <Crown size={14} />
+                                Eier
+                              </>
+                            )}
+                            {t.role === 'admin' && (
+                              <>
+                                <Settings size={14} />
+                                Admin
+                              </>
+                            )}
+                            {t.role === 'member' && (
+                              <>
+                                <User size={14} />
+                                Medlem
+                              </>
+                            )}
+                            {t.memberCount !== undefined && (
+                              <>
+                                <span style={{ margin: '0 var(--space-xs)' }}>
+                                  ·
+                                </span>
+                                <Users size={14} />
+                                {t.memberCount}{' '}
+                                {t.memberCount === 1 ? 'medlem' : 'medlemmer'}
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
+                      <span
+                        style={{
+                          fontSize: 'var(--font-size-2xl)',
+                          color: 'var(--color-primary)',
+                          fontWeight: '700',
+                        }}
+                      >
+                        →
+                      </span>
                     </div>
-                    <span
-                      style={{
-                        fontSize: 'var(--font-size-2xl)',
-                        color: 'var(--color-primary)',
+                    
+                    {/* Member list */}
+                    {t.members && t.members.length > 0 && (
+                      <div
+                        style={{
+                          paddingTop: 'var(--space-md)',
+                          borderTop: '1px solid var(--color-neutral-200)',
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 'var(--space-sm)',
+                        }}
+                      >
+                        {t.members.map((m) => (
+                          <div
+                            key={m.user_id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 'var(--space-xs)',
+                              padding: 'var(--space-xs) var(--space-sm)',
+                              backgroundColor: 'var(--color-neutral-100)',
+                              borderRadius: 'var(--border-radius-md)',
+                              fontSize: 'var(--font-size-sm)',
+                              color: 'var(--color-neutral-700)',
+                            }}
+                          >
+                            {m.role === 'owner' && <Crown size={12} />}
+                            {m.role === 'admin' && <Settings size={12} />}
+                            {m.role === 'member' && <User size={12} />}
+                            <span>{m.email}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                         fontWeight: '700',
                       }}
                     >
