@@ -18,12 +18,12 @@ SET search_path = public
 AS $$
   WITH user_submissions AS (
     SELECT 
-      s.user_id,
+      s.submitted_by as user_id,
       COUNT(s.id) as submission_count,
-      MAX(s.created_at) as latest_submission
+      MAX(s.submitted_at) as latest_submission
     FROM public.submissions s
     WHERE s.team_id = p_team_id
-    GROUP BY s.user_id
+    GROUP BY s.submitted_by
   )
   SELECT 
     us.user_id,
