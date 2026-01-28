@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
 import {
-  getUsersWithSubmissions,
   deleteUserSubmissions,
+  getUsersWithSubmissions,
 } from '@/server/actions/teams'
+import { useState, useTransition } from 'react'
 
 interface UserWithSubmissions {
   user_id: string
@@ -12,7 +12,7 @@ interface UserWithSubmissions {
   submission_count: number
   latest_submission: string
   is_current_member: boolean
-  current_role: string | null
+  member_role: string | null
 }
 
 export default function AdminUsersWithSubmissions({
@@ -178,7 +178,7 @@ export default function AdminUsersWithSubmissions({
                         fontWeight: 500,
                       }}
                     >
-                      Aktivt medlem ({user.current_role})
+                      Aktivt medlem ({user.member_role})
                     </span>
                   ) : (
                     <span
@@ -211,35 +211,46 @@ export default function AdminUsersWithSubmissions({
                     color: '#666',
                   }}
                 >
-                  {new Date(user.latest_submission).toLocaleDateString('no-NO', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
+                  {new Date(user.latest_submission).toLocaleDateString(
+                    'no-NO',
+                    {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    }
+                  )}
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'center' }}>
                   <button
                     onClick={() => handleDelete(user.user_id, user.email)}
                     disabled={
-                      isPending || deletingUserId === user.user_id || user.submission_count === 0
+                      isPending ||
+                      deletingUserId === user.user_id ||
+                      user.submission_count === 0
                     }
                     style={{
                       padding: '0.5rem 1rem',
                       backgroundColor:
-                        isPending || deletingUserId === user.user_id || user.submission_count === 0
+                        isPending ||
+                        deletingUserId === user.user_id ||
+                        user.submission_count === 0
                           ? '#e0e0e0'
                           : '#d32f2f',
                       color: '#fff',
                       border: 'none',
                       borderRadius: '4px',
                       cursor:
-                        isPending || deletingUserId === user.user_id || user.submission_count === 0
+                        isPending ||
+                        deletingUserId === user.user_id ||
+                        user.submission_count === 0
                           ? 'not-allowed'
                           : 'pointer',
                       fontSize: '0.875rem',
                       fontWeight: 500,
                       opacity:
-                        isPending || deletingUserId === user.user_id || user.submission_count === 0
+                        isPending ||
+                        deletingUserId === user.user_id ||
+                        user.submission_count === 0
                           ? 0.6
                           : 1,
                     }}

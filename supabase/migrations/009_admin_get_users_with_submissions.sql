@@ -9,7 +9,7 @@ RETURNS TABLE (
   submission_count bigint,
   latest_submission timestamp with time zone,
   is_current_member boolean,
-  current_role text
+  member_role text
 )
 LANGUAGE sql
 STABLE
@@ -33,7 +33,7 @@ AS $$
         AND tm.user_id = s.user_id 
         AND tm.status = 'active'
       LIMIT 1
-    ) as current_role
+    ) as member_role
   FROM public.submissions s
   LEFT JOIN auth.users au ON au.id = s.user_id
   WHERE s.team_id = p_team_id

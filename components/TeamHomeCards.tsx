@@ -3,7 +3,13 @@
 import { BarChart3, PenTool, Settings } from 'lucide-react'
 import Link from 'next/link'
 
-export function TeamHomeCards({ teamId, isOwner }: { teamId: string, isOwner?: boolean }) {
+export function TeamHomeCards({
+  teamId,
+  isOwner,
+}: {
+  teamId: string
+  isOwner?: boolean
+}) {
   return (
     <div
       style={{
