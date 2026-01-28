@@ -865,13 +865,23 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
               <button
                 onClick={() => {
                   startTransition(async () => {
+                    const teamId = myTeams.find((t) =>
+                      t.members?.some((m) => m.user_id === removingMemberId)
+                    )?.id || ''
+                    
+                    console.log('[removeMember] Calling with:', {
+                      teamId,
+                      memberId: removingMemberId,
+                      deleteSubmissions
+                    })
+
                     const result = await removeMember(
-                      myTeams.find((t) =>
-                        t.members?.some((m) => m.user_id === removingMemberId)
-                      )?.id || '',
+                      teamId,
                       removingMemberId || '',
                       deleteSubmissions
                     )
+
+                    console.log('[removeMember] Result:', result)
 
                     if ('error' in result) {
                       setError(result.error || 'Ukjent feil')

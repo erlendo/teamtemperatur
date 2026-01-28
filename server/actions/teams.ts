@@ -198,17 +198,23 @@ export async function removeMember(
   )
 
   if (roleError || callerRole !== 'owner') {
+    console.error('[removeMember] Auth check failed:', { roleError, callerRole })
     return { error: 'Du har ikke tillatelse til å fjerne medlemmer' }
   }
 
+  console.log('[removeMember] Removing member:', { teamId, memberId, deleteSubmissions })
+
   // Delete submissions if requested
   if (deleteSubmissions) {
-    const { error: submissionError } = await supabase
+    console.log('[removeMember] Deleting submissions...')
+    const { error: submissionError, count } = await supabase
       .from('tt_submissions')
       .delete()
       .eq('team_id', teamId)
       .eq('user_id', memberId)
+      .select()
 
+    console.log('[removeMember] Submissions deleted:', count)
     if (submissionError) {
       console.error('Error deleting submissions:', submissionError)
       return { error: 'Kunne ikke slette tidligere svar' }
@@ -216,16 +222,20 @@ export async function removeMember(
   }
 
   // Remove member from team
-  const { error: deleteError } = await supabase
+  console.log('[removeMember] Deleting membership...')
+  const { error: deleteError, count: memberCount } = await supabase
     .from('tt_team_memberships')
     .delete()
     .eq('team_id', teamId)
     .eq('user_id', memberId)
+    .select()
 
+  console.log('[removeMember] Memberships deleted:', memberCount)
   if (deleteError) {
     console.error('Error removing member:', deleteError)
     return { error: 'Kunne ikke fjerne medlem' }
   }
 
+  console.log('[removeMember] Success!')
   return { success: true }
 }
