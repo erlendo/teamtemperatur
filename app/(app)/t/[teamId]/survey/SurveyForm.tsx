@@ -50,6 +50,19 @@ export function SurveyForm({
   const [draftStatus, setDraftStatus] = useState<
     'saved' | 'saving' | 'idle' | 'error'
   >('idle')
+
+  // Track selected answers locally for UI updates
+  const [selectedAnswers, setSelectedAnswers] = useState<
+    Record<string, number | boolean | string | null>
+  >(() => {
+    const initial: Record<string, number | boolean | string | null> = {}
+    initialDraft?.answers.forEach((a) => {
+      if (a.value_num !== undefined) initial[a.question_id] = a.value_num
+      else if (a.value_bool !== undefined) initial[a.question_id] = a.value_bool
+      else if (a.value_text !== undefined) initial[a.question_id] = a.value_text
+    })
+    return initial
+  })
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: 'var(--space-md)',
@@ -430,24 +443,24 @@ export function SurveyForm({
                           padding: 'var(--space-lg)',
                           borderRadius: 'var(--border-radius-lg)',
                           border:
-                            draftAnswer?.value_num === val
+                            selectedAnswers[q.id] === val
                               ? '3px solid var(--color-primary)'
                               : '2px solid var(--color-neutral-200)',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
                           backgroundColor:
-                            draftAnswer?.value_num === val
+                            selectedAnswers[q.id] === val
                               ? 'var(--color-primary-light)'
                               : 'white',
                           boxShadow:
-                            draftAnswer?.value_num === val
+                            selectedAnswers[q.id] === val
                               ? 'var(--shadow-lg)'
                               : 'none',
                           gap: 'var(--space-sm)',
                         }}
                         onMouseEnter={(e) => {
                           const el = e.currentTarget as HTMLLabelElement
-                          if (draftAnswer?.value_num !== val) {
+                          if (selectedAnswers[q.id] !== val) {
                             el.style.borderColor = 'var(--color-primary)'
                             el.style.backgroundColor = 'var(--color-neutral-50)'
                             el.style.transform = 'scale(1.05)'
@@ -455,12 +468,18 @@ export function SurveyForm({
                         }}
                         onMouseLeave={(e) => {
                           const el = e.currentTarget as HTMLLabelElement
-                          if (draftAnswer?.value_num !== val) {
+                          if (selectedAnswers[q.id] !== val) {
                             el.style.borderColor = 'var(--color-neutral-200)'
                             el.style.backgroundColor = 'white'
                             el.style.transform = 'scale(1)'
                           }
                         }}
+                        onClick={() =>
+                          setSelectedAnswers((prev) => ({
+                            ...prev,
+                            [q.id]: val,
+                          }))
+                        }
                       >
                         <input
                           name={`q_${q.id}`}
@@ -487,7 +506,7 @@ export function SurveyForm({
                             fontWeight: '700',
                             fontSize: 'var(--font-size-sm)',
                             color:
-                              draftAnswer?.value_num === val
+                              selectedAnswers[q.id] === val
                                 ? 'var(--color-primary)'
                                 : 'var(--color-neutral-700)',
                           }}
