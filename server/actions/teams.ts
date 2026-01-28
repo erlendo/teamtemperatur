@@ -218,7 +218,7 @@ export async function removeMember(
       .from('submissions')
       .delete()
       .eq('team_id', teamId)
-      .eq('user_id', memberId)
+      .eq('submitted_by', memberId)
       .select()
 
     console.log('[removeMember] Submissions deleted:', count)
@@ -319,7 +319,7 @@ export async function deleteUserSubmissions(teamId: string, userId: string) {
     .from('submissions')
     .delete()
     .eq('team_id', teamId)
-    .eq('user_id', userId)
+    .eq('submitted_by', userId)
     .select()
 
   console.log('[deleteUserSubmissions] Submissions deleted:', count)
