@@ -24,28 +24,25 @@ export async function listMyTeams() {
   // Get members for each team
   const teamsWithMembers = await Promise.all(
     (data ?? []).map(async (r: any) => {
-      // Try to get members with emails via direct query (requires proper RLS)
-      const { data: membersData } = await supabase
-        .from('tt_team_memberships')
-        .select('user_id, role')
-        .eq('team_id', r.teams.id)
-        .eq('status', 'active')
-        .order('role', { ascending: true })
+      // Get members with emails via database function
+      const { data: membersData, error: membersError } = await supabase.rpc(
+        'get_team_members_with_emails',
+        { p_team_id: r.teams.id }
+      )
 
-      // For each member, try to get email using service role client
-      const membersWithEmails =
-        membersData?.map((m: any) => ({
-          user_id: m.user_id,
-          role: m.role,
-          email: m.user_id, // Temporarily show user_id, will fix after migration
-        })) || []
+      if (membersError) {
+        console.error(
+          `Error fetching members for team ${r.teams.name}:`,
+          membersError
+        )
+      }
 
       return {
         id: r.teams.id as string,
         name: r.teams.name as string,
         role: r.role as string,
         memberCount: membersData?.length || 0,
-        members: membersWithEmails,
+        members: membersData || [],
       }
     })
   )

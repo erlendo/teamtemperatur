@@ -15,14 +15,17 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
-  }
+    persistSession: false,
+  },
 })
 
-const sql = readFileSync('supabase/migrations/007_team_members_with_emails.sql', 'utf-8')
+const sql = readFileSync(
+  'supabase/migrations/007_team_members_with_emails.sql',
+  'utf-8'
+)
 
 // Execute SQL via raw query
-const statements = sql.split(';').filter(s => s.trim())
+const statements = sql.split(';').filter((s) => s.trim())
 
 for (const statement of statements) {
   if (statement.trim()) {
@@ -36,4 +39,3 @@ for (const statement of statements) {
 }
 
 console.log('\n✅ Migration complete')
-
