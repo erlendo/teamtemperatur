@@ -21,6 +21,8 @@ type QuestionStat = {
 type WeekStat = {
   week: number
   overall_avg: number
+  bayesian_adjusted: number
+  moving_average: number
   response_count: number
   member_count: number
   response_rate: number

@@ -25,6 +25,8 @@ type QuestionStat = {
 type WeekData = {
   week: number
   overall_avg: number
+  bayesian_adjusted: number
+  moving_average: number
   response_count: number
   member_count: number
   response_rate: number
@@ -45,7 +47,9 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
   // Transform data for main chart
   const chartData = data.map((w) => ({
     week: w.week,
-    helse: Number(w.overall_avg.toFixed(2)),
+    råscore: Number(w.overall_avg.toFixed(2)),
+    bayesiansk: Number(w.bayesian_adjusted.toFixed(2)),
+    glidende: Number(w.moving_average.toFixed(2)),
     svarprosent: Number(w.response_rate.toFixed(1)),
   }))
 
@@ -105,10 +109,10 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
           </div>
           <div>
             <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-              Teamhelse
+              Teamhelse (Bayesiansk)
             </div>
             <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {currentWeek.overall_avg.toFixed(2)}
+              {currentWeek.bayesian_adjusted.toFixed(2)}
               {delta && (
                 <span
                   style={{
@@ -120,6 +124,10 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
                   {Number(delta) >= 0 ? '↑' : '↓'} {Math.abs(Number(delta))}
                 </span>
               )}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+              Råscore: {currentWeek.overall_avg.toFixed(2)} · Glidende:{' '}
+              {currentWeek.moving_average.toFixed(2)}
             </div>
           </div>
           <div>
@@ -168,14 +176,33 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
             />
             <Tooltip />
             <Legend />
-            <Area
+            <Line
               yAxisId="left"
               type="monotone"
-              dataKey="helse"
-              name="Teamhelse"
-              fill="#3b82f6"
-              stroke="#2563eb"
-              fillOpacity={0.6}
+              dataKey="råscore"
+              name="Råscore"
+              stroke="#94a3b8"
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={false}
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="bayesiansk"
+              name="Bayesiansk justert"
+              stroke="#3b82f6"
+              strokeWidth={3}
+              dot={false}
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="glidende"
+              name="Glidende gjennomsnitt"
+              stroke="#8b5cf6"
+              strokeWidth={2}
+              dot={false}
             />
             <Line
               yAxisId="right"
