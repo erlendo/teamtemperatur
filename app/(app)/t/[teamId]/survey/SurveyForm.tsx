@@ -524,7 +524,8 @@ export function SurveyForm({
                       { val: 'ja', label: 'Ja' },
                       { val: 'nei', label: 'Nei' },
                     ].map((opt) => {
-                      const isSelected = selectedAnswers[q.id] === (opt.val === 'ja')
+                      const isSelected =
+                        selectedAnswers[q.id] === (opt.val === 'ja')
                       return (
                         <label
                           key={opt.val}
@@ -556,7 +557,8 @@ export function SurveyForm({
                               ).style.borderColor = 'var(--color-primary)'
                               ;(
                                 e.currentTarget as HTMLLabelElement
-                              ).style.backgroundColor = 'var(--color-neutral-50)'
+                              ).style.backgroundColor =
+                                'var(--color-neutral-50)'
                             }
                           }}
                           onMouseLeave={(e) => {
@@ -569,7 +571,12 @@ export function SurveyForm({
                               ).style.backgroundColor = 'white'
                             }
                           }}
-                          onClick={() => setSelectedAnswers(prev => ({ ...prev, [q.id]: opt.val === 'ja' }))}
+                          onClick={() =>
+                            setSelectedAnswers((prev) => ({
+                              ...prev,
+                              [q.id]: opt.val === 'ja',
+                            }))
+                          }
                         >
                           <input
                             name={`q_${q.id}`}

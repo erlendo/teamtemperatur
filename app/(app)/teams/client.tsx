@@ -14,7 +14,13 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 
 interface TeamsListProps {
-  myTeams: Array<{ id: string; name: string; role: string }> | null
+  myTeams: Array<{ 
+    id: string
+    name: string
+    role: string
+    memberCount?: number
+    members?: Array<{ user_id: string; role: string; status: string }>
+  }> | null
   availableTeams: Array<{ id: string; name: string }> | null
 }
 
@@ -369,6 +375,13 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                             <>
                               <User size={14} />
                               Medlem
+                            </>
+                          )}
+                          {t.memberCount !== undefined && (
+                            <>
+                              <span style={{ margin: '0 var(--space-xs)' }}>·</span>
+                              <Users size={14} />
+                              {t.memberCount} {t.memberCount === 1 ? 'medlem' : 'medlemmer'}
                             </>
                           )}
                         </div>

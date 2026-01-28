@@ -21,11 +21,27 @@ export async function listMyTeams() {
     return []
   }
 
-  return (data ?? []).map((r: any) => ({
-    id: r.teams.id as string,
-    name: r.teams.name as string,
-    role: r.role as string,
-  }))
+  // Get members for each team
+  const teamsWithMembers = await Promise.all(
+    (data ?? []).map(async (r: any) => {
+      const { data: members } = await supabase
+        .from('tt_team_memberships')
+        .select('user_id, role, status')
+        .eq('team_id', r.teams.id)
+        .eq('status', 'active')
+        .order('role', { ascending: true })
+
+      return {
+        id: r.teams.id as string,
+        name: r.teams.name as string,
+        role: r.role as string,
+        memberCount: members?.length || 0,
+        members: members || [],
+      }
+    })
+  )
+
+  return teamsWithMembers
 }
 
 export async function listAvailableTeams() {
