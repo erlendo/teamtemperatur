@@ -231,7 +231,7 @@ export async function removeMember(
   // Remove member from team
   console.log('[removeMember] Deleting membership...')
   const { error: deleteError, count: memberCount } = await supabase
-    .from('team_memberships')
+    .from('tt_team_memberships')
     .delete()
     .eq('team_id', teamId)
     .eq('user_id', memberId)
