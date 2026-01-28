@@ -127,5 +127,7 @@ export default async function TeamsPage() {
     )
   }
 
-  return <TeamsList myTeams={myTeams ?? []} availableTeams={availableTeams ?? []} />
+  return (
+    <TeamsList myTeams={myTeams ?? []} availableTeams={availableTeams ?? []} />
+  )
 }
