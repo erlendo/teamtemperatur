@@ -20,6 +20,11 @@ interface TeamsListProps {
     role: string
     memberCount?: number
     members?: Array<{ user_id: string; role: string; email: string }>
+  }>
+  availableTeams: Array<{ id: string; name: string }>
+}
+
+export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 

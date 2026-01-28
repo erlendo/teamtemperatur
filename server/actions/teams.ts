@@ -34,9 +34,12 @@ export async function listMyTeams() {
       // Get user emails for each member
       const membersWithEmails = await Promise.all(
         (members || []).map(async (m: any) => {
-          const { data: userData } = await supabase.auth.admin.getUserById(
+          const { data: userData, error: userError } = await supabase.auth.admin.getUserById(
             m.user_id
           )
+          if (userError) {
+            console.error('Error fetching user:', m.user_id, userError)
+          }
           return {
             user_id: m.user_id,
             role: m.role,
@@ -44,6 +47,8 @@ export async function listMyTeams() {
           }
         })
       )
+
+      console.log(`Team ${r.teams.name} members:`, membersWithEmails)
 
       return {
         id: r.teams.id as string,
