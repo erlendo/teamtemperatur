@@ -40,6 +40,8 @@ create or replace function public.get_team_year_stats(
 returns table (
   week int,
   overall_avg numeric,
+  bayesian_adjusted numeric,
+  moving_average numeric,
   response_count int,
   member_count int,
   response_rate numeric,
@@ -108,21 +110,67 @@ begin
     where s.team_id = p_team_id
       and s.week between v_start_week and v_current_week
     group by s.week
+  ),
+  bayesian_calc as (
+    select
+      ws.wk as week,
+      am.total as member_count,
+      coalesce(wsub.respondents, 0) as response_count,
+      coalesce(wsub.overall, 0) as raw_score,
+      case when am.total > 0
+        then coalesce(wsub.respondents, 0)::numeric / am.total
+        else 0 end as response_rate_decimal,
+      -- Bayesian adjustment: (n * rawScore + k' * 3) / (n + k')
+      -- where k' = 3 * (1 - responseRate) + 1
+      case 
+        when coalesce(wsub.respondents, 0) = 0 then 3.0
+        else
+          (
+            coalesce(wsub.respondents, 0) * coalesce(wsub.overall, 0) +
+            (3.0 * (1 - case when am.total > 0 then coalesce(wsub.respondents, 0)::numeric / am.total else 0 end) + 1) * 3.0
+          ) / (
+            coalesce(wsub.respondents, 0) +
+            (3.0 * (1 - case when am.total > 0 then coalesce(wsub.respondents, 0)::numeric / am.total else 0 end) + 1)
+          )
+      end as bayesian_adjusted,
+      coalesce(qs.q_stats, '[]'::jsonb) as q_stats
+    from week_series ws
+    cross join active_members am
+    left join weekly_submissions wsub on wsub.week = ws.wk
+    left join question_stats qs on qs.week = ws.wk
+  ),
+  moving_avg_calc as (
+    select
+      bc.week,
+      bc.member_count,
+      bc.response_count,
+      bc.raw_score,
+      bc.response_rate_decimal,
+      bc.bayesian_adjusted,
+      bc.q_stats,
+      -- Moving average: 0.6 * current + 0.3 * prev + 0.1 * two_weeks_ago
+      case
+        when lag(bc.bayesian_adjusted, 1) over (order by bc.week) is null then bc.bayesian_adjusted
+        when lag(bc.bayesian_adjusted, 2) over (order by bc.week) is null then
+          0.6 * bc.bayesian_adjusted + 0.4 * lag(bc.bayesian_adjusted, 1) over (order by bc.week)
+        else
+          0.6 * bc.bayesian_adjusted +
+          0.3 * lag(bc.bayesian_adjusted, 1) over (order by bc.week) +
+          0.1 * lag(bc.bayesian_adjusted, 2) over (order by bc.week)
+      end as moving_average
+    from bayesian_calc bc
   )
   select
-    ws.wk as week,
-    coalesce(wsub.overall, 0) as overall_avg,
-    coalesce(wsub.respondents, 0) as response_count,
-    am.total as member_count,
-    case when am.total > 0
-      then round((coalesce(wsub.respondents, 0)::numeric / am.total) * 100, 1)
-      else 0 end as response_rate,
-    coalesce(qs.q_stats, '[]'::jsonb) as question_stats
-  from week_series ws
-  cross join active_members am
-  left join weekly_submissions wsub on wsub.week = ws.wk
-  left join question_stats qs on qs.week = ws.wk
-  order by ws.wk;
+    mac.week,
+    round(mac.raw_score, 2) as overall_avg,
+    round(mac.bayesian_adjusted, 2) as bayesian_adjusted,
+    round(mac.moving_average, 2) as moving_average,
+    mac.response_count,
+    mac.member_count,
+    round(mac.response_rate_decimal * 100, 1) as response_rate,
+    mac.q_stats as question_stats
+  from moving_avg_calc mac
+  order by mac.week;
 end;
 $$;
 
