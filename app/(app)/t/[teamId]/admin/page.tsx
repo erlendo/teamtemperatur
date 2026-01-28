@@ -33,7 +33,7 @@ export default async function AdminPage({
             Team Admin
           </h1>
         </div>
-        <AdminUsersWithSubmissions teamId={teamId} initialUsers={result.data} />
+        <AdminUsersWithSubmissions teamId={teamId} initialUsers={result.data ?? []} />
       </div>
     )
   } catch (error) {
