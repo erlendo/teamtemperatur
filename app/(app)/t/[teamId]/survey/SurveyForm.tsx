@@ -586,8 +586,7 @@ export function SurveyForm({
                               : draftAnswer?.value_bool === false
                           }
                           style={{
-                            marginRight: 'var(--space-sm)',
-                            cursor: 'pointer',
+                            display: 'none',
                           }}
                         />
                         {opt.label}
