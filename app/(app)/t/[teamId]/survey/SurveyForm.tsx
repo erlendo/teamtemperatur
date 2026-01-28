@@ -523,75 +523,73 @@ export function SurveyForm({
                     {[
                       { val: 'ja', label: 'Ja' },
                       { val: 'nei', label: 'Nei' },
-                    ].map((opt) => (
-                      <label
-                        key={opt.val}
-                        style={{
-                          flex: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: 'var(--space-md)',
-                          borderRadius: 'var(--border-radius-md)',
-                          border: '2px solid var(--color-neutral-200)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          backgroundColor:
-                            draftAnswer?.value_bool === (opt.val === 'ja')
+                    ].map((opt) => {
+                      const isSelected = selectedAnswers[q.id] === (opt.val === 'ja')
+                      return (
+                        <label
+                          key={opt.val}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: 'var(--space-md)',
+                            borderRadius: 'var(--border-radius-md)',
+                            border: '2px solid var(--color-neutral-200)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            backgroundColor: isSelected
                               ? 'var(--color-primary-light)'
                               : 'white',
-                          borderColor:
-                            draftAnswer?.value_bool === (opt.val === 'ja')
+                            borderColor: isSelected
                               ? 'var(--color-primary)'
                               : 'var(--color-neutral-200)',
-                          color:
-                            draftAnswer?.value_bool === (opt.val === 'ja')
-                              ? 'white'
+                            color: isSelected
+                              ? 'var(--color-primary)'
                               : 'var(--color-neutral-900)',
-                          fontWeight:
-                            draftAnswer?.value_bool === (opt.val === 'ja')
-                              ? '600'
-                              : '500',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (draftAnswer?.value_bool !== (opt.val === 'ja')) {
-                            ;(
-                              e.currentTarget as HTMLLabelElement
-                            ).style.borderColor = 'var(--color-primary)'
-                            ;(
-                              e.currentTarget as HTMLLabelElement
-                            ).style.backgroundColor = 'var(--color-neutral-50)'
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (draftAnswer?.value_bool !== (opt.val === 'ja')) {
-                            ;(
-                              e.currentTarget as HTMLLabelElement
-                            ).style.borderColor = 'var(--color-neutral-200)'
-                            ;(
-                              e.currentTarget as HTMLLabelElement
-                            ).style.backgroundColor = 'white'
-                          }
-                        }}
-                      >
-                        <input
-                          name={`q_${q.id}`}
-                          value={opt.val}
-                          type="radio"
-                          required={q.required}
-                          disabled={isPending}
-                          defaultChecked={
-                            opt.val === 'ja'
-                              ? draftAnswer?.value_bool === true
-                              : draftAnswer?.value_bool === false
-                          }
-                          style={{
-                            display: 'none',
+                            fontWeight: isSelected ? '600' : '500',
                           }}
-                        />
-                        {opt.label}
-                      </label>
-                    ))}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              ;(
+                                e.currentTarget as HTMLLabelElement
+                              ).style.borderColor = 'var(--color-primary)'
+                              ;(
+                                e.currentTarget as HTMLLabelElement
+                              ).style.backgroundColor = 'var(--color-neutral-50)'
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              ;(
+                                e.currentTarget as HTMLLabelElement
+                              ).style.borderColor = 'var(--color-neutral-200)'
+                              ;(
+                                e.currentTarget as HTMLLabelElement
+                              ).style.backgroundColor = 'white'
+                            }
+                          }}
+                          onClick={() => setSelectedAnswers(prev => ({ ...prev, [q.id]: opt.val === 'ja' }))}
+                        >
+                          <input
+                            name={`q_${q.id}`}
+                            value={opt.val}
+                            type="radio"
+                            required={q.required}
+                            disabled={isPending}
+                            defaultChecked={
+                              opt.val === 'ja'
+                                ? draftAnswer?.value_bool === true
+                                : draftAnswer?.value_bool === false
+                            }
+                            style={{
+                              display: 'none',
+                            }}
+                          />
+                          {opt.label}
+                        </label>
+                      )
+                    })}
                   </div>
                 )}
 
