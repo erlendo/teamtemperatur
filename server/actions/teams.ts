@@ -262,16 +262,31 @@ export async function getUsersWithSubmissions(teamId: string) {
   )
 
   if (roleError || callerRole !== 'owner') {
+    console.error('[getUsersWithSubmissions] Not owner:', {
+      roleError,
+      callerRole,
+    })
     return { error: 'Du har ikke tillatelse til å se denne informasjonen' }
   }
 
+  console.log('[getUsersWithSubmissions] Calling RPC for teamId:', teamId)
   const { data, error } = await supabase.rpc('get_users_with_submissions', {
     p_team_id: teamId,
   })
 
+  console.log('[getUsersWithSubmissions] RPC response:', {
+    error,
+    dataLength: Array.isArray(data) ? data.length : typeof data,
+  })
+
   if (error) {
-    console.error('[getUsersWithSubmissions] Error:', error)
-    return { error: 'Kunne ikke hente brukere' }
+    console.error('[getUsersWithSubmissions] RPC Error:', error)
+    return { error: `RPC error: ${error.message}` }
+  }
+
+  if (!Array.isArray(data)) {
+    console.error('[getUsersWithSubmissions] Data is not an array:', data)
+    return { error: 'Invalid response from database' }
   }
 
   return { data }
