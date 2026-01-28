@@ -865,14 +865,15 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
               <button
                 onClick={() => {
                   startTransition(async () => {
-                    const teamId = myTeams.find((t) =>
-                      t.members?.some((m) => m.user_id === removingMemberId)
-                    )?.id || ''
-                    
+                    const teamId =
+                      myTeams.find((t) =>
+                        t.members?.some((m) => m.user_id === removingMemberId)
+                      )?.id || ''
+
                     console.log('[removeMember] Calling with:', {
                       teamId,
                       memberId: removingMemberId,
-                      deleteSubmissions
+                      deleteSubmissions,
                     })
 
                     const result = await removeMember(
