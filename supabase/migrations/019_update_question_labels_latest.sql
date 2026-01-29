@@ -1,6 +1,4 @@
--- Disable RLS on questions table, update labels, then re-enable RLS
--- This is necessary because RLS policies prevent even superusers from UPDATE
--- if the with check clause fails (no authenticated user context in migrations)
+-- Update question labels to latest wording (temporarily disable RLS)
 
 ALTER TABLE public.questions DISABLE ROW LEVEL SECURITY;
 
