@@ -64,6 +64,19 @@ export async function submitSurvey(input: {
       input.week
     )
 
+    // Delete existing submission for same week to allow overwriting
+    const { error: delErr } = await supabase
+      .from('tt_submissions')
+      .delete()
+      .eq('team_id', input.teamId)
+      .eq('week', input.week)
+      .eq('submitted_by', u.user.id)
+
+    if (delErr) {
+      console.error('[submitSurvey] Delete error:', delErr)
+      // Continue anyway - deletion error shouldn't block new submission
+    }
+
     const { data: submission, error: sErr } = await supabase
       .from('tt_submissions')
       .insert({
