@@ -261,6 +261,17 @@ export async function addSystemTag(
   }
 
   try {
+    // Get authenticated user first
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+    if (authError || !user) {
+      console.error('Auth error:', authError)
+      return { error: 'Ikke autentisert' }
+    }
+    console.log('User ID:', user.id)
+
     // Check max 5 tags
     const { data: existingTags, error: tagsError } = await supabase
       .from('team_item_tags')
@@ -288,9 +299,11 @@ export async function addSystemTag(
       return { error: itemError.message }
     }
 
-    const { error } = await supabase
+    console.log('Inserting tag:', { item_id: itemId, tag_name: normalizedTag })
+    const { error, data } = await supabase
       .from('team_item_tags')
       .insert({ item_id: itemId, tag_name: normalizedTag })
+      .select()
 
     if (error) {
       // Ignore duplicate errors
@@ -298,11 +311,11 @@ export async function addSystemTag(
         console.log('Tag already exists, skipping')
         return {}
       }
-      console.error('Error inserting tag:', error)
+      console.error('Error inserting tag:', error.code, error.message)
       return { error: error.message }
     }
 
-    console.log('Tag added successfully:', normalizedTag)
+    console.log('Tag inserted successfully:', data)
     if (item) {
       console.log('Revalidating path:', `/t/${item.team_id}`)
       revalidatePath(`/t/${item.team_id}`)
@@ -310,7 +323,7 @@ export async function addSystemTag(
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('Unexpected error in addSystemTag:', message)
+    console.error('Unexpected error in addSystemTag:', message, err)
     return { error: message }
   }
 }
@@ -322,6 +335,17 @@ export async function removeSystemTag(
   const supabase = supabaseServer()
 
   try {
+    // Get authenticated user first
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+    if (authError || !user) {
+      console.error('Auth error:', authError)
+      return { error: 'Ikke autentisert' }
+    }
+    console.log('User ID:', user.id)
+
     // Get team_id for revalidation
     const { data: item, error: itemError } = await supabase
       .from('team_items')
@@ -334,6 +358,7 @@ export async function removeSystemTag(
       return { error: itemError.message }
     }
 
+    console.log('Deleting tag:', { item_id: itemId, tag_name: tagName.toLowerCase() })
     const { error } = await supabase
       .from('team_item_tags')
       .delete()
@@ -341,7 +366,7 @@ export async function removeSystemTag(
       .eq('tag_name', tagName.toLowerCase())
 
     if (error) {
-      console.error('Error deleting tag:', error)
+      console.error('Error deleting tag:', error.code, error.message)
       return { error: error.message }
     }
 
@@ -353,7 +378,7 @@ export async function removeSystemTag(
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('Unexpected error in removeSystemTag:', message)
+    console.error('Unexpected error in removeSystemTag:', message, err)
     return { error: message }
   }
 }
