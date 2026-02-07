@@ -46,7 +46,7 @@ export default async function TeamHome({
 
   // Fetch health stats
   const currentWeek = currentWeekNumberSimple()
-  const { data: statsData } = await getYearStats(teamId, currentWeek)
+  const statsData = await getYearStats(teamId, currentWeek)
   const currentWeekStats = statsData?.find((s) => s.week === currentWeek)
   const previousWeekStats = statsData?.find((s) => s.week === currentWeek - 1)
 
