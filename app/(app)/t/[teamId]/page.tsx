@@ -83,86 +83,17 @@ export default async function TeamHome({
             padding: 'var(--space-3xl) var(--space-xl)',
           }}
         >
-          <div
+          <h1
             style={{
-              marginBottom: 'var(--space-3xl)',
-              display: 'grid',
-              gridTemplateColumns: '1fr 300px',
-              gap: 'var(--space-2xl)',
-              alignItems: 'start',
+              margin: '0 0 var(--space-3xl) 0',
+              fontSize: 'var(--font-size-4xl)',
+              fontWeight: '900',
+              color: 'var(--color-neutral-900)',
+              letterSpacing: '-0.02em',
             }}
           >
-            <h1
-              style={{
-                margin: 0,
-                fontSize: 'var(--font-size-4xl)',
-                fontWeight: '900',
-                color: 'var(--color-neutral-900)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Dashboard – Uke {currentWeek}, {new Date().getFullYear()}
-            </h1>
-
-            {/* Health Trend Chart */}
-            <div
-              style={{
-                backgroundColor: 'white',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-md)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                border: '1px solid var(--color-neutral-200)',
-              }}
-            >
-              <p
-                style={{
-                  margin: '0 0 var(--space-sm) 0',
-                  fontSize: 'var(--font-size-sm)',
-                  fontWeight: 600,
-                  color: 'var(--color-neutral-600)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                Trend
-              </p>
-              <svg
-                width="100%"
-                height="60"
-                viewBox="0 0 240 60"
-                style={{ display: 'block' }}
-              >
-                {/* Grid background */}
-                <line x1="0" y1="50" x2="240" y2="50" stroke="#e5e7eb" strokeWidth="1" />
-                
-                {/* Sample trend data - this would come from statsData */}
-                <polyline
-                  points="0,40 60,35 120,25 180,30 240,15"
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                {/* Data points */}
-                <circle cx="0" cy="40" r="3" fill="#10b981" />
-                <circle cx="60" cy="35" r="3" fill="#10b981" />
-                <circle cx="120" cy="25" r="3" fill="#10b981" />
-                <circle cx="180" cy="30" r="3" fill="#10b981" />
-                <circle cx="240" cy="15" r="3" fill="#10b981" />
-              </svg>
-              <p
-                style={{
-                  margin: 'var(--space-sm) 0 0 0',
-                  fontSize: 'var(--font-size-xs)',
-                  color: 'var(--color-neutral-500)',
-                  textAlign: 'center',
-                }}
-              >
-                {currentWeekStats?.moving_average?.toFixed(1) || '—'} / 5.0
-              </p>
-            </div>
-          </div>
+            Dashboard – Uke {currentWeek}, {new Date().getFullYear()}
+          </h1>
 
           {/* Row 1: Ukemål | Pipeline */}
           <div
@@ -228,6 +159,7 @@ export default async function TeamHome({
                   responseCount={currentWeekStats.response_count || 0}
                   memberCount={currentWeekStats.member_count || 0}
                   previousWeekAvg={previousWeekStats?.overall_avg}
+                  statsData={statsData}
                 />
               ) : (
                 <p
