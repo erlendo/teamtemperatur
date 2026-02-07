@@ -38,10 +38,11 @@ export function HealthCard({
   previousWeekAvg,
   statsData = [],
 }: HealthCardProps) {
-  // Get available weeks from stats data
+  // Get available weeks from stats data (only weeks with actual data)
   const availableWeeks = statsData
+    .filter((s) => s.overall_avg && s.overall_avg > 0) // Only weeks with real data
     .sort((a, b) => a.week - b.week)
-    .slice(-6) // Last 6 weeks
+    .slice(-6) // Last 6 weeks with data
     .map((s) => ({ week: s.week, avg: s.overall_avg }));
 
   const getTrendIcon = () => {
@@ -213,18 +214,7 @@ export function HealthCard({
               const x = availableWeeks.length > 1 ? i * spacing : 50;
               const y = 40 - (w.avg / 5) * 40;
               return (
-                <g key={w.week}>
-                  <circle cx={x} cy={y} r="1" fill="#10b981" />
-                  <text
-                    x={x}
-                    y={y - 3}
-                    fontSize="2"
-                    textAnchor="middle"
-                    fill="var(--color-neutral-700)"
-                  >
-                    {w.avg.toFixed(1)}
-                  </text>
-                </g>
+                <circle key={w.week} cx={x} cy={y} r="1.5" fill="#10b981" />
               );
             })}
           </svg>
