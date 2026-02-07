@@ -2,15 +2,15 @@
 
 import { createTeam, joinTeam, removeMember } from '@/server/actions/teams'
 import {
-  Crown,
-  LogOut,
-  Plus,
-  Settings,
-  Thermometer,
-  Trash2,
-  User,
-  Users,
-  X,
+    Crown,
+    LogOut,
+    Plus,
+    Settings,
+    Thermometer,
+    Trash2,
+    User,
+    Users,
+    X,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
