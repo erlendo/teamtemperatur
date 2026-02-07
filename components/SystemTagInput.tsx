@@ -5,7 +5,6 @@ import {
   getSystemTagSuggestions,
   removeSystemTag,
 } from '@/server/actions/dashboard'
-import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 
 interface SystemTagInputProps {
@@ -27,7 +26,6 @@ export function SystemTagInput({
   const [error, setError] = useState<string | null>(null)
   const [_isPending, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
-  const router = useRouter()
 
   useEffect(() => {
     if (input.length > 0) {
@@ -65,9 +63,8 @@ export function SystemTagInput({
         setError(null)
         setInput('')
         setShowSuggestions(false)
+        // Notify parent to refresh - don't use router.refresh() to avoid conflicts with revalidatePath
         onUpdate?.()
-        // Refresh after state updates
-        router.refresh()
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Ukjent feil'
         console.error('Add tag error:', msg, err)
@@ -95,9 +92,8 @@ export function SystemTagInput({
         }
         console.log('Tag removed successfully')
         setError(null)
+        // Notify parent to refresh - don't use router.refresh() to avoid conflicts with revalidatePath
         onUpdate?.()
-        // Refresh after state updates
-        router.refresh()
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Ukjent feil'
         console.error('Remove tag error:', msg, err)

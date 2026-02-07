@@ -1,78 +1,78 @@
-"use server";
+'use server'
 
-import { supabaseServer } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { supabaseServer } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 
-type ItemType = "ukemål" | "pipeline" | "mål" | "retro";
-type ItemStatus = "planlagt" | "pågår" | "ferdig";
+type ItemType = 'ukemål' | 'pipeline' | 'mål' | 'retro'
+type ItemStatus = 'planlagt' | 'pågår' | 'ferdig'
 
 export interface TeamItem {
-  id: string;
-  team_id: string;
-  type: ItemType;
-  title: string;
-  status: ItemStatus;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-  updated_by: string | null;
-  members: Array<{ user_id: string }>;
-  tags: Array<{ tag_name: string }>;
+  id: string
+  team_id: string
+  type: ItemType
+  title: string
+  status: ItemStatus
+  sort_order: number
+  created_at: string
+  updated_at: string
+  updated_by: string | null
+  members: Array<{ user_id: string }>
+  tags: Array<{ tag_name: string }>
 }
 
 export async function getTeamItems(
   teamId: string,
   type?: ItemType
 ): Promise<{ items: TeamItem[]; error?: string }> {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer()
 
   try {
     // Fetch items first
     let itemQuery = supabase
-      .from("team_items")
-      .select("*")
-      .eq("team_id", teamId)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
+      .from('team_items')
+      .select('*')
+      .eq('team_id', teamId)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false })
 
     if (type) {
-      itemQuery = itemQuery.eq("type", type);
+      itemQuery = itemQuery.eq('type', type)
     }
 
-    const { data: items, error: itemsError } = await itemQuery;
+    const { data: items, error: itemsError } = await itemQuery
 
     if (itemsError) {
-      return { items: [], error: itemsError.message };
+      return { items: [], error: itemsError.message }
     }
 
     if (!items || items.length === 0) {
-      return { items: [] };
+      return { items: [] }
     }
 
     // Fetch members separately
     const { data: members, error: membersError } = await supabase
-      .from("team_item_members")
-      .select("item_id, user_id")
+      .from('team_item_members')
+      .select('item_id, user_id')
       .in(
-        "item_id",
+        'item_id',
         items.map((i) => i.id)
-      );
+      )
 
     if (membersError) {
-      return { items: [], error: membersError.message };
+      return { items: [], error: membersError.message }
     }
 
     // Fetch tags separately
     const { data: tags, error: tagsError } = await supabase
-      .from("team_item_tags")
-      .select("item_id, tag_name")
+      .from('team_item_tags')
+      .select('item_id, tag_name')
       .in(
-        "item_id",
+        'item_id',
         items.map((i) => i.id)
-      );
+      )
 
     if (tagsError) {
-      return { items: [], error: tagsError.message };
+      return { items: [], error: tagsError.message }
     }
 
     // Combine data
@@ -80,12 +80,12 @@ export async function getTeamItems(
       ...item,
       members: (members || []).filter((m) => m.item_id === item.id),
       tags: (tags || []).filter((t) => t.item_id === item.id),
-    }));
+    }))
 
-    return { items: itemsWithRelations };
+    return { items: itemsWithRelations }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return { items: [], error: message };
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return { items: [], error: message }
   }
 }
 
@@ -94,225 +94,224 @@ export async function createItem(
   type: ItemType,
   title: string
 ): Promise<{ itemId?: string; error?: string }> {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer()
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
   if (!user) {
-    return { error: "Ikke autentisert" };
+    return { error: 'Ikke autentisert' }
   }
 
   const { data, error } = await supabase
-    .from("team_items")
+    .from('team_items')
     .insert({
       team_id: teamId,
       type,
       title,
       updated_by: user.id,
     })
-    .select("id")
-    .single();
+    .select('id')
+    .single()
 
   if (error) {
-    return { error: error.message };
+    return { error: error.message }
   }
 
-  revalidatePath(`/t/${teamId}`);
-  return { itemId: data.id };
+  revalidatePath(`/t/${teamId}`)
+  return { itemId: data.id }
 }
 
 export async function updateItem(
   itemId: string,
   updates: { title?: string; status?: ItemStatus }
 ): Promise<{ error?: string }> {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer()
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
   if (!user) {
-    return { error: "Ikke autentisert" };
+    return { error: 'Ikke autentisert' }
   }
 
   // Get team_id for revalidation
   const { data: item } = await supabase
-    .from("team_items")
-    .select("team_id")
-    .eq("id", itemId)
-    .single();
+    .from('team_items')
+    .select('team_id')
+    .eq('id', itemId)
+    .single()
 
   const { error } = await supabase
-    .from("team_items")
+    .from('team_items')
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
       updated_by: user.id,
     })
-    .eq("id", itemId);
+    .eq('id', itemId)
 
   if (error) {
-    return { error: error.message };
+    return { error: error.message }
   }
 
   if (item) {
-    revalidatePath(`/t/${item.team_id}`);
+    revalidatePath(`/t/${item.team_id}`)
   }
-  return {};
+  return {}
 }
 
 export async function deleteItem(itemId: string): Promise<{ error?: string }> {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer()
 
   // Get team_id for revalidation
   const { data: item } = await supabase
-    .from("team_items")
-    .select("team_id")
-    .eq("id", itemId)
-    .single();
+    .from('team_items')
+    .select('team_id')
+    .eq('id', itemId)
+    .single()
 
-  const { error } = await supabase.from("team_items").delete().eq("id", itemId);
+  const { error } = await supabase.from('team_items').delete().eq('id', itemId)
 
   if (error) {
-    return { error: error.message };
+    return { error: error.message }
   }
 
   if (item) {
-    revalidatePath(`/t/${item.team_id}`);
+    revalidatePath(`/t/${item.team_id}`)
   }
-  return {};
+  return {}
 }
 
 export async function toggleItemStatus(
   itemId: string,
   currentStatus: ItemStatus
 ): Promise<{ error?: string }> {
-  const newStatus =
-    currentStatus === "ferdig" ? "planlagt" : "ferdig";
-  return updateItem(itemId, { status: newStatus });
+  const newStatus = currentStatus === 'ferdig' ? 'planlagt' : 'ferdig'
+  return updateItem(itemId, { status: newStatus })
 }
 
 export async function addMemberTag(
   itemId: string,
   userId: string
 ): Promise<{ error?: string }> {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer()
 
   // Get team_id for revalidation
   const { data: item } = await supabase
-    .from("team_items")
-    .select("team_id")
-    .eq("id", itemId)
-    .single();
+    .from('team_items')
+    .select('team_id')
+    .eq('id', itemId)
+    .single()
 
   const { error } = await supabase
-    .from("team_item_members")
-    .insert({ item_id: itemId, user_id: userId });
+    .from('team_item_members')
+    .insert({ item_id: itemId, user_id: userId })
 
   if (error) {
-    return { error: error.message };
+    return { error: error.message }
   }
 
   if (item) {
-    revalidatePath(`/t/${item.team_id}`);
+    revalidatePath(`/t/${item.team_id}`)
   }
-  return {};
+  return {}
 }
 
 export async function removeMemberTag(
   itemId: string,
   userId: string
 ): Promise<{ error?: string }> {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer()
 
   // Get team_id for revalidation
   const { data: item } = await supabase
-    .from("team_items")
-    .select("team_id")
-    .eq("id", itemId)
-    .single();
+    .from('team_items')
+    .select('team_id')
+    .eq('id', itemId)
+    .single()
 
   const { error } = await supabase
-    .from("team_item_members")
+    .from('team_item_members')
     .delete()
-    .eq("item_id", itemId)
-    .eq("user_id", userId);
+    .eq('item_id', itemId)
+    .eq('user_id', userId)
 
   if (error) {
-    return { error: error.message };
+    return { error: error.message }
   }
 
   if (item) {
-    revalidatePath(`/t/${item.team_id}`);
+    revalidatePath(`/t/${item.team_id}`)
   }
-  return {};
+  return {}
 }
 
 export async function addSystemTag(
   itemId: string,
   tagName: string
 ): Promise<{ error?: string }> {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer()
 
   // Normalize to lowercase
-  const normalizedTag = tagName.trim().toLowerCase();
+  const normalizedTag = tagName.trim().toLowerCase()
 
   if (!normalizedTag) {
-    return { error: "Tom tag" };
+    return { error: 'Tom tag' }
   }
 
   try {
     // Check max 5 tags
     const { data: existingTags, error: tagsError } = await supabase
-      .from("team_item_tags")
-      .select("id")
-      .eq("item_id", itemId);
+      .from('team_item_tags')
+      .select('id')
+      .eq('item_id', itemId)
 
     if (tagsError) {
-      console.error("Error fetching existing tags:", tagsError);
-      return { error: tagsError.message };
+      console.error('Error fetching existing tags:', tagsError)
+      return { error: tagsError.message }
     }
 
     if (existingTags && existingTags.length >= 5) {
-      return { error: "Maks 5 tags per oppgave" };
+      return { error: 'Maks 5 tags per oppgave' }
     }
 
     // Get team_id for revalidation
     const { data: item, error: itemError } = await supabase
-      .from("team_items")
-      .select("team_id")
-      .eq("id", itemId)
-      .single();
+      .from('team_items')
+      .select('team_id')
+      .eq('id', itemId)
+      .single()
 
     if (itemError) {
-      console.error("Error fetching item:", itemError);
-      return { error: itemError.message };
+      console.error('Error fetching item:', itemError)
+      return { error: itemError.message }
     }
 
     const { error } = await supabase
-      .from("team_item_tags")
-      .insert({ item_id: itemId, tag_name: normalizedTag });
+      .from('team_item_tags')
+      .insert({ item_id: itemId, tag_name: normalizedTag })
 
     if (error) {
       // Ignore duplicate errors
-      if (error.code === "23505") {
-        console.log("Tag already exists, skipping");
-        return {};
+      if (error.code === '23505') {
+        console.log('Tag already exists, skipping')
+        return {}
       }
-      console.error("Error inserting tag:", error);
-      return { error: error.message };
+      console.error('Error inserting tag:', error)
+      return { error: error.message }
     }
 
-    console.log("Tag added successfully:", normalizedTag);
+    console.log('Tag added successfully:', normalizedTag)
     if (item) {
-      console.log("Revalidating path:", `/t/${item.team_id}`);
-      revalidatePath(`/t/${item.team_id}`);
+      console.log('Revalidating path:', `/t/${item.team_id}`)
+      revalidatePath(`/t/${item.team_id}`)
     }
-    return {};
+    return {}
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("Unexpected error in addSystemTag:", message);
-    return { error: message };
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('Unexpected error in addSystemTag:', message)
+    return { error: message }
   }
 }
 
@@ -320,68 +319,68 @@ export async function removeSystemTag(
   itemId: string,
   tagName: string
 ): Promise<{ error?: string }> {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer()
 
   try {
     // Get team_id for revalidation
     const { data: item, error: itemError } = await supabase
-      .from("team_items")
-      .select("team_id")
-      .eq("id", itemId)
-      .single();
+      .from('team_items')
+      .select('team_id')
+      .eq('id', itemId)
+      .single()
 
     if (itemError) {
-      console.error("Error fetching item:", itemError);
-      return { error: itemError.message };
+      console.error('Error fetching item:', itemError)
+      return { error: itemError.message }
     }
 
     const { error } = await supabase
-      .from("team_item_tags")
+      .from('team_item_tags')
       .delete()
-      .eq("item_id", itemId)
-      .eq("tag_name", tagName.toLowerCase());
+      .eq('item_id', itemId)
+      .eq('tag_name', tagName.toLowerCase())
 
     if (error) {
-      console.error("Error deleting tag:", error);
-      return { error: error.message };
+      console.error('Error deleting tag:', error)
+      return { error: error.message }
     }
 
-    console.log("Tag removed successfully:", tagName.toLowerCase());
+    console.log('Tag removed successfully:', tagName.toLowerCase())
     if (item) {
-      console.log("Revalidating path:", `/t/${item.team_id}`);
-      revalidatePath(`/t/${item.team_id}`);
+      console.log('Revalidating path:', `/t/${item.team_id}`)
+      revalidatePath(`/t/${item.team_id}`)
     }
-    return {};
+    return {}
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("Unexpected error in removeSystemTag:", message);
-    return { error: message };
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('Unexpected error in removeSystemTag:', message)
+    return { error: message }
   }
 }
 
 export async function getSystemTagSuggestions(
   teamId: string
 ): Promise<{ suggestions: string[]; error?: string }> {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer()
 
   try {
-    const { data, error } = await supabase.rpc("get_team_tag_suggestions", {
+    const { data, error } = await supabase.rpc('get_team_tag_suggestions', {
       p_team_id: teamId,
-    });
+    })
 
     if (error) {
-      console.error("Error fetching tag suggestions:", error);
-      return { suggestions: [], error: error.message };
+      console.error('Error fetching tag suggestions:', error)
+      return { suggestions: [], error: error.message }
     }
 
     const suggestions = (data || []).map(
       (row: { tag_name: string }) => row.tag_name
-    );
-    console.log("Tag suggestions fetched:", suggestions.length);
-    return { suggestions };
+    )
+    console.log('Tag suggestions fetched:', suggestions.length)
+    return { suggestions }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("Unexpected error in getSystemTagSuggestions:", message);
-    return { suggestions: [], error: message };
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('Unexpected error in getSystemTagSuggestions:', message)
+    return { suggestions: [], error: message }
   }
 }

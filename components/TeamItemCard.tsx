@@ -118,9 +118,9 @@ export function TeamItemCard({
   };
 
   const handleTagUpdate = () => {
-    router.refresh();
-    onUpdate?.();
-  };
+    // revalidatePath is already called on the server side, no need for router.refresh
+    onUpdate?.()
+  }
 
   const assignedUserIds = item.members.map((m) => m.user_id);
   const availableMembers = teamMembers.filter(
