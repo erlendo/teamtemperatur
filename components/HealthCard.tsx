@@ -74,11 +74,11 @@ export function HealthCard({
     const firstWeek = availableWeeks[0]
     if (!firstWeek) return ''
     if (availableWeeks.length === 1) {
-      return `${0},${60 - (firstWeek.avg / 5) * 40}`
+      return `${0},${100 - (firstWeek.avg / 5) * 100}`
     }
 
     const width = 100
-    const height = 40
+    const height = 100
     const spacing = width / (availableWeeks.length - 1)
 
     return availableWeeks
@@ -190,17 +190,17 @@ export function HealthCard({
           </p>
           <svg
             width="100%"
-            height="50"
-            viewBox="0 0 100 50"
+            height="120"
+            viewBox="0 0 100 120"
             style={{ display: 'block' }}
             preserveAspectRatio="none"
           >
             {/* Baseline */}
             <line
               x1="0"
-              y1="40"
+              y1="100"
               x2="100"
-              y2="40"
+              y2="100"
               stroke="#e5e7eb"
               strokeWidth="0.5"
             />
@@ -222,7 +222,7 @@ export function HealthCard({
                   ? 100 / (availableWeeks.length - 1)
                   : 50
               const x = availableWeeks.length > 1 ? i * spacing : 50
-              const y = 40 - (w.avg / 5) * 40
+              const y = 100 - (w.avg / 5) * 100
               return (
                 <circle key={w.week} cx={x} cy={y} r="1.5" fill="#10b981" />
               )
