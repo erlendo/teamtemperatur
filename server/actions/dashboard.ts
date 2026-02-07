@@ -261,39 +261,59 @@ export async function addSystemTag(
     return { error: "Tom tag" };
   }
 
-  // Check max 5 tags
-  const { data: existingTags } = await supabase
-    .from("team_item_tags")
-    .select("id")
-    .eq("item_id", itemId);
+  try {
+    // Check max 5 tags
+    const { data: existingTags, error: tagsError } = await supabase
+      .from("team_item_tags")
+      .select("id")
+      .eq("item_id", itemId);
 
-  if (existingTags && existingTags.length >= 5) {
-    return { error: "Maks 5 tags per oppgave" };
-  }
-
-  // Get team_id for revalidation
-  const { data: item } = await supabase
-    .from("team_items")
-    .select("team_id")
-    .eq("id", itemId)
-    .single();
-
-  const { error } = await supabase
-    .from("team_item_tags")
-    .insert({ item_id: itemId, tag_name: normalizedTag });
-
-  if (error) {
-    // Ignore duplicate errors
-    if (error.code === "23505") {
-      return {};
+    if (tagsError) {
+      console.error("Error fetching existing tags:", tagsError);
+      return { error: tagsError.message };
     }
-    return { error: error.message };
-  }
 
-  if (item) {
-    revalidatePath(`/t/${item.team_id}`);
+    if (existingTags && existingTags.length >= 5) {
+      return { error: "Maks 5 tags per oppgave" };
+    }
+
+    // Get team_id for revalidation
+    const { data: item, error: itemError } = await supabase
+      .from("team_items")
+      .select("team_id")
+      .eq("id", itemId)
+      .single();
+
+    if (itemError) {
+      console.error("Error fetching item:", itemError);
+      return { error: itemError.message };
+    }
+
+    const { error } = await supabase
+      .from("team_item_tags")
+      .insert({ item_id: itemId, tag_name: normalizedTag });
+
+    if (error) {
+      // Ignore duplicate errors
+      if (error.code === "23505") {
+        console.log("Tag already exists, skipping");
+        return {};
+      }
+      console.error("Error inserting tag:", error);
+      return { error: error.message };
+    }
+
+    console.log("Tag added successfully:", normalizedTag);
+    if (item) {
+      console.log("Revalidating path:", `/t/${item.team_id}`);
+      revalidatePath(`/t/${item.team_id}`);
+    }
+    return {};
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("Unexpected error in addSystemTag:", message);
+    return { error: message };
   }
-  return {};
 }
 
 export async function removeSystemTag(
@@ -302,27 +322,41 @@ export async function removeSystemTag(
 ): Promise<{ error?: string }> {
   const supabase = supabaseServer();
 
-  // Get team_id for revalidation
-  const { data: item } = await supabase
-    .from("team_items")
-    .select("team_id")
-    .eq("id", itemId)
-    .single();
+  try {
+    // Get team_id for revalidation
+    const { data: item, error: itemError } = await supabase
+      .from("team_items")
+      .select("team_id")
+      .eq("id", itemId)
+      .single();
 
-  const { error } = await supabase
-    .from("team_item_tags")
-    .delete()
-    .eq("item_id", itemId)
-    .eq("tag_name", tagName.toLowerCase());
+    if (itemError) {
+      console.error("Error fetching item:", itemError);
+      return { error: itemError.message };
+    }
 
-  if (error) {
-    return { error: error.message };
+    const { error } = await supabase
+      .from("team_item_tags")
+      .delete()
+      .eq("item_id", itemId)
+      .eq("tag_name", tagName.toLowerCase());
+
+    if (error) {
+      console.error("Error deleting tag:", error);
+      return { error: error.message };
+    }
+
+    console.log("Tag removed successfully:", tagName.toLowerCase());
+    if (item) {
+      console.log("Revalidating path:", `/t/${item.team_id}`);
+      revalidatePath(`/t/${item.team_id}`);
+    }
+    return {};
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("Unexpected error in removeSystemTag:", message);
+    return { error: message };
   }
-
-  if (item) {
-    revalidatePath(`/t/${item.team_id}`);
-  }
-  return {};
 }
 
 export async function getSystemTagSuggestions(
@@ -330,15 +364,24 @@ export async function getSystemTagSuggestions(
 ): Promise<{ suggestions: string[]; error?: string }> {
   const supabase = supabaseServer();
 
-  const { data, error } = await supabase.rpc("get_team_tag_suggestions", {
-    p_team_id: teamId,
-  });
+  try {
+    const { data, error } = await supabase.rpc("get_team_tag_suggestions", {
+      p_team_id: teamId,
+    });
 
-  if (error) {
-    return { suggestions: [], error: error.message };
+    if (error) {
+      console.error("Error fetching tag suggestions:", error);
+      return { suggestions: [], error: error.message };
+    }
+
+    const suggestions = (data || []).map(
+      (row: { tag_name: string }) => row.tag_name
+    );
+    console.log("Tag suggestions fetched:", suggestions.length);
+    return { suggestions };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("Unexpected error in getSystemTagSuggestions:", message);
+    return { suggestions: [], error: message };
   }
-
-  return {
-    suggestions: (data || []).map((row: { tag_name: string }) => row.tag_name),
-  };
 }
