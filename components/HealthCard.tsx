@@ -179,6 +179,7 @@ export function HealthCard({
             borderRadius: 'var(--radius-md)',
             padding: 'var(--space-md)',
             marginTop: 'var(--space-md)',
+            position: 'relative',
           }}
         >
           <p
@@ -193,91 +194,103 @@ export function HealthCard({
           >
             Trend ({availableWeeks.length} uker)
           </p>
-          <svg
-            width="100%"
-            height="160"
-            viewBox="0 -40 100 160"
-            style={{ display: 'block', overflow: 'visible' }}
-            preserveAspectRatio="none"
-          >
-            {/* Baseline */}
-            <line
-              x1="0"
-              y1="100"
-              x2="100"
-              y2="100"
-              stroke="#e5e7eb"
-              strokeWidth="0.5"
-            />
+          <div style={{ position: 'relative', width: '100%' }}>
+            <svg
+              width="100%"
+              height="160"
+              viewBox="0 -40 100 160"
+              style={{ display: 'block', overflow: 'visible' }}
+              preserveAspectRatio="none"
+            >
+              {/* Baseline */}
+              <line
+                x1="0"
+                y1="100"
+                x2="100"
+                y2="100"
+                stroke="#e5e7eb"
+                strokeWidth="0.5"
+              />
 
-            {/* Trend line */}
-            <polyline
-              points={generateTrendPoints()}
-              fill="none"
-              stroke="#10b981"
-              strokeWidth="0.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+              {/* Trend line */}
+              <polyline
+                points={generateTrendPoints()}
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="0.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
 
-            {/* Data points */}
-            {availableWeeks.map((w, i) => {
+              {/* Data points - without tooltip text (text moved outside SVG) */}
+              {availableWeeks.map((w, i) => {
+                const spacing =
+                  availableWeeks.length > 1
+                    ? 100 / (availableWeeks.length - 1)
+                    : 50
+                const x = availableWeeks.length > 1 ? i * spacing : 50
+                const y = 100 - (w.avg / 5) * 100
+                return (
+                  <g key={w.week}>
+                    {/* Larger invisible hit area for easier mouseover */}
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r="7"
+                      fill="transparent"
+                      style={{ cursor: 'pointer' }}
+                      onMouseEnter={() => setHoveredWeek(w.week)}
+                      onMouseLeave={() => setHoveredWeek(null)}
+                    />
+                    {/* Visible data point */}
+                    <circle cx={x} cy={y} r="2" fill="#10b981" />
+                  </g>
+                )
+              })}
+            </svg>
+
+            {/* HTML-based tooltips (outside SVG, not affected by scaling) */}
+            {hoveredWeek && availableWeeks.map((w) => {
+              if (hoveredWeek !== w.week) return null
+              
               const spacing =
                 availableWeeks.length > 1
                   ? 100 / (availableWeeks.length - 1)
                   : 50
-              const x = availableWeeks.length > 1 ? i * spacing : 50
+              const i = availableWeeks.indexOf(w)
+              const xPercent = availableWeeks.length > 1 ? (i * spacing) : 50
               const y = 100 - (w.avg / 5) * 100
+              const yPercent = -40 + y - 35
+
               return (
-                <g key={w.week}>
-                  {/* Larger invisible hit area for easier mouseover */}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r="7"
-                    fill="transparent"
-                    style={{ cursor: 'pointer' }}
-                    onMouseEnter={() => setHoveredWeek(w.week)}
-                    onMouseLeave={() => setHoveredWeek(null)}
-                  />
-                  {/* Visible data point */}
-                  <circle cx={x} cy={y} r="2" fill="#10b981" />
-                  {hoveredWeek === w.week && (
-                    <>
-                      <rect
-                        x={x - 22}
-                        y={y - 35}
-                        width="44"
-                        height="28"
-                        fill="var(--color-neutral-900)"
-                        rx="4"
-                      />
-                      <text
-                        x={x}
-                        y={y - 16}
-                        textAnchor="middle"
-                        fontSize="11"
-                        fontWeight="600"
-                        fill="rgba(255,255,255,0.7)"
-                      >
-                        Uke {w.week}
-                      </text>
-                      <text
-                        x={x}
-                        y={y - 2}
-                        textAnchor="middle"
-                        fontSize="14"
-                        fontWeight="700"
-                        fill="#10b981"
-                      >
-                        {w.avg.toFixed(1)}
-                      </text>
-                    </>
-                  )}
-                </g>
+                <div
+                  key={`tooltip-${w.week}`}
+                  style={{
+                    position: 'absolute',
+                    left: `${xPercent}%`,
+                    top: `${yPercent}%`,
+                    transform: 'translate(-50%, 0)',
+                    pointerEvents: 'none',
+                    backgroundColor: 'var(--color-neutral-900)',
+                    color: 'white',
+                    padding: '6px 10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    zIndex: 10,
+                  }}
+                >
+                  <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>
+                    Uke {w.week}
+                  </div>
+                  <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '700' }}>
+                    {w.avg.toFixed(1)}
+                  </div>
+                </div>
               )
             })}
-          </svg>
+          </div>
         </div>
       )}
 
