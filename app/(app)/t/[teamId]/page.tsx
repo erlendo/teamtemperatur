@@ -1,7 +1,18 @@
 import { AppHeader } from '@/components/AppHeader'
-import { TeamHomeCards } from '@/components/TeamHomeCards'
+import { DashboardSection } from '@/components/DashboardSection'
+import { HealthCard } from '@/components/HealthCard'
 import { supabaseServer } from '@/lib/supabase/server'
+import { getTeamItems } from '@/server/actions/dashboard'
+import { getYearStats } from '@/server/actions/stats'
 import Link from 'next/link'
+
+function currentWeekNumberSimple(): number {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), 0, 1)
+  const diff = now.getTime() - start.getTime()
+  const oneWeek = 1000 * 60 * 60 * 24 * 7
+  return Math.ceil(diff / oneWeek)
+}
 
 export default async function TeamHome({
   params,
@@ -10,13 +21,34 @@ export default async function TeamHome({
 }) {
   const { teamId } = await params
 
-  // Check if user is owner
+  // Fetch team members
   const supabase = supabaseServer()
-  const { data: role } = await supabase.rpc('team_role', {
-    p_team_id: teamId,
-  })
+  const { data: members } = await supabase
+    .from('team_memberships')
+    .select('user_id, users:user_id(id, email)')
+    .eq('team_id', teamId)
+    .eq('status', 'active')
 
-  const isOwner = role === 'owner'
+  const teamMembers =
+    members
+      ?.map((m: any) => ({
+        id: m.users?.id || m.user_id,
+        email: m.users?.email || 'Ukjent',
+      }))
+      .filter((m) => m.id) || []
+
+  // Fetch dashboard items
+  const { items } = await getTeamItems(teamId)
+  const ukemålItems = items.filter((i) => i.type === 'ukemål')
+  const pipelineItems = items.filter((i) => i.type === 'pipeline')
+  const målItems = items.filter((i) => i.type === 'mål')
+  const retroItems = items.filter((i) => i.type === 'retro')
+
+  // Fetch health stats
+  const currentWeek = currentWeekNumberSimple()
+  const { data: statsData } = await getYearStats(teamId, currentWeek)
+  const currentWeekStats = statsData?.find((s) => s.week === currentWeek)
+  const previousWeekStats = statsData?.find((s) => s.week === currentWeek - 1)
 
   return (
     <>
@@ -24,7 +56,7 @@ export default async function TeamHome({
       <main style={{ flex: 1, backgroundColor: 'var(--color-neutral-50)' }}>
         <div
           style={{
-            maxWidth: '1200px',
+            maxWidth: '1400px',
             margin: '0 auto',
             padding: 'var(--space-3xl) var(--space-xl)',
           }}
@@ -41,21 +73,102 @@ export default async function TeamHome({
               letterSpacing: '-0.02em',
             }}
           >
-            📍 Teamoversikt
+            📊 Dashboard – Uke {currentWeek}, {new Date().getFullYear()}
           </h1>
-          <p
+
+          {/* Row 1: Ukemål | Pipeline */}
+          <div
             style={{
-              color: 'var(--color-neutral-700)',
-              marginBottom: 'var(--space-3xl)',
-              fontSize: 'var(--font-size-xl)',
-              lineHeight: 'var(--line-height-relaxed)',
-              maxWidth: '600px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+              gap: 'var(--space-2xl)',
+              marginBottom: 'var(--space-2xl)',
             }}
           >
-            Velg en aktivitet for å komme i gang
-          </p>
+            <DashboardSection
+              title="Ukemål denne uka"
+              emoji="🎯"
+              type="ukemål"
+              items={ukemålItems}
+              teamId={teamId}
+              teamMembers={teamMembers}
+            />
+            <DashboardSection
+              title="Pipeline (neste 4 uker)"
+              emoji="📋"
+              type="pipeline"
+              items={pipelineItems}
+              teamId={teamId}
+              teamMembers={teamMembers}
+            />
+          </div>
 
-          <TeamHomeCards teamId={teamId} isOwner={isOwner} />
+          {/* Row 2: Mål | Helse */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+              gap: 'var(--space-2xl)',
+              marginBottom: 'var(--space-2xl)',
+            }}
+          >
+            <DashboardSection
+              title={`Mål (Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()})`}
+              emoji="🎯"
+              type="mål"
+              items={målItems}
+              teamId={teamId}
+              teamMembers={teamMembers}
+            />
+            <div>
+              <h2
+                style={{
+                  margin: 0,
+                  marginBottom: 'var(--space-lg)',
+                  fontSize: 'var(--font-size-xl, 1.25rem)',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-sm)',
+                }}
+              >
+                <span>💚</span> Helse
+              </h2>
+              {currentWeekStats ? (
+                <HealthCard
+                  teamId={teamId}
+                  currentWeek={currentWeek}
+                  overallAvg={currentWeekStats.overall_avg || 0}
+                  responseRate={currentWeekStats.response_rate || 0}
+                  responseCount={currentWeekStats.response_count || 0}
+                  memberCount={currentWeekStats.member_count || 0}
+                  previousWeekAvg={previousWeekStats?.overall_avg}
+                />
+              ) : (
+                <p
+                  style={{
+                    color: 'var(--color-neutral-500)',
+                    fontStyle: 'italic',
+                  }}
+                >
+                  Ingen helse-data tilgjengelig ennå.{' '}
+                  <Link href={`/t/${teamId}/survey`}>Send inn målinger</Link>
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Row 3: Retro (full width) */}
+          <div style={{ marginBottom: 'var(--space-2xl)' }}>
+            <DashboardSection
+              title="Retro-forbedringer"
+              emoji="🔧"
+              type="retro"
+              items={retroItems}
+              teamId={teamId}
+              teamMembers={teamMembers}
+            />
+          </div>
 
           {/* Back Link */}
           <Link
@@ -68,7 +181,7 @@ export default async function TeamHome({
               fontWeight: '600',
               textDecoration: 'none',
               padding: 'var(--space-md) var(--space-lg)',
-              marginTop: 'var(--space-3xl)',
+              marginTop: 'var(--space-xl)',
               transition: 'color 0.2s ease',
               fontSize: 'var(--font-size-base)',
             }}
