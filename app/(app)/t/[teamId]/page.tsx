@@ -109,7 +109,6 @@ export default async function TeamHome({
           >
             <DashboardSection
               title="Ukemål denne uka"
-              emoji="🎯"
               type="ukemål"
               items={ukemålItems}
               teamId={teamId}
@@ -117,7 +116,6 @@ export default async function TeamHome({
             />
             <DashboardSection
               title="Pipeline (neste 4 uker)"
-              emoji="📋"
               type="pipeline"
               items={pipelineItems}
               teamId={teamId}
@@ -136,7 +134,6 @@ export default async function TeamHome({
           >
             <DashboardSection
               title={`Mål (Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()})`}
-              emoji="🎯"
               type="mål"
               items={målItems}
               teamId={teamId}
@@ -149,12 +146,12 @@ export default async function TeamHome({
                   marginBottom: 'var(--space-lg)',
                   fontSize: 'var(--font-size-xl, 1.25rem)',
                   fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--space-sm)',
+                  color: '#10b981',
+                  paddingBottom: 'var(--space-md)',
+                  borderBottom: '3px solid #10b981',
                 }}
               >
-                <span>💚</span> Helse
+                Helse
               </h2>
               {currentWeekStats ? (
                 <HealthCard
@@ -184,7 +181,6 @@ export default async function TeamHome({
           <div style={{ marginBottom: 'var(--space-2xl)' }}>
             <DashboardSection
               title="Retro-forbedringer"
-              emoji="🔧"
               type="retro"
               items={retroItems}
               teamId={teamId}

@@ -141,15 +141,17 @@ export function TeamItemCard({
         backgroundColor: 'white',
         borderRadius: 'var(--radius-lg, 0.5rem)',
         padding: 'var(--space-lg)',
-        boxShadow: 'var(--shadow-sm)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         border: '1px solid var(--color-neutral-200, #e5e5e5)',
-        transition: 'box-shadow 0.2s',
+        transition: 'all 0.3s ease',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--shadow-md)'
+        e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'
+        e.currentTarget.style.transform = 'translateY(-2px)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--shadow-sm)'
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'
+        e.currentTarget.style.transform = 'translateY(0)'
       }}
     >
       {error && (

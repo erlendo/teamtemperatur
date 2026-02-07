@@ -7,9 +7,16 @@ import { TeamItemCard } from "./TeamItemCard";
 
 type ItemType = "ukemål" | "pipeline" | "mål" | "retro";
 
+// Nordic nature colors
+const NORDIC_COLORS: Record<ItemType, { accent: string; light: string }> = {
+  ukemål: { accent: "#6b7280", light: "#f3f4f6" }, // Fjell-grå
+  pipeline: { accent: "#1a472a", light: "#f0fdf4" }, // Skog-grønn
+  mål: { accent: "#0f766e", light: "#f0fdfa" }, // Fjord-blå
+  retro: { accent: "#92400e", light: "#fefce8" }, // Antikk-brun
+};
+
 interface DashboardSectionProps {
   title: string;
-  emoji: string;
   type: ItemType;
   items: TeamItem[];
   teamId: string;
@@ -19,13 +26,13 @@ interface DashboardSectionProps {
 
 export function DashboardSection({
   title,
-  emoji,
   type,
   items,
   teamId,
   teamMembers,
   onUpdate,
 }: DashboardSectionProps) {
+  const colors = NORDIC_COLORS[type];
   const [isAdding, setIsAdding] = useState(false);
   const [newItemTitle, setNewItemTitle] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -69,6 +76,8 @@ export function DashboardSection({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          paddingBottom: "var(--space-md)",
+          borderBottom: `3px solid ${colors.accent}`,
         }}
       >
         <h2
@@ -76,12 +85,10 @@ export function DashboardSection({
             margin: 0,
             fontSize: "var(--font-size-xl, 1.25rem)",
             fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-sm)",
+            color: colors.accent,
           }}
         >
-          <span>{emoji}</span> {title}
+          {title}
         </h2>
 
         {!isAdding && (
