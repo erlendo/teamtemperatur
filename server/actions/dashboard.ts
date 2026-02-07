@@ -358,7 +358,10 @@ export async function removeSystemTag(
       return { error: itemError.message }
     }
 
-    console.log('Deleting tag:', { item_id: itemId, tag_name: tagName.toLowerCase() })
+    console.log('Deleting tag:', {
+      item_id: itemId,
+      tag_name: tagName.toLowerCase(),
+    })
     const { error } = await supabase
       .from('team_item_tags')
       .delete()

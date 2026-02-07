@@ -1,168 +1,166 @@
-"use client";
+'use client'
 
 import {
-    addMemberTag,
-    deleteItem,
-    toggleItemStatus,
-    updateItem,
-    type TeamItem,
-} from "@/server/actions/dashboard";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { PersonChip } from "./PersonChip";
-import { SystemTagInput } from "./SystemTagInput";
+  addMemberTag,
+  deleteItem,
+  toggleItemStatus,
+  updateItem,
+  type TeamItem,
+} from '@/server/actions/dashboard'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { PersonChip } from './PersonChip'
+import { SystemTagInput } from './SystemTagInput'
 
 interface TeamItemCardProps {
-  item: TeamItem;
-  teamMembers: Array<{ id: string; email: string }>;
-  onUpdate?: () => void;
+  item: TeamItem
+  teamMembers: Array<{ id: string; email: string }>
+  onUpdate?: () => void
 }
 
-type ItemStatus = "planlagt" | "pågår" | "ferdig";
+type ItemStatus = 'planlagt' | 'pågår' | 'ferdig'
 
 export function TeamItemCard({
   item,
   teamMembers,
   onUpdate,
 }: TeamItemCardProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(item.title);
-  const [showMemberDropdown, setShowMemberDropdown] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false)
+  const [title, setTitle] = useState(item.title)
+  const [showMemberDropdown, setShowMemberDropdown] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleSaveTitle = async () => {
     if (title.trim() && title !== item.title) {
       try {
-        const result = await updateItem(item.id, { title: title.trim() });
+        const result = await updateItem(item.id, { title: title.trim() })
         if (result.error) {
-          setError(result.error);
-          return;
+          setError(result.error)
+          return
         }
-        setError(null);
-        router.refresh();
-        onUpdate?.();
+        setError(null)
+        router.refresh()
+        onUpdate?.()
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Ukjent feil";
-        setError(msg);
+        const msg = err instanceof Error ? err.message : 'Ukjent feil'
+        setError(msg)
       }
     }
-    setIsEditing(false);
-  };
+    setIsEditing(false)
+  }
 
   const handleDelete = async () => {
-    if (confirm("Er du sikker på at du vil slette denne?")) {
+    if (confirm('Er du sikker på at du vil slette denne?')) {
       try {
-        const result = await deleteItem(item.id);
+        const result = await deleteItem(item.id)
         if (result.error) {
-          setError(result.error);
-          return;
+          setError(result.error)
+          return
         }
-        setError(null);
-        router.refresh();
-        onUpdate?.();
+        setError(null)
+        router.refresh()
+        onUpdate?.()
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Ukjent feil";
-        setError(msg);
+        const msg = err instanceof Error ? err.message : 'Ukjent feil'
+        setError(msg)
       }
     }
-  };
+  }
 
   const handleToggleStatus = async () => {
     try {
-      const result = await toggleItemStatus(item.id, item.status);
+      const result = await toggleItemStatus(item.id, item.status)
       if (result.error) {
-        setError(result.error);
-        return;
+        setError(result.error)
+        return
       }
-      setError(null);
-      router.refresh();
-      onUpdate?.();
+      setError(null)
+      router.refresh()
+      onUpdate?.()
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Ukjent feil";
-      setError(msg);
+      const msg = err instanceof Error ? err.message : 'Ukjent feil'
+      setError(msg)
     }
-  };
+  }
 
   const handleStatusChange = async (newStatus: ItemStatus) => {
     try {
-      const result = await updateItem(item.id, { status: newStatus });
+      const result = await updateItem(item.id, { status: newStatus })
       if (result.error) {
-        setError(result.error);
-        return;
+        setError(result.error)
+        return
       }
-      setError(null);
-      router.refresh();
-      onUpdate?.();
+      setError(null)
+      router.refresh()
+      onUpdate?.()
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Ukjent feil";
-      setError(msg);
+      const msg = err instanceof Error ? err.message : 'Ukjent feil'
+      setError(msg)
     }
-  };
+  }
 
   const handleAddMember = async (userId: string) => {
     try {
-      const result = await addMemberTag(item.id, userId);
+      const result = await addMemberTag(item.id, userId)
       if (result.error) {
-        setError(result.error);
-        return;
+        setError(result.error)
+        return
       }
-      setError(null);
-      setShowMemberDropdown(false);
-      router.refresh();
-      onUpdate?.();
+      setError(null)
+      setShowMemberDropdown(false)
+      router.refresh()
+      onUpdate?.()
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Ukjent feil";
-      setError(msg);
+      const msg = err instanceof Error ? err.message : 'Ukjent feil'
+      setError(msg)
     }
-  };
+  }
 
   const handleTagUpdate = () => {
     // revalidatePath is already called on the server side, no need for router.refresh
     onUpdate?.()
   }
 
-  const assignedUserIds = item.members.map((m) => m.user_id);
+  const assignedUserIds = item.members.map((m) => m.user_id)
   const availableMembers = teamMembers.filter(
     (m) => !assignedUserIds.includes(m.id)
-  );
+  )
 
   const getStatusIcon = () => {
-    if (item.type === "ukemål" || item.type === "pipeline") {
-      return item.status === "ferdig" ? "☑️" : "☐";
+    if (item.type === 'ukemål' || item.type === 'pipeline') {
+      return item.status === 'ferdig' ? '☑️' : '☐'
     }
-    const icons = { planlagt: "📍", pågår: "⏳", ferdig: "✅" };
-    return icons[item.status];
-  };
-
-
+    const icons = { planlagt: '📍', pågår: '⏳', ferdig: '✅' }
+    return icons[item.status]
+  }
 
   return (
     <div
       style={{
-        backgroundColor: "white",
-        borderRadius: "var(--radius-lg, 0.5rem)",
-        padding: "var(--space-lg)",
-        boxShadow: "var(--shadow-sm)",
-        border: "1px solid var(--color-neutral-200, #e5e5e5)",
-        transition: "box-shadow 0.2s",
+        backgroundColor: 'white',
+        borderRadius: 'var(--radius-lg, 0.5rem)',
+        padding: 'var(--space-lg)',
+        boxShadow: 'var(--shadow-sm)',
+        border: '1px solid var(--color-neutral-200, #e5e5e5)',
+        transition: 'box-shadow 0.2s',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "var(--shadow-md)";
+        e.currentTarget.style.boxShadow = 'var(--shadow-md)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+        e.currentTarget.style.boxShadow = 'var(--shadow-sm)'
       }}
     >
       {error && (
         <div
           style={{
-            backgroundColor: "rgba(239, 68, 68, 0.1)",
-            color: "var(--color-error, #ef4444)",
-            padding: "var(--space-sm)",
-            borderRadius: "var(--radius-md)",
-            fontSize: "var(--font-size-sm)",
-            marginBottom: "var(--space-md)",
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            color: 'var(--color-error, #ef4444)',
+            padding: 'var(--space-sm)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: 'var(--font-size-sm)',
+            marginBottom: 'var(--space-md)',
           }}
         >
           ❌ {error}
@@ -170,42 +168,44 @@ export function TeamItemCard({
       )}
       <div
         style={{
-          display: "flex",
-          alignItems: "flex-start",
-          gap: "var(--space-sm)",
-          marginBottom: "var(--space-md)",
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 'var(--space-sm)',
+          marginBottom: 'var(--space-md)',
         }}
       >
-        {(item.type === "ukemål" || item.type === "pipeline") && (
+        {(item.type === 'ukemål' || item.type === 'pipeline') && (
           <button
             onClick={handleToggleStatus}
             style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "1.25rem",
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '1.25rem',
               padding: 0,
-              marginTop: "2px",
+              marginTop: '2px',
             }}
-            title={item.status === "ferdig" ? "Merk som ikke ferdig" : "Merk som ferdig"}
+            title={
+              item.status === 'ferdig'
+                ? 'Merk som ikke ferdig'
+                : 'Merk som ferdig'
+            }
           >
             {getStatusIcon()}
           </button>
         )}
 
-        {item.type === "retro" && (
-          <div style={{ marginTop: "2px" }}>
+        {item.type === 'retro' && (
+          <div style={{ marginTop: '2px' }}>
             <select
               value={item.status}
-              onChange={(e) =>
-                handleStatusChange(e.target.value as ItemStatus)
-              }
+              onChange={(e) => handleStatusChange(e.target.value as ItemStatus)}
               style={{
-                padding: "var(--space-xs) var(--space-sm)",
-                border: "1px solid var(--color-neutral-300)",
-                borderRadius: "var(--radius-md)",
-                fontSize: "var(--font-size-sm)",
-                cursor: "pointer",
+                padding: 'var(--space-xs) var(--space-sm)',
+                border: '1px solid var(--color-neutral-300)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: 'var(--font-size-sm)',
+                cursor: 'pointer',
               }}
             >
               <option value="planlagt">📍 Planlagt</option>
@@ -215,11 +215,11 @@ export function TeamItemCard({
           </div>
         )}
 
-        {item.type === "mål" && (
+        {item.type === 'mål' && (
           <span
             style={{
-              fontSize: "1.25rem",
-              marginTop: "2px",
+              fontSize: '1.25rem',
+              marginTop: '2px',
             }}
           >
             {getStatusIcon()}
@@ -234,19 +234,19 @@ export function TeamItemCard({
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleSaveTitle}
               onKeyDown={(e) => {
-                if (e.key === "Enter") void handleSaveTitle();
-                if (e.key === "Escape") {
-                  setTitle(item.title);
-                  setIsEditing(false);
+                if (e.key === 'Enter') void handleSaveTitle()
+                if (e.key === 'Escape') {
+                  setTitle(item.title)
+                  setIsEditing(false)
                 }
               }}
               autoFocus
               style={{
-                width: "100%",
-                padding: "var(--space-sm)",
-                border: "1px solid var(--color-primary)",
-                borderRadius: "var(--radius-md)",
-                fontSize: "var(--font-size-base)",
+                width: '100%',
+                padding: 'var(--space-sm)',
+                border: '1px solid var(--color-primary)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: 'var(--font-size-base)',
               }}
             />
           ) : (
@@ -254,8 +254,8 @@ export function TeamItemCard({
               onClick={() => setIsEditing(true)}
               style={{
                 margin: 0,
-                cursor: "text",
-                fontSize: "var(--font-size-base)",
+                cursor: 'text',
+                fontSize: 'var(--font-size-base)',
                 lineHeight: 1.5,
               }}
             >
@@ -267,11 +267,11 @@ export function TeamItemCard({
         <button
           onClick={handleDelete}
           style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--color-neutral-400)",
-            fontSize: "1.25rem",
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--color-neutral-400)',
+            fontSize: '1.25rem',
             padding: 0,
           }}
           title="Slett"
@@ -282,42 +282,42 @@ export function TeamItemCard({
 
       <div
         style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--space-sm)",
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-sm)',
         }}
       >
         <div
           style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "var(--space-xs)",
-            alignItems: "center",
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 'var(--space-xs)',
+            alignItems: 'center',
           }}
         >
           {item.members.map((member) => {
-            const user = teamMembers.find((m) => m.id === member.user_id);
+            const user = teamMembers.find((m) => m.id === member.user_id)
             return (
               <PersonChip
                 key={member.user_id}
                 userId={member.user_id}
-                displayName={user?.email.split("@")[0] || "Ukjent"}
+                displayName={user?.email.split('@')[0] || 'Ukjent'}
                 itemId={item.id}
                 onUpdate={handleTagUpdate}
               />
-            );
+            )
           })}
 
-          <div style={{ position: "relative" }}>
+          <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShowMemberDropdown(!showMemberDropdown)}
               style={{
-                padding: "var(--space-xs) var(--space-sm)",
-                backgroundColor: "var(--color-neutral-100)",
-                border: "1px dashed var(--color-neutral-400)",
-                borderRadius: "var(--radius-full)",
-                cursor: "pointer",
-                fontSize: "var(--font-size-sm)",
+                padding: 'var(--space-xs) var(--space-sm)',
+                backgroundColor: 'var(--color-neutral-100)',
+                border: '1px dashed var(--color-neutral-400)',
+                borderRadius: 'var(--radius-full)',
+                cursor: 'pointer',
+                fontSize: 'var(--font-size-sm)',
                 fontWeight: 500,
               }}
             >
@@ -327,16 +327,16 @@ export function TeamItemCard({
             {showMemberDropdown && availableMembers.length > 0 && (
               <div
                 style={{
-                  position: "absolute",
-                  top: "100%",
+                  position: 'absolute',
+                  top: '100%',
                   left: 0,
-                  marginTop: "var(--space-xs)",
-                  backgroundColor: "white",
-                  border: "1px solid var(--color-neutral-300)",
-                  borderRadius: "var(--radius-md)",
-                  boxShadow: "var(--shadow-md)",
+                  marginTop: 'var(--space-xs)',
+                  backgroundColor: 'white',
+                  border: '1px solid var(--color-neutral-300)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: 'var(--shadow-md)',
                   zIndex: 10,
-                  minWidth: "200px",
+                  minWidth: '200px',
                 }}
               >
                 {availableMembers.map((member) => (
@@ -344,24 +344,24 @@ export function TeamItemCard({
                     key={member.id}
                     onClick={() => handleAddMember(member.id)}
                     style={{
-                      display: "block",
-                      width: "100%",
-                      padding: "var(--space-sm)",
-                      border: "none",
-                      background: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "var(--font-size-sm)",
+                      display: 'block',
+                      width: '100%',
+                      padding: 'var(--space-sm)',
+                      border: 'none',
+                      background: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: 'var(--font-size-sm)',
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor =
-                        "var(--color-neutral-100)";
+                        'var(--color-neutral-100)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
+                      e.currentTarget.style.backgroundColor = 'transparent'
                     }}
                   >
-                    {member.email.split("@")[0]}
+                    {member.email.split('@')[0]}
                   </button>
                 ))}
               </div>
@@ -377,5 +377,5 @@ export function TeamItemCard({
         />
       </div>
     </div>
-  );
+  )
 }
