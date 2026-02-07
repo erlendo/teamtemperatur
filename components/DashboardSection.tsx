@@ -28,15 +28,26 @@ export function DashboardSection({
 }: DashboardSectionProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newItemTitle, setNewItemTitle] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
 
   const handleAddItem = async () => {
     if (newItemTitle.trim()) {
-      await createItem(teamId, type, newItemTitle.trim());
-      setNewItemTitle("");
-      setIsAdding(false);
-      router.refresh();
-      onUpdate?.();
+      try {
+        const result = await createItem(teamId, type, newItemTitle.trim());
+        if (result.error) {
+          setErrorMsg(result.error);
+          return;
+        }
+        setNewItemTitle("");
+        setIsAdding(false);
+        setErrorMsg(null);
+        router.refresh();
+        onUpdate?.();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        setErrorMsg(msg);
+      }
     }
   };
 
@@ -96,61 +107,85 @@ export function DashboardSection({
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
             gap: "var(--space-sm)",
           }}
         >
-          <input
-            type="text"
-            value={newItemTitle}
-            onChange={(e) => setNewItemTitle(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void handleAddItem();
-              if (e.key === "Escape") {
+          {errorMsg && (
+            <p
+              style={{
+                color: "var(--color-error, #ef4444)",
+                fontSize: "var(--font-size-sm)",
+                margin: 0,
+                padding: "var(--space-sm)",
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                borderRadius: "var(--radius-md)",
+              }}
+            >
+              ❌ {errorMsg}
+            </p>
+          )}
+          <div
+            style={{
+              display: "flex",
+              gap: "var(--space-sm)",
+            }}
+          >
+            <input
+              type="text"
+              value={newItemTitle}
+              onChange={(e) => setNewItemTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void handleAddItem();
+                if (e.key === "Escape") {
+                  setIsAdding(false);
+                  setNewItemTitle("");
+                  setErrorMsg(null);
+                }
+              }}
+              placeholder="Skriv inn tittel..."
+              autoFocus
+              style={{
+                flex: 1,
+                padding: "var(--space-sm) var(--space-md)",
+                border: "1px solid var(--color-neutral-300)",
+                borderRadius: "var(--radius-md)",
+                fontSize: "var(--font-size-base)",
+              }}
+            />
+            <button
+              onClick={handleAddItem}
+              style={{
+                padding: "var(--space-sm) var(--space-md)",
+                backgroundColor: "var(--color-primary)",
+                color: "white",
+                border: "none",
+                borderRadius: "var(--radius-md)",
+                cursor: "pointer",
+                fontSize: "var(--font-size-sm)",
+              }}
+            >
+              Lagre
+            </button>
+            <button
+              onClick={() => {
                 setIsAdding(false);
                 setNewItemTitle("");
-              }
-            }}
-            placeholder="Skriv inn tittel..."
-            autoFocus
-            style={{
-              flex: 1,
-              padding: "var(--space-sm) var(--space-md)",
-              border: "1px solid var(--color-neutral-300)",
-              borderRadius: "var(--radius-md)",
-              fontSize: "var(--font-size-base)",
-            }}
-          />
-          <button
-            onClick={handleAddItem}
-            style={{
-              padding: "var(--space-sm) var(--space-md)",
-              backgroundColor: "var(--color-primary)",
-              color: "white",
-              border: "none",
-              borderRadius: "var(--radius-md)",
-              cursor: "pointer",
-              fontSize: "var(--font-size-sm)",
-            }}
-          >
-            Lagre
-          </button>
-          <button
-            onClick={() => {
-              setIsAdding(false);
-              setNewItemTitle("");
-            }}
-            style={{
-              padding: "var(--space-sm) var(--space-md)",
-              backgroundColor: "var(--color-neutral-200)",
-              color: "var(--color-neutral-700)",
-              border: "none",
-              borderRadius: "var(--radius-md)",
-              cursor: "pointer",
-              fontSize: "var(--font-size-sm)",
-            }}
-          >
-            Avbryt
-          </button>
+                setErrorMsg(null);
+              }}
+              style={{
+                padding: "var(--space-sm) var(--space-md)",
+                backgroundColor: "var(--color-neutral-200)",
+                color: "var(--color-neutral-700)",
+                border: "none",
+                borderRadius: "var(--radius-md)",
+                cursor: "pointer",
+                fontSize: "var(--font-size-sm)",
+              }}
+            >
+              Avbryt
+            </button>
+          </div>
         </div>
       )}
 

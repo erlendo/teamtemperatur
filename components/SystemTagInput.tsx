@@ -24,12 +24,17 @@ export function SystemTagInput({
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     if (input.length > 0) {
-      void getSystemTagSuggestions(teamId).then(({ suggestions }) => {
+      void getSystemTagSuggestions(teamId).then(({ suggestions, error }) => {
+        if (error) {
+          setError(error);
+          return;
+        }
         const filtered = suggestions.filter(
           (s) =>
             s.toLowerCase().includes(input.toLowerCase()) &&
@@ -46,11 +51,21 @@ export function SystemTagInput({
   const handleAddTag = async (tag: string) => {
     if (!tag.trim() || existingTags.length >= 5) return;
 
-    await addSystemTag(itemId, tag);
-    setInput("");
-    setShowSuggestions(false);
-    router.refresh();
-    onUpdate?.();
+    try {
+      const result = await addSystemTag(itemId, tag);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setError(null);
+      setInput("");
+      setShowSuggestions(false);
+      router.refresh();
+      onUpdate?.();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Ukjent feil";
+      setError(msg);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -61,13 +76,38 @@ export function SystemTagInput({
   };
 
   const handleRemoveTag = async (tag: string) => {
-    await removeSystemTag(itemId, tag);
-    router.refresh();
-    onUpdate?.();
+    try {
+      const result = await removeSystemTag(itemId, tag);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setError(null);
+      router.refresh();
+      onUpdate?.();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Ukjent feil";
+      setError(msg);
+    }
   };
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xs)", alignItems: "center" }}>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xs)", alignItems: "center", flexDirection: "column", alignItems: "flex-start" }}>
+      {error && (
+        <div
+          style={{
+            backgroundColor: "rgba(239, 68, 68, 0.1)",
+            color: "var(--color-error, #ef4444)",
+            padding: "var(--space-xs) var(--space-sm)",
+            borderRadius: "var(--radius-md)",
+            fontSize: "var(--font-size-xs)",
+            width: "100%",
+          }}
+        >
+          ❌ {error}
+        </div>
+      )}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xs)", alignItems: "center" }}>
       {existingTags.map((tag) => (
         <span
           key={tag}
@@ -165,7 +205,7 @@ export function SystemTagInput({
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

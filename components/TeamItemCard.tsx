@@ -28,42 +28,93 @@ export function TeamItemCard({
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(item.title);
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSaveTitle = async () => {
     if (title.trim() && title !== item.title) {
-      await updateItem(item.id, { title: title.trim() });
-      router.refresh();
-      onUpdate?.();
+      try {
+        const result = await updateItem(item.id, { title: title.trim() });
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+        setError(null);
+        router.refresh();
+        onUpdate?.();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Ukjent feil";
+        setError(msg);
+      }
     }
     setIsEditing(false);
   };
 
   const handleDelete = async () => {
     if (confirm("Er du sikker på at du vil slette denne?")) {
-      await deleteItem(item.id);
-      router.refresh();
-      onUpdate?.();
+      try {
+        const result = await deleteItem(item.id);
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+        setError(null);
+        router.refresh();
+        onUpdate?.();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Ukjent feil";
+        setError(msg);
+      }
     }
   };
 
   const handleToggleStatus = async () => {
-    await toggleItemStatus(item.id, item.status);
-    router.refresh();
-    onUpdate?.();
+    try {
+      const result = await toggleItemStatus(item.id, item.status);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setError(null);
+      router.refresh();
+      onUpdate?.();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Ukjent feil";
+      setError(msg);
+    }
   };
 
   const handleStatusChange = async (newStatus: ItemStatus) => {
-    await updateItem(item.id, { status: newStatus });
-    router.refresh();
-    onUpdate?.();
+    try {
+      const result = await updateItem(item.id, { status: newStatus });
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setError(null);
+      router.refresh();
+      onUpdate?.();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Ukjent feil";
+      setError(msg);
+    }
   };
 
   const handleAddMember = async (userId: string) => {
-    await addMemberTag(item.id, userId);
-    setShowMemberDropdown(false);
-    router.refresh();
-    onUpdate?.();
+    try {
+      const result = await addMemberTag(item.id, userId);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setError(null);
+      setShowMemberDropdown(false);
+      router.refresh();
+      onUpdate?.();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Ukjent feil";
+      setError(msg);
+    }
   };
 
   const handleTagUpdate = () => {
@@ -103,6 +154,20 @@ export function TeamItemCard({
         e.currentTarget.style.boxShadow = "var(--shadow-sm)";
       }}
     >
+      {error && (
+        <div
+          style={{
+            backgroundColor: "rgba(239, 68, 68, 0.1)",
+            color: "var(--color-error, #ef4444)",
+            padding: "var(--space-sm)",
+            borderRadius: "var(--radius-md)",
+            fontSize: "var(--font-size-sm)",
+            marginBottom: "var(--space-md)",
+          }}
+        >
+          ❌ {error}
+        </div>
+      )}
       <div
         style={{
           display: "flex",
