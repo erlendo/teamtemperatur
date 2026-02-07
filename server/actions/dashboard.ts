@@ -197,25 +197,54 @@ export async function addMemberTag(
 ): Promise<{ error?: string }> {
   const supabase = supabaseServer()
 
-  // Get team_id for revalidation
-  const { data: item } = await supabase
-    .from('team_items')
-    .select('team_id')
-    .eq('id', itemId)
-    .single()
+  try {
+    console.log('=== addMemberTag START ===')
+    console.log('itemId:', itemId, 'userId:', userId)
 
-  const { error } = await supabase
-    .from('team_item_members')
-    .insert({ item_id: itemId, user_id: userId })
+    // Get team_id for revalidation
+    console.log('Fetching team_id for item...')
+    const { data: item, error: itemError } = await supabase
+      .from('team_items')
+      .select('id, team_id, title')
+      .eq('id', itemId)
 
-  if (error) {
-    return { error: error.message }
+    if (itemError) {
+      console.error('✗ Error fetching item:', itemError.message)
+      return { error: `Kunne ikke finne oppgave: ${itemError.message}` }
+    }
+
+    if (!item || item.length === 0) {
+      console.error('✗ Item not found')
+      return { error: 'Oppgave ikke funnet' }
+    }
+
+    console.log('✓ Found item:', item[0].title)
+
+    console.log('Inserting member tag...')
+    const { error } = await supabase
+      .from('team_item_members')
+      .insert({ item_id: itemId, user_id: userId })
+
+    if (error) {
+      // Ignore duplicate errors (same person already tagged)
+      if (error.code === '23505') {
+        console.log('Member already tagged')
+        return {}
+      }
+      console.error('✗ Error inserting member tag:', error.code, error.message)
+      return { error: `Kunne ikke legge til person: ${error.message}` }
+    }
+
+    console.log('✓ Member tag inserted')
+    console.log('Revalidating path:', `/t/${item[0].team_id}`)
+    revalidatePath(`/t/${item[0].team_id}`)
+    console.log('=== addMemberTag SUCCESS ===')
+    return {}
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('✗ Unexpected error in addMemberTag:', message)
+    return { error: `Uventet feil: ${message}` }
   }
-
-  if (item) {
-    revalidatePath(`/t/${item.team_id}`)
-  }
-  return {}
 }
 
 export async function removeMemberTag(
@@ -224,27 +253,51 @@ export async function removeMemberTag(
 ): Promise<{ error?: string }> {
   const supabase = supabaseServer()
 
-  // Get team_id for revalidation
-  const { data: item } = await supabase
-    .from('team_items')
-    .select('team_id')
-    .eq('id', itemId)
-    .single()
+  try {
+    console.log('=== removeMemberTag START ===')
+    console.log('itemId:', itemId, 'userId:', userId)
 
-  const { error } = await supabase
-    .from('team_item_members')
-    .delete()
-    .eq('item_id', itemId)
-    .eq('user_id', userId)
+    // Get team_id for revalidation
+    console.log('Fetching team_id for item...')
+    const { data: item, error: itemError } = await supabase
+      .from('team_items')
+      .select('id, team_id, title')
+      .eq('id', itemId)
 
-  if (error) {
-    return { error: error.message }
+    if (itemError) {
+      console.error('✗ Error fetching item:', itemError.message)
+      return { error: `Kunne ikke finne oppgave: ${itemError.message}` }
+    }
+
+    if (!item || item.length === 0) {
+      console.error('✗ Item not found')
+      return { error: 'Oppgave ikke funnet' }
+    }
+
+    console.log('✓ Found item:', item[0].title)
+
+    console.log('Removing member tag...')
+    const { error } = await supabase
+      .from('team_item_members')
+      .delete()
+      .eq('item_id', itemId)
+      .eq('user_id', userId)
+
+    if (error) {
+      console.error('✗ Error removing member tag:', error.code, error.message)
+      return { error: `Kunne ikke fjerne person: ${error.message}` }
+    }
+
+    console.log('✓ Member tag removed')
+    console.log('Revalidating path:', `/t/${item[0].team_id}`)
+    revalidatePath(`/t/${item[0].team_id}`)
+    console.log('=== removeMemberTag SUCCESS ===')
+    return {}
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('✗ Unexpected error in removeMemberTag:', message)
+    return { error: `Uventet feil: ${message}` }
   }
-
-  if (item) {
-    revalidatePath(`/t/${item.team_id}`)
-  }
-  return {}
 }
 
 export async function addSystemTag(
@@ -261,6 +314,9 @@ export async function addSystemTag(
   }
 
   try {
+    console.log('=== addSystemTag START ===')
+    console.log('itemId:', itemId, 'tagName:', normalizedTag)
+
     // Get authenticated user first
     const {
       data: { user },
@@ -270,36 +326,46 @@ export async function addSystemTag(
       console.error('Auth error:', authError)
       return { error: 'Ikke autentisert' }
     }
-    console.log('User ID:', user.id)
+    console.log('✓ User authenticated:', user.id)
 
     // Check max 5 tags
+    console.log('Checking existing tags...')
     const { data: existingTags, error: tagsError } = await supabase
       .from('team_item_tags')
       .select('id')
       .eq('item_id', itemId)
 
     if (tagsError) {
-      console.error('Error fetching existing tags:', tagsError)
-      return { error: tagsError.message }
+      console.error('✗ Error fetching existing tags:', tagsError.code, tagsError.message)
+      return { error: `Kunne ikke hente eksisterende tagger: ${tagsError.message}` }
     }
 
+    console.log('✓ Found', existingTags?.length || 0, 'existing tags')
     if (existingTags && existingTags.length >= 5) {
       return { error: 'Maks 5 tags per oppgave' }
     }
 
-    // Get team_id for revalidation
-    const { data: item, error: itemError } = await supabase
+    // Get team_id for revalidation (try without .single() first to see if item exists)
+    console.log('Fetching team_id for item...')
+    const { data: item, error: itemError, status: itemStatus } = await supabase
       .from('team_items')
-      .select('team_id')
+      .select('id, team_id, title')
       .eq('id', itemId)
-      .single()
 
     if (itemError) {
-      console.error('Error fetching item:', itemError)
-      return { error: itemError.message }
+      console.error(`✗ Error fetching item (status ${itemStatus}):`, itemError.code, itemError.message)
+      return { error: `Kunne ikke finne oppgave: ${itemError.message}` }
     }
 
-    console.log('Inserting tag:', { item_id: itemId, tag_name: normalizedTag })
+    if (!item || item.length === 0) {
+      console.error('✗ Item not found with id:', itemId)
+      return { error: 'Oppgave ikke funnet' }
+    }
+
+    const itemData = item[0]
+    console.log('✓ Found item:', itemData.title, '(team:', itemData.team_id, ')')
+
+    console.log('Inserting tag into team_item_tags...')
     const { error, data } = await supabase
       .from('team_item_tags')
       .insert({ item_id: itemId, tag_name: normalizedTag })
@@ -311,20 +377,21 @@ export async function addSystemTag(
         console.log('Tag already exists, skipping')
         return {}
       }
-      console.error('Error inserting tag:', error.code, error.message)
-      return { error: error.message }
+      console.error(`✗ Error inserting tag (${error.code}):`, error.message)
+      console.error('  Details:', error.details)
+      console.error('  Hint:', error.hint)
+      return { error: `Kunne ikke lagre tag: ${error.message}` }
     }
 
-    console.log('Tag inserted successfully:', data)
-    if (item) {
-      console.log('Revalidating path:', `/t/${item.team_id}`)
-      revalidatePath(`/t/${item.team_id}`)
-    }
+    console.log('✓ Tag inserted successfully:', data)
+    console.log('Revalidating path:', `/t/${itemData.team_id}`)
+    revalidatePath(`/t/${itemData.team_id}`)
+    console.log('=== addSystemTag SUCCESS ===')
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('Unexpected error in addSystemTag:', message, err)
-    return { error: message }
+    console.error('✗ Unexpected error in addSystemTag:', message, err)
+    return { error: `Uventet feil: ${message}` }
   }
 }
 
@@ -335,28 +402,38 @@ export async function removeSystemTag(
   const supabase = supabaseServer()
 
   try {
+    console.log('=== removeSystemTag START ===')
+    console.log('itemId:', itemId, 'tagName:', tagName)
+
     // Get authenticated user first
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
     if (authError || !user) {
-      console.error('Auth error:', authError)
+      console.error('✗ Auth error:', authError)
       return { error: 'Ikke autentisert' }
     }
-    console.log('User ID:', user.id)
+    console.log('✓ User authenticated:', user.id)
 
     // Get team_id for revalidation
+    console.log('Fetching team_id for item...')
     const { data: item, error: itemError } = await supabase
       .from('team_items')
-      .select('team_id')
+      .select('id, team_id, title')
       .eq('id', itemId)
-      .single()
 
     if (itemError) {
-      console.error('Error fetching item:', itemError)
-      return { error: itemError.message }
+      console.error('✗ Error fetching item:', itemError.message)
+      return { error: `Kunne ikke finne oppgave: ${itemError.message}` }
     }
+
+    if (!item || item.length === 0) {
+      console.error('✗ Item not found')
+      return { error: 'Oppgave ikke funnet' }
+    }
+
+    console.log('✓ Found item:', item[0].title)
 
     console.log('Deleting tag:', {
       item_id: itemId,
@@ -369,20 +446,19 @@ export async function removeSystemTag(
       .eq('tag_name', tagName.toLowerCase())
 
     if (error) {
-      console.error('Error deleting tag:', error.code, error.message)
-      return { error: error.message }
+      console.error('✗ Error deleting tag:', error.code, error.message)
+      return { error: `Kunne ikke slette tag: ${error.message}` }
     }
 
-    console.log('Tag removed successfully:', tagName.toLowerCase())
-    if (item) {
-      console.log('Revalidating path:', `/t/${item.team_id}`)
-      revalidatePath(`/t/${item.team_id}`)
-    }
+    console.log('✓ Tag removed successfully:', tagName.toLowerCase())
+    console.log('Revalidating path:', `/t/${item[0].team_id}`)
+    revalidatePath(`/t/${item[0].team_id}`)
+    console.log('=== removeSystemTag SUCCESS ===')
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('Unexpected error in removeSystemTag:', message, err)
-    return { error: message }
+    console.error('✗ Unexpected error in removeSystemTag:', message, err)
+    return { error: `Uventet feil: ${message}` }
   }
 }
 
