@@ -245,20 +245,20 @@ export function HealthCard({
                   {hoveredWeek === w.week && (
                     <>
                       <rect
-                        x={x - 18}
-                        y={y - 28}
-                        width="36"
-                        height="20"
+                        x={x - 22}
+                        y={y - 35}
+                        width="44"
+                        height="28"
                         fill="var(--color-neutral-900)"
-                        rx="3"
+                        rx="4"
                       />
                       <text
                         x={x}
-                        y={y - 12}
+                        y={y - 16}
                         textAnchor="middle"
-                        fontSize="9"
+                        fontSize="11"
                         fontWeight="600"
-                        fill="white"
+                        fill="rgba(255,255,255,0.7)"
                       >
                         Uke {w.week}
                       </text>
@@ -266,7 +266,7 @@ export function HealthCard({
                         x={x}
                         y={y - 2}
                         textAnchor="middle"
-                        fontSize="10"
+                        fontSize="14"
                         fontWeight="700"
                         fill="#10b981"
                       >
