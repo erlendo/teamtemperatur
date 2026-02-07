@@ -1,14 +1,14 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!url || !serviceRoleKey) {
-  console.error('Missing env variables');
-  process.exit(1);
+  console.error('Missing env variables')
+  process.exit(1)
 }
 
-const supabase = createClient(url, serviceRoleKey);
+const supabase = createClient(url, serviceRoleKey)
 
 // SQL to create the team_items tables
 const sql = `
@@ -146,57 +146,59 @@ CREATE POLICY "TeamMembers can manage item members"
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.team_items TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.team_item_members TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.team_item_tags TO authenticated;
-`;
+`
 
-console.log('Attempting to execute SQL to create team_items tables...\n');
+console.log('Attempting to execute SQL to create team_items tables...\n')
 
 try {
   // Try executing via rpc if available
   const { data, error } = await supabase.rpc('exec_sql', {
-    sql: sql
-  });
+    sql: sql,
+  })
 
   if (error) {
-    console.error('RPC exec_sql failed:', error.message);
-    console.log('\nTrying alternative approach via Supabase client...\n');
-    
+    console.error('RPC exec_sql failed:', error.message)
+    console.log('\nTrying alternative approach via Supabase client...\n')
+
     // Alternative: Try executing individual CREATE TABLE statements
-    const statements = sql.split(';').filter((s) => s.trim());
-    let successCount = 0;
-    let failureCount = 0;
+    const statements = sql.split(';').filter((s) => s.trim())
+    let successCount = 0
+    let failureCount = 0
 
     for (const statement of statements) {
-      const trimmed = statement.trim();
-      if (!trimmed) continue;
+      const trimmed = statement.trim()
+      if (!trimmed) continue
 
       try {
-        console.log(`Executing: ${trimmed.substring(0, 70)}...`);
+        console.log(`Executing: ${trimmed.substring(0, 70)}...`)
         // We can't directly execute arbitrary SQL via the client
-        console.log('  Note: Cannot execute via Supabase JS client');
+        console.log('  Note: Cannot execute via Supabase JS client')
       } catch (e) {
-        console.error('  Error:', e instanceof Error ? e.message : String(e));
-        failureCount++;
+        console.error('  Error:', e instanceof Error ? e.message : String(e))
+        failureCount++
       }
     }
   } else {
-    console.log('✓ SQL executed successfully via RPC');
-    console.log('Response:', data);
+    console.log('✓ SQL executed successfully via RPC')
+    console.log('Response:', data)
   }
 } catch (err) {
-  console.error('Error:', err instanceof Error ? err.message : String(err));
+  console.error('Error:', err instanceof Error ? err.message : String(err))
 }
 
 // Verify tables exist
-console.log('\n=== Verifying Tables ===\n');
+console.log('\n=== Verifying Tables ===\n')
 const { data: items, error: itemsError } = await supabase
   .from('team_items')
   .select('id')
-  .limit(1);
+  .limit(1)
 
 if (itemsError) {
-  console.error('✗ team_items still does not exist:', itemsError.message);
-  console.log('\nThe direct SQL execution did not work.');
-  console.log('You may need to manually run the migration via Supabase Dashboard > SQL Editor');
+  console.error('✗ team_items still does not exist:', itemsError.message)
+  console.log('\nThe direct SQL execution did not work.')
+  console.log(
+    'You may need to manually run the migration via Supabase Dashboard > SQL Editor'
+  )
 } else {
-  console.log('✓ team_items table now exists!');
+  console.log('✓ team_items table now exists!')
 }
