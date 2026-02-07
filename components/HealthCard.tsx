@@ -230,15 +230,18 @@ export function HealthCard({
               const y = 100 - (w.avg / 5) * 100
               return (
                 <g key={w.week}>
+                  {/* Larger invisible hit area for easier mouseover */}
                   <circle
                     cx={x}
                     cy={y}
-                    r="2"
-                    fill="#10b981"
+                    r="7"
+                    fill="transparent"
                     style={{ cursor: 'pointer' }}
                     onMouseEnter={() => setHoveredWeek(w.week)}
                     onMouseLeave={() => setHoveredWeek(null)}
                   />
+                  {/* Visible data point */}
+                  <circle cx={x} cy={y} r="2" fill="#10b981" />
                   {hoveredWeek === w.week && (
                     <>
                       <rect
