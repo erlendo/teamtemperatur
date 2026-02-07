@@ -26,30 +26,67 @@ export async function getTeamItems(
 ): Promise<{ items: TeamItem[]; error?: string }> {
   const supabase = supabaseServer();
 
-  let query = supabase
-    .from("team_items")
-    .select(
-      `
-      *,
-      members:team_item_members(user_id),
-      tags:team_item_tags(tag_name)
-    `
-    )
-    .eq("team_id", teamId)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
+  try {
+    // Fetch items first
+    let itemQuery = supabase
+      .from("team_items")
+      .select("*")
+      .eq("team_id", teamId)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
 
-  if (type) {
-    query = query.eq("type", type);
+    if (type) {
+      itemQuery = itemQuery.eq("type", type);
+    }
+
+    const { data: items, error: itemsError } = await itemQuery;
+
+    if (itemsError) {
+      return { items: [], error: itemsError.message };
+    }
+
+    if (!items || items.length === 0) {
+      return { items: [] };
+    }
+
+    // Fetch members separately
+    const { data: members, error: membersError } = await supabase
+      .from("team_item_members")
+      .select("item_id, user_id")
+      .in(
+        "item_id",
+        items.map((i) => i.id)
+      );
+
+    if (membersError) {
+      return { items: [], error: membersError.message };
+    }
+
+    // Fetch tags separately
+    const { data: tags, error: tagsError } = await supabase
+      .from("team_item_tags")
+      .select("item_id, tag_name")
+      .in(
+        "item_id",
+        items.map((i) => i.id)
+      );
+
+    if (tagsError) {
+      return { items: [], error: tagsError.message };
+    }
+
+    // Combine data
+    const itemsWithRelations: TeamItem[] = items.map((item) => ({
+      ...item,
+      members: (members || []).filter((m) => m.item_id === item.id),
+      tags: (tags || []).filter((t) => t.item_id === item.id),
+    }));
+
+    return { items: itemsWithRelations };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { items: [], error: message };
   }
-
-  const { data, error } = await query;
-
-  if (error) {
-    return { items: [], error: error.message };
-  }
-
-  return { items: data as TeamItem[] };
 }
 
 export async function createItem(
