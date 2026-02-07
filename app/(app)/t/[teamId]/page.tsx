@@ -21,7 +21,7 @@ export default async function TeamHome({
 }) {
   const { teamId } = await params
 
-  // Fetch team members - without join since auth.users doesn't support Postgrest relations
+  // Fetch team members with email lookup
   const supabase = supabaseServer()
   const { data: members } = await supabase
     .from('team_memberships')
@@ -29,11 +29,33 @@ export default async function TeamHome({
     .eq('team_id', teamId)
     .eq('status', 'active')
 
+  // Get user emails from auth.users via admin API
+  let userEmails: Record<string, string> = {}
+  if (members && members.length > 0) {
+    try {
+      const userIds = members.map((m) => m.user_id)
+      // Query to get user emails
+      const { data } = await supabase.auth.admin.listUsers()
+      const users = data?.users || []
+      userEmails = users
+        .filter((u) => userIds.includes(u.id))
+        .reduce(
+          (acc, u) => {
+            acc[u.id] = u.email || u.id
+            return acc
+          },
+          {} as Record<string, string>
+        )
+    } catch (err) {
+      console.error('Error fetching user emails:', err)
+    }
+  }
+
   const teamMembers =
     (members as Array<{ user_id: string }> | null)
       ?.map((m) => ({
         id: m.user_id,
-        email: m.user_id, // Use user_id as fallback since we can't join auth.users
+        email: userEmails[m.user_id] || m.user_id.slice(0, 8) + '...',
       }))
       .filter((m) => m.id) || []
 
