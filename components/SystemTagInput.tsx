@@ -92,7 +92,7 @@ export function SystemTagInput({
   };
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xs)", alignItems: "center", flexDirection: "column", alignItems: "flex-start" }}>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xs)", flexDirection: "column", alignItems: "flex-start" }}>
       {error && (
         <div
           style={{
@@ -205,6 +205,7 @@ export function SystemTagInput({
             </div>
           )}
         </div>
+      )}
       </div>
     </div>
   );
