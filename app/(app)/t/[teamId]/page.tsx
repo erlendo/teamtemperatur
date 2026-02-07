@@ -31,7 +31,7 @@ export default async function TeamHome({
 
   const teamMembers =
     members
-      ?.map((m: any) => ({
+      ?.map((m: { user_id: string; users?: { id: string; email: string } | null }) => ({
         id: m.users?.id || m.user_id,
         email: m.users?.email || 'Ukjent',
       }))

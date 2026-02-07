@@ -870,19 +870,11 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                         t.members?.some((m) => m.user_id === removingMemberId)
                       )?.id || ''
 
-                    console.log('[removeMember] Calling with:', {
-                      teamId,
-                      memberId: removingMemberId,
-                      deleteSubmissions,
-                    })
-
                     const result = await removeMember(
                       teamId,
                       removingMemberId || '',
                       deleteSubmissions
                     )
-
-                    console.log('[removeMember] Result:', result)
 
                     if ('error' in result) {
                       setError(result.error || 'Ukjent feil')
