@@ -195,9 +195,9 @@ export function HealthCard({
           </p>
           <svg
             width="100%"
-            height="120"
-            viewBox="0 0 100 120"
-            style={{ display: 'block' }}
+            height="160"
+            viewBox="0 -40 100 160"
+            style={{ display: 'block', overflow: 'visible' }}
             preserveAspectRatio="none"
           >
             {/* Baseline */}
@@ -295,7 +295,8 @@ export function HealthCard({
             color: 'var(--color-neutral-700)',
           }}
         >
-          <strong>Svar:</strong> {responseCount} av {memberCount} ({responseRate.toFixed(0)}%)
+          <strong>Svar:</strong> {responseCount} av {memberCount} (
+          {responseRate.toFixed(0)}%)
         </p>
       </div>
 
