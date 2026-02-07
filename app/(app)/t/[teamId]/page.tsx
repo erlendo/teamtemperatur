@@ -21,19 +21,19 @@ export default async function TeamHome({
 }) {
   const { teamId } = await params
 
-  // Fetch team members
+  // Fetch team members - without join since auth.users doesn't support Postgrest relations
   const supabase = supabaseServer()
   const { data: members } = await supabase
     .from('team_memberships')
-    .select('user_id, users:user_id(id, email)')
+    .select('user_id')
     .eq('team_id', teamId)
     .eq('status', 'active')
 
   const teamMembers =
-    (members as Array<{ user_id: string; users?: { id: string; email: string } | null }> | null)
+    (members as Array<{ user_id: string }> | null)
       ?.map((m) => ({
-        id: m.users?.id || m.user_id,
-        email: m.users?.email || 'Ukjent',
+        id: m.user_id,
+        email: m.user_id, // Use user_id as fallback since we can't join auth.users
       }))
       .filter((m) => m.id) || []
 
