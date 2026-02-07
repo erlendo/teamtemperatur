@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { supabaseServer } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 type ItemType = "ukemål" | "pipeline" | "mål" | "retro";
 type ItemStatus = "planlagt" | "pågår" | "ferdig";

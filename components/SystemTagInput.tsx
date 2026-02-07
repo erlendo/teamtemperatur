@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import {
-  addSystemTag,
-  removeSystemTag,
-  getSystemTagSuggestions,
+    addSystemTag,
+    getSystemTagSuggestions,
+    removeSystemTag,
 } from "@/server/actions/dashboard";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 interface SystemTagInputProps {
   itemId: string;

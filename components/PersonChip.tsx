@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { removeMemberTag } from "@/server/actions/dashboard";
+import { useRouter } from "next/navigation";
 
 interface PersonChipProps {
   userId: string;

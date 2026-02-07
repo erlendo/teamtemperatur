@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import {
+    addMemberTag,
+    deleteItem,
+    toggleItemStatus,
+    updateItem,
+    type TeamItem,
+} from "@/server/actions/dashboard";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { PersonChip } from "./PersonChip";
 import { SystemTagInput } from "./SystemTagInput";
-import {
-  updateItem,
-  deleteItem,
-  toggleItemStatus,
-  addMemberTag,
-  type TeamItem,
-} from "@/server/actions/dashboard";
 
 interface TeamItemCardProps {
   item: TeamItem;
