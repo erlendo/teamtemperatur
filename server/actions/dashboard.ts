@@ -201,6 +201,12 @@ export async function addMemberTag(
     console.log('=== addMemberTag START ===')
     console.log('itemId:', itemId, 'userId:', userId)
 
+    // Validate userId format
+    if (!userId || userId.trim() === '') {
+      console.error('✗ userId is empty')
+      return { error: 'Bruker-ID er tom' }
+    }
+
     // Get team_id for revalidation
     console.log('Fetching team_id for item...')
     const { data: item, error: itemError } = await supabase
@@ -209,7 +215,7 @@ export async function addMemberTag(
       .eq('id', itemId)
 
     if (itemError) {
-      console.error('✗ Error fetching item:', itemError.message)
+      console.error('✗ Error fetching item:', itemError.code, itemError.message)
       return { error: `Kunne ikke finne oppgave: ${itemError.message}` }
     }
 
@@ -218,31 +224,55 @@ export async function addMemberTag(
       return { error: 'Oppgave ikke funnet' }
     }
 
-    console.log('✓ Found item:', item[0].title)
+    console.log('✓ Found item:', item[0].title, '(team:', item[0].team_id, ')')
+
+    // Verify user is a member of the team
+    console.log('Verifying user is member of team...')
+    const { data: membership, error: memberError } = await supabase
+      .from('team_memberships')
+      .select('user_id, status')
+      .eq('team_id', item[0].team_id)
+      .eq('user_id', userId)
+      .eq('status', 'active')
+
+    if (memberError) {
+      console.error('✗ Error checking membership:', memberError.message)
+      return { error: `Kunne ikke verifisere medlemskap: ${memberError.message}` }
+    }
+
+    if (!membership || membership.length === 0) {
+      console.error('✗ User is not an active member of this team')
+      return { error: 'Person er ikke medlem av laget' }
+    }
+
+    console.log('✓ User is active team member')
 
     console.log('Inserting member tag...')
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from('team_item_members')
       .insert({ item_id: itemId, user_id: userId })
+      .select()
 
     if (error) {
       // Ignore duplicate errors (same person already tagged)
       if (error.code === '23505') {
-        console.log('Member already tagged')
+        console.log('Member already tagged, ignoring duplicate')
         return {}
       }
       console.error('✗ Error inserting member tag:', error.code, error.message)
+      console.error('  Details:', error.details)
+      console.error('  Hint:', error.hint)
       return { error: `Kunne ikke legge til person: ${error.message}` }
     }
 
-    console.log('✓ Member tag inserted')
+    console.log('✓ Member tag inserted:', data)
     console.log('Revalidating path:', `/t/${item[0].team_id}`)
     revalidatePath(`/t/${item[0].team_id}`)
     console.log('=== addMemberTag SUCCESS ===')
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('✗ Unexpected error in addMemberTag:', message)
+    console.error('✗ Unexpected error in addMemberTag:', message, err)
     return { error: `Uventet feil: ${message}` }
   }
 }

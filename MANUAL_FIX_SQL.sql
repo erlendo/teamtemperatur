@@ -152,15 +152,21 @@ CREATE POLICY "Users can select members for items in their teams"
     )
   );
 
+-- Note: For INSERT, we check that the CURRENT user is a team member
+-- The user_id being inserted is just a data field, RLS doesn't restrict who can be added
 CREATE POLICY "Users can add members to items in their teams"
   ON public.team_item_members FOR INSERT
   WITH CHECK (
-    EXISTS (
+    id IS NOT NULL  -- Basic check to ensure something is being inserted
+    AND EXISTS (
       SELECT 1 FROM public.team_items ti
-      INNER JOIN public.team_memberships tm ON tm.team_id = ti.team_id
       WHERE ti.id = team_item_members.item_id
-        AND tm.user_id = auth.uid()
-        AND tm.status = 'active'
+        AND EXISTS (
+          SELECT 1 FROM public.team_memberships tm
+          WHERE tm.team_id = ti.team_id
+            AND tm.user_id = auth.uid()
+            AND tm.status = 'active'
+        )
     )
   );
 
