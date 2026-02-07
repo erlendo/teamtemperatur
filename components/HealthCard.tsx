@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useState } from 'react'
 
 type WeekStat = {
   week: number
@@ -38,6 +41,8 @@ export function HealthCard({
   previousWeekAvg,
   statsData = [],
 }: HealthCardProps) {
+  const [hoveredWeek, setHoveredWeek] = useState<number | null>(null)
+
   // Get available weeks from stats data (only weeks with actual data)
   const availableWeeks = statsData
     .filter((s) => s.overall_avg && s.overall_avg > 0) // Only weeks with real data
@@ -224,7 +229,49 @@ export function HealthCard({
               const x = availableWeeks.length > 1 ? i * spacing : 50
               const y = 100 - (w.avg / 5) * 100
               return (
-                <circle key={w.week} cx={x} cy={y} r="1.5" fill="#10b981" />
+                <g key={w.week}>
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="2"
+                    fill="#10b981"
+                    style={{ cursor: 'pointer' }}
+                    onMouseEnter={() => setHoveredWeek(w.week)}
+                    onMouseLeave={() => setHoveredWeek(null)}
+                  />
+                  {hoveredWeek === w.week && (
+                    <>
+                      <rect
+                        x={x - 18}
+                        y={y - 28}
+                        width="36"
+                        height="20"
+                        fill="var(--color-neutral-900)"
+                        rx="3"
+                      />
+                      <text
+                        x={x}
+                        y={y - 12}
+                        textAnchor="middle"
+                        fontSize="9"
+                        fontWeight="600"
+                        fill="white"
+                      >
+                        Uke {w.week}
+                      </text>
+                      <text
+                        x={x}
+                        y={y - 2}
+                        textAnchor="middle"
+                        fontSize="10"
+                        fontWeight="700"
+                        fill="#10b981"
+                      >
+                        {w.avg.toFixed(1)}
+                      </text>
+                    </>
+                  )}
+                </g>
               )
             })}
           </svg>
