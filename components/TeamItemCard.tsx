@@ -6,6 +6,7 @@ import {
   updateItem,
   type TeamItem,
 } from '@/server/actions/dashboard'
+import { AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { PersonChip } from './PersonChip'
@@ -138,9 +139,13 @@ export function TeamItemCard({
             borderRadius: 'var(--radius-md)',
             fontSize: 'var(--font-size-sm)',
             marginBottom: 'var(--space-md)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-xs)',
           }}
         >
-          ❌ {error}
+          <AlertCircle size={16} />
+          {error}
         </div>
       )}
       <div
@@ -164,9 +169,9 @@ export function TeamItemCard({
               cursor: 'pointer',
             }}
           >
-            <option value="planlagt">📍 Planlagt</option>
-            <option value="pågår">⏳ Pågår</option>
-            <option value="ferdig">✅ Ferdig</option>
+            <option value="planlagt">◆ Planlagt</option>
+            <option value="pågår">▶ Pågår</option>
+            <option value="ferdig">● Ferdig</option>
           </select>
         </div>
 
