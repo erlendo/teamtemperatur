@@ -194,7 +194,7 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
   // Verify user is member of this team
   const { data: memberships, error: membershipError } = await supabase
     .from('team_memberships')
-    .select('id, role, status')
+    .select('role, status')
     .eq('team_id', item.team_id)
     .eq('user_id', user.id)
 
@@ -202,7 +202,9 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
 
   if (membershipError) {
     console.error('Membership fetch error:', membershipError)
-    return { error: `Kunne ikke verifisere medlemskap: ${membershipError.message}` }
+    return {
+      error: `Kunne ikke verifisere medlemskap: ${membershipError.message}`,
+    }
   }
 
   const activeMembership = memberships?.find((m) => m.status === 'active')
@@ -211,7 +213,9 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
       'No active membership found. Available:',
       memberships?.map((m) => ({ role: m.role, status: m.status }))
     )
-    return { error: 'Du har ikke tilgang til denne oppgaven (inaktivt medlemskap)' }
+    return {
+      error: 'Du har ikke tilgang til denne oppgaven (inaktivt medlemskap)',
+    }
   }
 
   console.log('User verified as member with role:', activeMembership.role)
