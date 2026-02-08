@@ -111,10 +111,24 @@ export function TeamItemCard({
     (m) => !assignedUserIds.includes(m.id)
   )
 
+  // Get background color based on status (Nordic nature palette)
+  const getBackgroundColor = (): string => {
+    switch (item.status) {
+      case 'planlagt':
+        return '#E3F2FD' // Light blue - planned
+      case 'pågår':
+        return '#FFFACD' // Light yellow - in progress
+      case 'ferdig':
+        return '#E8F5E9' // Light green - done
+      default:
+        return 'white'
+    }
+  }
+
   return (
     <div
       style={{
-        backgroundColor: 'white',
+        backgroundColor: getBackgroundColor(),
         borderRadius: 'var(--radius-lg, 0.5rem)',
         padding: 'var(--space-lg)',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
