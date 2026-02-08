@@ -192,13 +192,19 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
   }
 
   // Verify user is member of this team
+  console.log('Checking membership for user:', user.id, 'in team:', item.team_id)
+  
   const { data: memberships, error: membershipError } = await supabase
     .from('team_memberships')
     .select('role, status')
     .eq('team_id', item.team_id)
     .eq('user_id', user.id)
 
-  console.log('Team memberships:', memberships, 'error:', membershipError)
+  console.log('Team memberships query result:', {
+    memberships,
+    count: memberships?.length,
+    error: membershipError,
+  })
 
   if (membershipError) {
     console.error('Membership fetch error:', membershipError)
@@ -207,12 +213,24 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     }
   }
 
-  const activeMembership = memberships?.find((m) => m.status === 'active')
+  if (!memberships || memberships.length === 0) {
+    // Try querying without the user_id filter to see if RLS is blocking
+    console.log('No memberships found. Checking if RLS is blocking access...')
+    const { data: allMemberships } = await supabase
+      .from('team_memberships')
+      .select('role, status, user_id')
+      .eq('team_id', item.team_id)
+    
+    console.log('All memberships for this team (visible to user):', allMemberships?.map((m) => ({ role: m.role, status: m.status, is_current_user: m.user_id === user.id })))
+    
+    return {
+      error: 'Du har ikke tilgang til denne oppgaven (ikke medlem av teamet)',
+    }
+  }
+
+  const activeMembership = memberships.find((m) => m.status === 'active')
   if (!activeMembership) {
-    console.log(
-      'No active membership found. Available:',
-      memberships?.map((m) => ({ role: m.role, status: m.status }))
-    )
+    console.log('User found but not active, status:', memberships[0]?.status)
     return {
       error: 'Du har ikke tilgang til denne oppgaven (inaktivt medlemskap)',
     }
