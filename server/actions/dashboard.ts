@@ -164,6 +164,14 @@ export async function updateItem(
 export async function deleteItem(itemId: string): Promise<{ error?: string }> {
   const supabase = supabaseServer()
 
+  // Verify user is authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Ikke autentisert' }
+  }
+
   // Get team_id for revalidation
   const { data: item } = await supabase
     .from('team_items')
