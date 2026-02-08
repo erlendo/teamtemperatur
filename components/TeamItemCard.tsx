@@ -8,7 +8,7 @@ import {
 } from '@/server/actions/dashboard'
 import { AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { PersonChip } from './PersonChip'
 import { SystemTagInput } from './SystemTagInput'
 
@@ -29,6 +29,7 @@ export function TeamItemCard({
   const [title, setTitle] = useState(item.title)
   const [showMemberDropdown, setShowMemberDropdown] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
   const handleSaveTitle = async () => {
@@ -52,8 +53,28 @@ export function TeamItemCard({
 
   const handleDelete = async () => {
     if (confirm('Er du sikker på at du vil slette denne?')) {
+      startTransition(async () => {
+        try {
+          const result = await deleteItem(item.id)
+          if (result.error) {
+            setError(result.error)
+            return
+          }
+          setError(null)
+          router.refresh()
+          onUpdate?.()
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Ukjent feil'
+          setError(msg)
+        }
+      })
+    }
+  }
+
+  const handleStatusChange = async (newStatus: ItemStatus) => {
+    startTransition(async () => {
       try {
-        const result = await deleteItem(item.id)
+        const result = await updateItem(item.id, { status: newStatus })
         if (result.error) {
           setError(result.error)
           return
@@ -65,40 +86,26 @@ export function TeamItemCard({
         const msg = err instanceof Error ? err.message : 'Ukjent feil'
         setError(msg)
       }
-    }
-  }
-
-  const handleStatusChange = async (newStatus: ItemStatus) => {
-    try {
-      const result = await updateItem(item.id, { status: newStatus })
-      if (result.error) {
-        setError(result.error)
-        return
-      }
-      setError(null)
-      router.refresh()
-      onUpdate?.()
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Ukjent feil'
-      setError(msg)
-    }
+    })
   }
 
   const handleAddMember = async (userId: string) => {
-    try {
-      const result = await addMemberTag(item.id, userId)
-      if (result.error) {
-        setError(result.error)
-        return
+    startTransition(async () => {
+      try {
+        const result = await addMemberTag(item.id, userId)
+        if (result.error) {
+          setError(result.error)
+          return
+        }
+        setError(null)
+        setShowMemberDropdown(false)
+        router.refresh()
+        onUpdate?.()
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Ukjent feil'
+        setError(msg)
       }
-      setError(null)
-      setShowMemberDropdown(false)
-      router.refresh()
-      onUpdate?.()
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Ukjent feil'
-      setError(msg)
-    }
+    })
   }
 
   const handleTagUpdate = () => {
@@ -161,12 +168,15 @@ export function TeamItemCard({
           <select
             value={item.status}
             onChange={(e) => handleStatusChange(e.target.value as ItemStatus)}
+            disabled={isPending}
             style={{
               padding: 'var(--space-xs) var(--space-sm)',
               border: '1px solid var(--color-neutral-300)',
               borderRadius: 'var(--radius-md)',
               fontSize: 'var(--font-size-sm)',
-              cursor: 'pointer',
+              cursor: isPending ? 'not-allowed' : 'pointer',
+              opacity: isPending ? 0.6 : 1,
+              transition: 'all 0.2s ease',
             }}
           >
             <option value="planlagt">◆ Planlagt</option>
@@ -215,15 +225,20 @@ export function TeamItemCard({
 
         <button
           onClick={handleDelete}
+          disabled={isPending}
           style={{
             background: 'none',
             border: 'none',
-            cursor: 'pointer',
-            color: 'var(--color-neutral-400)',
+            cursor: isPending ? 'not-allowed' : 'pointer',
+            color: isPending
+              ? 'var(--color-neutral-300)'
+              : 'var(--color-neutral-400)',
             fontSize: '1.25rem',
             padding: 0,
+            opacity: isPending ? 0.6 : 1,
+            transition: 'all 0.2s ease',
           }}
-          title="Slett"
+          title={isPending ? 'Sletter...' : 'Slett'}
         >
           🗑️
         </button>
@@ -260,17 +275,22 @@ export function TeamItemCard({
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShowMemberDropdown(!showMemberDropdown)}
+              disabled={isPending}
               style={{
                 padding: 'var(--space-xs) var(--space-sm)',
-                backgroundColor: 'var(--color-neutral-100)',
+                backgroundColor: isPending
+                  ? 'var(--color-neutral-200)'
+                  : 'var(--color-neutral-100)',
                 border: '1px dashed var(--color-neutral-400)',
                 borderRadius: 'var(--radius-full)',
-                cursor: 'pointer',
+                cursor: isPending ? 'not-allowed' : 'pointer',
                 fontSize: 'var(--font-size-sm)',
                 fontWeight: 500,
+                opacity: isPending ? 0.6 : 1,
+                transition: 'all 0.2s ease',
               }}
             >
-              + Legg til person
+              {isPending ? '…' : '+ Legg til person'}
             </button>
 
             {showMemberDropdown && availableMembers.length > 0 && (
@@ -292,6 +312,7 @@ export function TeamItemCard({
                   <button
                     key={member.id}
                     onClick={() => handleAddMember(member.id)}
+                    disabled={isPending}
                     style={{
                       display: 'block',
                       width: '100%',
@@ -299,12 +320,16 @@ export function TeamItemCard({
                       border: 'none',
                       background: 'none',
                       textAlign: 'left',
-                      cursor: 'pointer',
+                      cursor: isPending ? 'not-allowed' : 'pointer',
                       fontSize: 'var(--font-size-sm)',
+                      opacity: isPending ? 0.6 : 1,
+                      transition: 'all 0.2s ease',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        'var(--color-neutral-100)'
+                      if (!isPending) {
+                        e.currentTarget.style.backgroundColor =
+                          'var(--color-neutral-100)'
+                      }
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = 'transparent'
