@@ -95,11 +95,11 @@ export default async function TeamHome({
             Dashboard – Uke {currentWeek}, {new Date().getFullYear()}
           </h1>
 
-          {/* Row 1: Ukemål | Pipeline */}
+          {/* Row 1: Ukemål | Pipeline | (Mål moved here) */}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
               gap: 'var(--space-2xl)',
               marginBottom: 'var(--space-2xl)',
             }}
@@ -118,17 +118,6 @@ export default async function TeamHome({
               teamId={teamId}
               teamMembers={teamMembers}
             />
-          </div>
-
-          {/* Row 2: Mål | Helse */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
-              gap: 'var(--space-2xl)',
-              marginBottom: 'var(--space-2xl)',
-            }}
-          >
             <DashboardSection
               title={`Mål (T${Math.ceil((new Date().getMonth() + 1) / 4)} ${new Date().getFullYear()})`}
               type="mål"
@@ -136,6 +125,17 @@ export default async function TeamHome({
               teamId={teamId}
               teamMembers={teamMembers}
             />
+          </div>
+
+          {/* Row 2: Helse | Retro */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+              gap: 'var(--space-2xl)',
+              marginBottom: 'var(--space-2xl)',
+            }}
+          >
             <div>
               <h2
                 style={{
@@ -173,10 +173,6 @@ export default async function TeamHome({
                 </p>
               )}
             </div>
-          </div>
-
-          {/* Row 3: Retro (full width) */}
-          <div style={{ marginBottom: 'var(--space-2xl)' }}>
             <DashboardSection
               title="Retro-forbedringer"
               type="retro"
