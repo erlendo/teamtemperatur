@@ -202,7 +202,7 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
 
   console.log('Team membership:', membership, 'error:', membershipError)
 
-  if (!membership) {
+  if (membershipError || !membership) {
     return { error: 'Du har ikke tilgang til denne oppgaven' }
   }
 

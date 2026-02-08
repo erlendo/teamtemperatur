@@ -23,7 +23,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { TeamItemCard } from './TeamItemCard'
 
 type ItemType = 'ukemål' | 'pipeline' | 'mål' | 'retro'
@@ -46,13 +46,8 @@ function SortableItemWrapper({
   teamMembers: Array<{ id: string; email: string }>
   onUpdate: () => void
 }) {
-  const {
-    attributes,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id })
+  const { attributes, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -92,6 +87,13 @@ export function DashboardSection({
     [...items].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
   )
   const router = useRouter()
+
+  // Re-sync sorted items when items prop changes
+  useEffect(() => {
+    setSortedItems(
+      [...items].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    )
+  }, [items])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

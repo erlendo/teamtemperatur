@@ -229,8 +229,6 @@ export function TeamItemCard({
 
         <button
           onClick={() => {
-            console.log('Button clicked!')
-            alert('Delete button clicked! Now calling handleDelete...')
             void handleDelete()
           }}
           style={{
