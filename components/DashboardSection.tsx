@@ -48,7 +48,6 @@ function SortableItemWrapper({
 }) {
   const {
     attributes,
-    listeners,
     setNodeRef,
     transform,
     transition,
@@ -62,7 +61,7 @@ function SortableItemWrapper({
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} {...attributes}>
       <TeamItemCard item={item} teamMembers={teamMembers} onUpdate={onUpdate} />
     </div>
   )
@@ -95,7 +94,11 @@ export function DashboardSection({
   const router = useRouter()
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 10, // Require 10px drag distance to start dragging
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
