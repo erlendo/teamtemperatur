@@ -192,19 +192,29 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
   }
 
   // Verify user is member of this team
-  const { data: membership, error: membershipError } = await supabase
+  const { data: memberships, error: membershipError } = await supabase
     .from('team_memberships')
-    .select('id')
+    .select('id, role, status')
     .eq('team_id', item.team_id)
     .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
 
-  console.log('Team membership:', membership, 'error:', membershipError)
+  console.log('Team memberships:', memberships, 'error:', membershipError)
 
-  if (membershipError || !membership) {
-    return { error: 'Du har ikke tilgang til denne oppgaven' }
+  if (membershipError) {
+    console.error('Membership fetch error:', membershipError)
+    return { error: `Kunne ikke verifisere medlemskap: ${membershipError.message}` }
   }
+
+  const activeMembership = memberships?.find((m) => m.status === 'active')
+  if (!activeMembership) {
+    console.log(
+      'No active membership found. Available:',
+      memberships?.map((m) => ({ role: m.role, status: m.status }))
+    )
+    return { error: 'Du har ikke tilgang til denne oppgaven (inaktivt medlemskap)' }
+  }
+
+  console.log('User verified as member with role:', activeMembership.role)
 
   // Delete related records first (CASCADE should handle but being explicit)
   const { error: membersDeleteError } = await supabase

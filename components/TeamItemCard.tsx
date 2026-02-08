@@ -53,14 +53,6 @@ export function TeamItemCard({
   const handleDelete = async () => {
     console.log('handleDelete called for item:', item.id)
 
-    if (!confirm('Er du sikker på at du vil slette denne?')) {
-      console.log('Delete cancelled by user')
-      return
-    }
-
-    console.log('Delete confirmed, calling deleteItem')
-
-    // Use regular async/await instead of startTransition for direct Server Action calls
     try {
       const result = await deleteItem(item.id)
       console.log('Delete result:', result)
