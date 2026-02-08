@@ -162,12 +162,14 @@ export async function updateItem(
 }
 
 export async function deleteItem(itemId: string): Promise<{ error?: string }> {
+  console.log('deleteItem called with itemId:', itemId)
   const supabase = supabaseServer()
 
   // Verify user is authenticated
   const {
     data: { user },
   } = await supabase.auth.getUser()
+  console.log('User:', user?.id)
   if (!user) {
     return { error: 'Ikke autentisert' }
   }
@@ -179,6 +181,8 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     .eq('id', itemId)
     .single()
 
+  console.log('Fetched item:', item, 'error:', fetchError)
+  
   if (fetchError) {
     return { error: `Fant ikke oppgaven: ${fetchError.message}` }
   }
@@ -196,6 +200,8 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     .eq('status', 'active')
     .single()
 
+  console.log('Team membership:', membership, 'error:', membershipError)
+
   if (!membership) {
     return { error: 'Du har ikke tilgang til denne oppgaven' }
   }
@@ -206,10 +212,14 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     .delete()
     .eq('item_id', itemId)
 
+  console.log('Members delete error:', membersDeleteError)
+
   const { error: tagsDeleteError } = await supabase
     .from('team_item_tags')
     .delete()
     .eq('item_id', itemId)
+
+  console.log('Tags delete error:', tagsDeleteError)
 
   // Delete the item itself
   const { error: deleteError } = await supabase
@@ -217,10 +227,13 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     .delete()
     .eq('id', itemId)
 
+  console.log('Item delete error:', deleteError)
+
   if (deleteError) {
     return { error: `Sletting feilet: ${deleteError.message}` }
   }
 
+  console.log('Item deleted successfully, revalidating path for team:', item.team_id)
   revalidatePath(`/t/${item.team_id}`)
   return {}
 }
