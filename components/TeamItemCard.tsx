@@ -6,7 +6,7 @@ import {
   updateItem,
   type TeamItem,
 } from '@/server/actions/dashboard'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, Pencil } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { PersonChip } from './PersonChip'
@@ -25,7 +25,8 @@ export function TeamItemCard({
   teamMembers,
   onUpdate,
 }: TeamItemCardProps) {
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
   const [title, setTitle] = useState(item.title)
   const [showMemberDropdown, setShowMemberDropdown] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,7 +48,7 @@ export function TeamItemCard({
         setError(msg)
       }
     }
-    setIsEditing(false)
+    setIsEditingTitle(false)
   }
 
   const handleDelete = async () => {
@@ -130,7 +131,7 @@ export function TeamItemCard({
       style={{
         backgroundColor: getBackgroundColor(),
         borderRadius: 'var(--radius-lg, 0.5rem)',
-        padding: 'var(--space-lg)',
+        padding: 'var(--space-md)',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         border: '1px solid var(--color-neutral-200, #e5e5e5)',
         transition: 'all 0.3s ease',
@@ -166,20 +167,20 @@ export function TeamItemCard({
         style={{
           display: 'flex',
           alignItems: 'flex-start',
-          gap: 'var(--space-sm)',
-          marginBottom: 'var(--space-md)',
+          gap: 'var(--space-xs)',
+          marginBottom: isEditMode ? 'var(--space-md)' : 0,
         }}
       >
-        {/* Status dropdown for all item types */}
-        <div style={{ marginTop: '2px' }}>
+        {/* Status dropdown */}
+        <div style={{ marginTop: '2px', flexShrink: 0 }}>
           <select
             value={item.status}
             onChange={(e) => handleStatusChange(e.target.value as ItemStatus)}
             style={{
-              padding: 'var(--space-xs) var(--space-sm)',
+              padding: '4px 6px',
               border: '1px solid var(--color-neutral-300)',
               borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--font-size-sm)',
+              fontSize: '12px',
               cursor: 'pointer',
             }}
           >
@@ -189,8 +190,9 @@ export function TeamItemCard({
           </select>
         </div>
 
-        <div style={{ flex: 1 }}>
-          {isEditing ? (
+        {/* Title */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {isEditingTitle ? (
             <input
               type="text"
               value={title}
@@ -200,26 +202,32 @@ export function TeamItemCard({
                 if (e.key === 'Enter') void handleSaveTitle()
                 if (e.key === 'Escape') {
                   setTitle(item.title)
-                  setIsEditing(false)
+                  setIsEditingTitle(false)
                 }
               }}
               autoFocus
               style={{
                 width: '100%',
-                padding: 'var(--space-sm)',
+                padding: '4px 6px',
                 border: '1px solid var(--color-primary)',
                 borderRadius: 'var(--radius-md)',
-                fontSize: 'var(--font-size-base)',
+                fontSize: '13px',
+                fontWeight: 500,
               }}
             />
           ) : (
             <p
-              onClick={() => setIsEditing(true)}
+              onClick={() => {
+                setIsEditingTitle(true)
+                setIsEditMode(true)
+              }}
               style={{
                 margin: 0,
                 cursor: 'text',
-                fontSize: 'var(--font-size-base)',
-                lineHeight: 1.5,
+                fontSize: '13px',
+                fontWeight: 500,
+                lineHeight: 1.4,
+                wordBreak: 'break-word',
               }}
             >
               {item.title}
@@ -227,6 +235,36 @@ export function TeamItemCard({
           )}
         </div>
 
+        {/* Edit button (pencil) */}
+        <button
+          onClick={() => setIsEditMode(!isEditMode)}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: isEditMode
+              ? 'var(--color-primary)'
+              : 'var(--color-neutral-500)',
+            padding: 'var(--space-xs)',
+            transition: 'all 0.2s ease',
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--color-primary)'
+            e.currentTarget.style.transform = 'scale(1.1)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = isEditMode
+              ? 'var(--color-primary)'
+              : 'var(--color-neutral-500)'
+            e.currentTarget.style.transform = 'scale(1)'
+          }}
+          title="Rediger"
+        >
+          <Pencil size={18} />
+        </button>
+
+        {/* Delete button (trash) */}
         <button
           onClick={() => {
             void handleDelete()
@@ -236,9 +274,10 @@ export function TeamItemCard({
             border: 'none',
             cursor: 'pointer',
             color: 'var(--color-neutral-500)',
-            fontSize: '1.5rem',
+            fontSize: '1.2rem',
             padding: 'var(--space-xs)',
             transition: 'all 0.2s ease',
+            flexShrink: 0,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = 'var(--color-error, #ef4444)'
@@ -254,102 +293,104 @@ export function TeamItemCard({
         </button>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--space-sm)',
-        }}
-      >
+      {isEditMode && (
         <div
           style={{
             display: 'flex',
-            flexWrap: 'wrap',
-            gap: 'var(--space-xs)',
-            alignItems: 'center',
+            flexDirection: 'column',
+            gap: 'var(--space-sm)',
           }}
         >
-          {item.members.map((member) => {
-            const user = teamMembers.find((m) => m.id === member.user_id)
-            return (
-              <PersonChip
-                key={member.user_id}
-                userId={member.user_id}
-                displayName={user?.email.split('@')[0] || 'Ukjent'}
-                itemId={item.id}
-                onUpdate={handleTagUpdate}
-              />
-            )
-          })}
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 'var(--space-xs)',
+              alignItems: 'center',
+            }}
+          >
+            {item.members.map((member) => {
+              const user = teamMembers.find((m) => m.id === member.user_id)
+              return (
+                <PersonChip
+                  key={member.user_id}
+                  userId={member.user_id}
+                  displayName={user?.email.split('@')[0] || 'Ukjent'}
+                  itemId={item.id}
+                  onUpdate={handleTagUpdate}
+                />
+              )
+            })}
 
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setShowMemberDropdown(!showMemberDropdown)}
-              style={{
-                padding: 'var(--space-xs) var(--space-sm)',
-                backgroundColor: 'var(--color-neutral-100)',
-                border: '1px dashed var(--color-neutral-400)',
-                borderRadius: 'var(--radius-full)',
-                cursor: 'pointer',
-                fontSize: 'var(--font-size-sm)',
-                fontWeight: 500,
-              }}
-            >
-              + Legg til person
-            </button>
-
-            {showMemberDropdown && availableMembers.length > 0 && (
-              <div
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowMemberDropdown(!showMemberDropdown)}
                 style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  marginTop: 'var(--space-xs)',
-                  backgroundColor: 'white',
-                  border: '1px solid var(--color-neutral-300)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: 'var(--shadow-md)',
-                  zIndex: 10,
-                  minWidth: '200px',
+                  padding: '4px 8px',
+                  backgroundColor: 'var(--color-neutral-100)',
+                  border: '1px dashed var(--color-neutral-400)',
+                  borderRadius: 'var(--radius-full)',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: 500,
                 }}
               >
-                {availableMembers.map((member) => (
-                  <button
-                    key={member.id}
-                    onClick={() => handleAddMember(member.id)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      padding: 'var(--space-sm)',
-                      border: 'none',
-                      background: 'none',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      fontSize: 'var(--font-size-sm)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        'var(--color-neutral-100)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                    }}
-                  >
-                    {member.email.split('@')[0]}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+                + Legg til person
+              </button>
 
-        <SystemTagInput
-          itemId={item.id}
-          teamId={item.team_id}
-          existingTags={item.tags.map((t) => t.tag_name)}
-          onUpdate={handleTagUpdate}
-        />
-      </div>
+              {showMemberDropdown && availableMembers.length > 0 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: 'var(--space-xs)',
+                    backgroundColor: 'white',
+                    border: '1px solid var(--color-neutral-300)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-md)',
+                    zIndex: 10,
+                    minWidth: '200px',
+                  }}
+                >
+                  {availableMembers.map((member) => (
+                    <button
+                      key={member.id}
+                      onClick={() => handleAddMember(member.id)}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: 'var(--space-sm)',
+                        border: 'none',
+                        background: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        fontSize: 'var(--font-size-sm)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor =
+                          'var(--color-neutral-100)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }}
+                    >
+                      {member.email.split('@')[0]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <SystemTagInput
+            itemId={item.id}
+            teamId={item.team_id}
+            existingTags={item.tags.map((t) => t.tag_name)}
+            onUpdate={handleTagUpdate}
+          />
+        </div>
+      )}
     </div>
   )
 }
