@@ -162,14 +162,12 @@ export async function updateItem(
 }
 
 export async function deleteItem(itemId: string): Promise<{ error?: string }> {
-  console.log('deleteItem called with itemId:', itemId)
   const supabase = supabaseServer()
 
   // Verify user is authenticated
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  console.log('User:', user?.id)
   if (!user) {
     return { error: 'Ikke autentisert' }
   }
@@ -181,8 +179,6 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     .eq('id', itemId)
     .single()
 
-  console.log('Fetched item:', item, 'error:', fetchError)
-
   if (fetchError) {
     return { error: `Fant ikke oppgaven: ${fetchError.message}` }
   }
@@ -192,37 +188,19 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
   }
 
   // Verify user is member of this team
-  console.log('Checking membership for user:', user.id, 'in team:', item.team_id)
-  
   const { data: memberships, error: membershipError } = await supabase
     .from('team_memberships')
     .select('role, status')
     .eq('team_id', item.team_id)
     .eq('user_id', user.id)
 
-  console.log('Team memberships query result:', {
-    memberships,
-    count: memberships?.length,
-    error: membershipError,
-  })
-
   if (membershipError) {
-    console.error('Membership fetch error:', membershipError)
     return {
       error: `Kunne ikke verifisere medlemskap: ${membershipError.message}`,
     }
   }
 
   if (!memberships || memberships.length === 0) {
-    // Try querying without the user_id filter to see if RLS is blocking
-    console.log('No memberships found. Checking if RLS is blocking access...')
-    const { data: allMemberships } = await supabase
-      .from('team_memberships')
-      .select('role, status, user_id')
-      .eq('team_id', item.team_id)
-    
-    console.log('All memberships for this team (visible to user):', allMemberships?.map((m) => ({ role: m.role, status: m.status, is_current_user: m.user_id === user.id })))
-    
     return {
       error: 'Du har ikke tilgang til denne oppgaven (ikke medlem av teamet)',
     }
@@ -230,13 +208,10 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
 
   const activeMembership = memberships.find((m) => m.status === 'active')
   if (!activeMembership) {
-    console.log('User found but not active, status:', memberships[0]?.status)
     return {
       error: 'Du har ikke tilgang til denne oppgaven (inaktivt medlemskap)',
     }
   }
-
-  console.log('User verified as member with role:', activeMembership.role)
 
   // Delete related records first (CASCADE should handle but being explicit)
   const { error: membersDeleteError } = await supabase
@@ -244,14 +219,10 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     .delete()
     .eq('item_id', itemId)
 
-  console.log('Members delete error:', membersDeleteError)
-
   const { error: tagsDeleteError } = await supabase
     .from('team_item_tags')
     .delete()
     .eq('item_id', itemId)
-
-  console.log('Tags delete error:', tagsDeleteError)
 
   // Delete the item itself
   const { error: deleteError } = await supabase
@@ -259,16 +230,10 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     .delete()
     .eq('id', itemId)
 
-  console.log('Item delete error:', deleteError)
-
   if (deleteError) {
     return { error: `Sletting feilet: ${deleteError.message}` }
   }
 
-  console.log(
-    'Item deleted successfully, revalidating path for team:',
-    item.team_id
-  )
   revalidatePath(`/t/${item.team_id}`)
   return {}
 }

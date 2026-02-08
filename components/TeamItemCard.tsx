@@ -51,25 +51,19 @@ export function TeamItemCard({
   }
 
   const handleDelete = async () => {
-    console.log('handleDelete called for item:', item.id)
-
     try {
       const result = await deleteItem(item.id)
-      console.log('Delete result:', result)
 
       if (result.error) {
-        console.error('Delete error:', result.error)
         setError(result.error)
         return
       }
 
-      console.log('Item deleted successfully')
       setError(null)
       router.refresh()
       onUpdate?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
-      console.error('Delete exception:', msg, err)
       setError(msg)
     }
   }
