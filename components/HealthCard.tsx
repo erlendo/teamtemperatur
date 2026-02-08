@@ -250,46 +250,58 @@ export function HealthCard({
             </svg>
 
             {/* HTML-based tooltips (outside SVG, not affected by scaling) */}
-            {hoveredWeek && availableWeeks.map((w) => {
-              if (hoveredWeek !== w.week) return null
-              
-              const spacing =
-                availableWeeks.length > 1
-                  ? 100 / (availableWeeks.length - 1)
-                  : 50
-              const i = availableWeeks.indexOf(w)
-              const xPercent = availableWeeks.length > 1 ? (i * spacing) : 50
-              const y = 100 - (w.avg / 5) * 100
-              const yPercent = -40 + y - 35
+            {hoveredWeek &&
+              availableWeeks.map((w) => {
+                if (hoveredWeek !== w.week) return null
 
-              return (
-                <div
-                  key={`tooltip-${w.week}`}
-                  style={{
-                    position: 'absolute',
-                    left: `${xPercent}%`,
-                    top: `${yPercent}%`,
-                    transform: 'translate(-50%, 0)',
-                    pointerEvents: 'none',
-                    backgroundColor: 'var(--color-neutral-900)',
-                    color: 'white',
-                    padding: '6px 10px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    whiteSpace: 'nowrap',
-                    zIndex: 10,
-                  }}
-                >
-                  <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>
-                    Uke {w.week}
+                const spacing =
+                  availableWeeks.length > 1
+                    ? 100 / (availableWeeks.length - 1)
+                    : 50
+                const i = availableWeeks.indexOf(w)
+                const xPercent = availableWeeks.length > 1 ? i * spacing : 50
+                const y = 100 - (w.avg / 5) * 100
+                const yPercent = -40 + y - 35
+
+                return (
+                  <div
+                    key={`tooltip-${w.week}`}
+                    style={{
+                      position: 'absolute',
+                      left: `${xPercent}%`,
+                      top: `${yPercent}%`,
+                      transform: 'translate(-50%, 0)',
+                      pointerEvents: 'none',
+                      backgroundColor: 'var(--color-neutral-900)',
+                      color: 'white',
+                      padding: '6px 10px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      whiteSpace: 'nowrap',
+                      zIndex: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: 'rgba(255,255,255,0.7)',
+                        fontSize: '11px',
+                      }}
+                    >
+                      Uke {w.week}
+                    </div>
+                    <div
+                      style={{
+                        color: '#10b981',
+                        fontSize: '16px',
+                        fontWeight: '700',
+                      }}
+                    >
+                      {w.avg.toFixed(1)}
+                    </div>
                   </div>
-                  <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '700' }}>
-                    {w.avg.toFixed(1)}
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
           </div>
         </div>
       )}

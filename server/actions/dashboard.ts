@@ -569,3 +569,38 @@ export async function getSystemTagSuggestions(
     return { suggestions: [], error: message }
   }
 }
+
+export async function reorderItem(
+  itemId: string,
+  newSortOrder: number,
+  teamId: string
+): Promise<{ error?: string }> {
+  const supabase = supabaseServer()
+
+  try {
+    console.log(
+      `Reordering item ${itemId} to sort_order ${newSortOrder} in team ${teamId}`
+    )
+
+    const { error } = await supabase
+      .from('team_items')
+      .update({
+        sort_order: newSortOrder,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', itemId)
+      .eq('team_id', teamId)
+
+    if (error) {
+      console.error('Error reordering item:', error)
+      return { error: error.message }
+    }
+
+    revalidatePath(`/t/${teamId}`)
+    return {}
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('Unexpected error in reorderItem:', message)
+    return { error: message }
+  }
+}

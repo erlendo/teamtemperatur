@@ -130,7 +130,7 @@ export default async function TeamHome({
             }}
           >
             <DashboardSection
-              title={`Mål (Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()})`}
+              title={`Mål (T${Math.ceil((new Date().getMonth() + 1) / 4)} ${new Date().getFullYear()})`}
               type="mål"
               items={målItems}
               teamId={teamId}

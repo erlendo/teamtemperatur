@@ -1,6 +1,27 @@
 'use client'
 
-import { createItem, type TeamItem } from '@/server/actions/dashboard'
+import {
+  createItem,
+  reorderItem,
+  type TeamItem,
+} from '@/server/actions/dashboard'
+import {
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { TeamItemCard } from './TeamItemCard'
@@ -13,6 +34,38 @@ const NORDIC_COLORS: Record<ItemType, { accent: string; light: string }> = {
   pipeline: { accent: '#1a472a', light: '#f0fdf4' }, // Skog-grønn
   mål: { accent: '#0f766e', light: '#f0fdfa' }, // Fjord-blå
   retro: { accent: '#92400e', light: '#fefce8' }, // Antikk-brun
+}
+
+// Wrapper component to make TeamItemCard sortable
+function SortableItemWrapper({
+  item,
+  teamMembers,
+  onUpdate,
+}: {
+  item: TeamItem
+  teamMembers: Array<{ id: string; email: string }>
+  onUpdate: () => void
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <TeamItemCard item={item} teamMembers={teamMembers} onUpdate={onUpdate} />
+    </div>
+  )
 }
 
 interface DashboardSectionProps {
@@ -36,7 +89,17 @@ export function DashboardSection({
   const [isAdding, setIsAdding] = useState(false)
   const [newItemTitle, setNewItemTitle] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [sortedItems, setSortedItems] = useState<TeamItem[]>(
+    [...items].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+  )
   const router = useRouter()
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   const handleAddItem = async () => {
     if (newItemTitle.trim()) {
@@ -54,6 +117,31 @@ export function DashboardSection({
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Unknown error'
         setErrorMsg(msg)
+      }
+    }
+  }
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      const oldIndex = sortedItems.findIndex((item) => item.id === active.id)
+      const newIndex = sortedItems.findIndex((item) => item.id === over.id)
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newSortedItems = arrayMove(sortedItems, oldIndex, newIndex)
+        setSortedItems(newSortedItems)
+
+        // Update sort_order in database for items that moved
+        for (let i = 0; i < newSortedItems.length; i++) {
+          const item = newSortedItems[i]
+          if (item && (item.sort_order || 0) !== i) {
+            await reorderItem(item.id, i, teamId)
+          }
+        }
+
+        router.refresh()
+        onUpdate?.()
       }
     }
   }
@@ -196,34 +284,45 @@ export function DashboardSection({
         </div>
       )}
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--space-md)',
-        }}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
       >
-        {items.length === 0 ? (
-          <p
+        <SortableContext
+          items={sortedItems.map((item) => item.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div
             style={{
-              color: 'var(--color-neutral-500)',
-              fontStyle: 'italic',
-              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-md)',
             }}
           >
-            Ingen {type} lagt til ennå
-          </p>
-        ) : (
-          items.map((item) => (
-            <TeamItemCard
-              key={item.id}
-              item={item}
-              teamMembers={teamMembers}
-              onUpdate={handleUpdate}
-            />
-          ))
-        )}
-      </div>
+            {sortedItems.length === 0 ? (
+              <p
+                style={{
+                  color: 'var(--color-neutral-500)',
+                  fontStyle: 'italic',
+                  margin: 0,
+                }}
+              >
+                Ingen {type} lagt til ennå
+              </p>
+            ) : (
+              sortedItems.map((item) => (
+                <SortableItemWrapper
+                  key={item.id}
+                  item={item}
+                  teamMembers={teamMembers}
+                  onUpdate={handleUpdate}
+                />
+              ))
+            )}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   )
 }
