@@ -172,22 +172,56 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     return { error: 'Ikke autentisert' }
   }
 
-  // Get team_id for revalidation
-  const { data: item } = await supabase
+  // Get item and team info first
+  const { data: item, error: fetchError } = await supabase
     .from('team_items')
-    .select('team_id')
+    .select('id, team_id, title')
     .eq('id', itemId)
     .single()
 
-  const { error } = await supabase.from('team_items').delete().eq('id', itemId)
-
-  if (error) {
-    return { error: error.message }
+  if (fetchError) {
+    return { error: `Fant ikke oppgaven: ${fetchError.message}` }
   }
 
-  if (item) {
-    revalidatePath(`/t/${item.team_id}`)
+  if (!item) {
+    return { error: 'Oppgaven eksisterer ikke' }
   }
+
+  // Verify user is member of this team
+  const { data: membership, error: membershipError } = await supabase
+    .from('team_memberships')
+    .select('id')
+    .eq('team_id', item.team_id)
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .single()
+
+  if (!membership) {
+    return { error: 'Du har ikke tilgang til denne oppgaven' }
+  }
+
+  // Delete related records first (CASCADE should handle but being explicit)
+  const { error: membersDeleteError } = await supabase
+    .from('team_item_members')
+    .delete()
+    .eq('item_id', itemId)
+
+  const { error: tagsDeleteError } = await supabase
+    .from('team_item_tags')
+    .delete()
+    .eq('item_id', itemId)
+
+  // Delete the item itself
+  const { error: deleteError } = await supabase
+    .from('team_items')
+    .delete()
+    .eq('id', itemId)
+
+  if (deleteError) {
+    return { error: `Sletting feilet: ${deleteError.message}` }
+  }
+
+  revalidatePath(`/t/${item.team_id}`)
   return {}
 }
 
