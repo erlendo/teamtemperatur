@@ -127,15 +127,8 @@ export default async function TeamHome({
             />
           </div>
 
-          {/* Row 2: Helse | Retro */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-              gap: 'var(--space-2xl)',
-              marginBottom: 'var(--space-2xl)',
-            }}
-          >
+          {/* Row 2: Helse (full width - prominent) */}
+          <div style={{ marginBottom: 'var(--space-2xl)' }}>
             <div>
               <h2
                 style={{
@@ -173,6 +166,10 @@ export default async function TeamHome({
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Row 3: Retro */}
+          <div style={{ marginBottom: 'var(--space-2xl)' }}>
             <DashboardSection
               title="Retro-forbedringer"
               type="retro"
