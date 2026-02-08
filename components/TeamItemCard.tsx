@@ -228,11 +228,20 @@ export function TeamItemCard({
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            color: 'var(--color-neutral-400)',
-            fontSize: '1.25rem',
-            padding: 0,
+            color: 'var(--color-neutral-500)',
+            fontSize: '1.5rem',
+            padding: 'var(--space-xs)',
+            transition: 'all 0.2s ease',
           }}
-          title="Slett"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--color-error, #ef4444)'
+            e.currentTarget.style.transform = 'scale(1.2)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'var(--color-neutral-500)'
+            e.currentTarget.style.transform = 'scale(1)'
+          }}
+          title="Slett oppgave"
         >
           🗑️
         </button>
