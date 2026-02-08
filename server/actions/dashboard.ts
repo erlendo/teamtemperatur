@@ -182,7 +182,7 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     .single()
 
   console.log('Fetched item:', item, 'error:', fetchError)
-  
+
   if (fetchError) {
     return { error: `Fant ikke oppgaven: ${fetchError.message}` }
   }
@@ -233,7 +233,10 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
     return { error: `Sletting feilet: ${deleteError.message}` }
   }
 
-  console.log('Item deleted successfully, revalidating path for team:', item.team_id)
+  console.log(
+    'Item deleted successfully, revalidating path for team:',
+    item.team_id
+  )
   revalidatePath(`/t/${item.team_id}`)
   return {}
 }
