@@ -46,8 +46,14 @@ function SortableItemWrapper({
   teamMembers: Array<{ id: string; email: string }>
   onUpdate: () => void
 }) {
-  const { attributes, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: item.id })
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -56,7 +62,7 @@ function SortableItemWrapper({
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <TeamItemCard item={item} teamMembers={teamMembers} onUpdate={onUpdate} />
     </div>
   )
