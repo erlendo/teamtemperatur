@@ -3,7 +3,6 @@
 import {
   addMemberTag,
   deleteItem,
-  toggleItemStatus,
   updateItem,
   type TeamItem,
 } from '@/server/actions/dashboard'
@@ -68,22 +67,6 @@ export function TeamItemCard({
     }
   }
 
-  const handleToggleStatus = async () => {
-    try {
-      const result = await toggleItemStatus(item.id, item.status)
-      if (result.error) {
-        setError(result.error)
-        return
-      }
-      setError(null)
-      router.refresh()
-      onUpdate?.()
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Ukjent feil'
-      setError(msg)
-    }
-  }
-
   const handleStatusChange = async (newStatus: ItemStatus) => {
     try {
       const result = await updateItem(item.id, { status: newStatus })
@@ -127,14 +110,6 @@ export function TeamItemCard({
     (m) => !assignedUserIds.includes(m.id)
   )
 
-  const getStatusIcon = () => {
-    if (item.type === 'ukemål' || item.type === 'pipeline') {
-      return item.status === 'ferdig' ? '☑️' : '☐'
-    }
-    const icons = { planlagt: '📍', pågår: '⏳', ferdig: '✅' }
-    return icons[item.status]
-  }
-
   return (
     <div
       style={{
@@ -176,57 +151,24 @@ export function TeamItemCard({
           marginBottom: 'var(--space-md)',
         }}
       >
-        {(item.type === 'ukemål' || item.type === 'pipeline') && (
-          <button
-            onClick={handleToggleStatus}
+        {/* Status dropdown for all item types */}
+        <div style={{ marginTop: '2px' }}>
+          <select
+            value={item.status}
+            onChange={(e) => handleStatusChange(e.target.value as ItemStatus)}
             style={{
-              background: 'none',
-              border: 'none',
+              padding: 'var(--space-xs) var(--space-sm)',
+              border: '1px solid var(--color-neutral-300)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--font-size-sm)',
               cursor: 'pointer',
-              fontSize: '1.25rem',
-              padding: 0,
-              marginTop: '2px',
-            }}
-            title={
-              item.status === 'ferdig'
-                ? 'Merk som ikke ferdig'
-                : 'Merk som ferdig'
-            }
-          >
-            {getStatusIcon()}
-          </button>
-        )}
-
-        {item.type === 'retro' && (
-          <div style={{ marginTop: '2px' }}>
-            <select
-              value={item.status}
-              onChange={(e) => handleStatusChange(e.target.value as ItemStatus)}
-              style={{
-                padding: 'var(--space-xs) var(--space-sm)',
-                border: '1px solid var(--color-neutral-300)',
-                borderRadius: 'var(--radius-md)',
-                fontSize: 'var(--font-size-sm)',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="planlagt">📍 Planlagt</option>
-              <option value="pågår">⏳ Pågår</option>
-              <option value="ferdig">✅ Ferdig</option>
-            </select>
-          </div>
-        )}
-
-        {item.type === 'mål' && (
-          <span
-            style={{
-              fontSize: '1.25rem',
-              marginTop: '2px',
             }}
           >
-            {getStatusIcon()}
-          </span>
-        )}
+            <option value="planlagt">📍 Planlagt</option>
+            <option value="pågår">⏳ Pågår</option>
+            <option value="ferdig">✅ Ferdig</option>
+          </select>
+        </div>
 
         <div style={{ flex: 1 }}>
           {isEditing ? (
