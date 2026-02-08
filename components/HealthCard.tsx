@@ -102,18 +102,18 @@ export function HealthCard({
       style={{
         backgroundColor: 'white',
         borderRadius: 'var(--radius-lg, 0.5rem)',
-        padding: 'var(--space-lg)',
+        padding: 'var(--space-md)',
         boxShadow: 'var(--shadow-sm)',
         border: '1px solid var(--color-neutral-200, #e5e5e5)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 'var(--space-md)',
+        gap: 'var(--space-sm)',
       }}
     >
       <h3
         style={{
           margin: 0,
-          fontSize: 'var(--font-size-sm, 0.875rem)',
+          fontSize: '12px',
           fontWeight: 600,
           color: 'var(--color-neutral-600)',
           textTransform: 'uppercase',
@@ -132,7 +132,7 @@ export function HealthCard({
       >
         <span
           style={{
-            fontSize: '2rem',
+            fontSize: '1.5rem',
             fontWeight: 700,
             color: getHealthColor(),
           }}
@@ -141,7 +141,7 @@ export function HealthCard({
         </span>
         <span
           style={{
-            fontSize: 'var(--font-size-lg)',
+            fontSize: '0.875rem',
             color: 'var(--color-neutral-500)',
           }}
         >
@@ -150,7 +150,7 @@ export function HealthCard({
         {previousWeekAvg && (
           <span
             style={{
-              fontSize: 'var(--font-size-lg)',
+              fontSize: '1.25rem',
               marginLeft: 'auto',
             }}
           >
@@ -177,15 +177,15 @@ export function HealthCard({
           style={{
             backgroundColor: 'var(--color-neutral-50, #fafafa)',
             borderRadius: 'var(--radius-md)',
-            padding: 'var(--space-md)',
-            marginTop: 'var(--space-md)',
+            padding: 'var(--space-sm)',
+            marginTop: 0,
             position: 'relative',
           }}
         >
           <p
             style={{
-              margin: '0 0 var(--space-sm) 0',
-              fontSize: 'var(--font-size-xs)',
+              margin: '0 0 var(--space-xs) 0',
+              fontSize: '11px',
               fontWeight: 600,
               color: 'var(--color-neutral-600)',
               textTransform: 'uppercase',
@@ -197,7 +197,7 @@ export function HealthCard({
           <div style={{ position: 'relative', width: '100%' }}>
             <svg
               width="100%"
-              height="160"
+              height="100"
               viewBox="0 -40 100 160"
               style={{ display: 'block', overflow: 'visible' }}
               preserveAspectRatio="none"
@@ -308,7 +308,7 @@ export function HealthCard({
 
       <div
         style={{
-          padding: 'var(--space-md)',
+          padding: 'var(--space-sm)',
           backgroundColor: 'var(--color-neutral-50, #fafafa)',
           borderRadius: 'var(--radius-md)',
         }}
@@ -316,7 +316,7 @@ export function HealthCard({
         <p
           style={{
             margin: 0,
-            fontSize: 'var(--font-size-sm)',
+            fontSize: '12px',
             color: 'var(--color-neutral-700)',
           }}
         >
