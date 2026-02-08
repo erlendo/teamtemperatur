@@ -171,25 +171,6 @@ export function TeamItemCard({
           marginBottom: isEditMode ? 'var(--space-md)' : 0,
         }}
       >
-        {/* Status dropdown */}
-        <div style={{ marginTop: '2px', flexShrink: 0 }}>
-          <select
-            value={item.status}
-            onChange={(e) => handleStatusChange(e.target.value as ItemStatus)}
-            style={{
-              padding: '4px 6px',
-              border: '1px solid var(--color-neutral-300)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '12px',
-              cursor: 'pointer',
-            }}
-          >
-            <option value="planlagt">◆ Planlagt</option>
-            <option value="pågår">▶ Pågår</option>
-            <option value="ferdig">● Ferdig</option>
-          </select>
-        </div>
-
         {/* Title */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {isEditingTitle ? (
@@ -301,6 +282,25 @@ export function TeamItemCard({
             gap: 'var(--space-sm)',
           }}
         >
+          {/* Status dropdown (only in edit mode) */}
+          <div style={{ flexShrink: 0 }}>
+            <select
+              value={item.status}
+              onChange={(e) => handleStatusChange(e.target.value as ItemStatus)}
+              style={{
+                padding: '4px 6px',
+                border: '1px solid var(--color-neutral-300)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '12px',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="planlagt">◆ Planlagt</option>
+              <option value="pågår">▶ Pågår</option>
+              <option value="ferdig">● Ferdig</option>
+            </select>
+          </div>
+
           <div
             style={{
               display: 'flex',
