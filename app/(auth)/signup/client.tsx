@@ -1,5 +1,6 @@
 'use client'
 
+import { saveUserProfile } from '@/server/actions/auth'
 import { supabaseBrowser } from '@/lib/supabase/browser'
 import { Loader, Lock, Mail, Thermometer, User } from 'lucide-react'
 import Link from 'next/link'
@@ -7,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 export function SignupClient() {
+  const [firstName, setFirstName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -39,6 +41,11 @@ export function SignupClient() {
     e.preventDefault()
     setMsg(null)
 
+    if (!firstName.trim()) {
+      setMsg({ type: 'error', text: 'Fornavn er påkrevd' })
+      return
+    }
+
     if (password !== confirmPassword) {
       setMsg({ type: 'error', text: 'Passordene matcher ikke' })
       return
@@ -61,6 +68,14 @@ export function SignupClient() {
     if (signupError) {
       setMsg({ type: 'error', text: `Feil: ${signupError.message}` })
       return
+    }
+
+    // Save first name to user_profiles
+    if (data.user) {
+      const profileResult = await saveUserProfile(firstName.trim())
+      if (profileResult.error) {
+        console.error('Error saving profile:', profileResult.error)
+      }
     }
 
     // Check if email confirmation is required
@@ -167,6 +182,51 @@ export function SignupClient() {
             onSubmit={handleSubmit}
             style={{ display: 'grid', gap: 'var(--space-lg)' }}
           >
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontWeight: '600',
+                  marginBottom: 'var(--space-sm)',
+                  color: 'var(--color-neutral-700)',
+                }}
+              >
+                Fornavn
+              </label>
+              <div
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <User
+                  size={18}
+                  style={{
+                    position: 'absolute',
+                    left: 'var(--space-md)',
+                    color: 'var(--color-neutral-400)',
+                    pointerEvents: 'none',
+                  }}
+                />
+                <input
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  type="text"
+                  placeholder="f.eks. Erlend"
+                  required
+                  style={{
+                    width: '100%',
+                    padding:
+                      'var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 28px)',
+                    border: '1px solid var(--color-neutral-300)',
+                    borderRadius: 'var(--border-radius-md)',
+                    fontSize: 'var(--font-size-base)',
+                  }}
+                />
+              </div>
+            </div>
+
             <div>
               <label
                 style={{
