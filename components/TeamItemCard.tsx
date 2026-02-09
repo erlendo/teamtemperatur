@@ -197,22 +197,99 @@ export function TeamItemCard({
               }}
             />
           ) : (
-            <p
-              onClick={() => {
-                setIsEditingTitle(true)
-                setIsEditMode(true)
-              }}
-              style={{
-                margin: 0,
-                cursor: 'text',
-                fontSize: '13px',
-                fontWeight: 500,
-                lineHeight: 1.4,
-                wordBreak: 'break-word',
-              }}
-            >
-              {item.title}
-            </p>
+            <>
+              <p
+                onClick={() => {
+                  setIsEditingTitle(true)
+                  setIsEditMode(true)
+                }}
+                style={{
+                  margin: 0,
+                  cursor: 'text',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  lineHeight: 1.4,
+                  wordBreak: 'break-word',
+                  marginBottom:
+                    item.tags.length > 0 || item.members.length > 0
+                      ? 'var(--space-xs)'
+                      : 0,
+                }}
+              >
+                {item.title}
+              </p>
+
+              {/* Tags in view mode */}
+              {item.tags.length > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '4px',
+                    marginBottom: item.members.length > 0 ? '4px' : 0,
+                  }}
+                >
+                  {item.tags.map((tag) => (
+                    <span
+                      key={tag.tag_name}
+                      style={{
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        color: 'var(--color-primary, #3b82f6)',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {tag.tag_name}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Members in view mode */}
+              {item.members.length > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '4px',
+                  }}
+                >
+                  {item.members.map((member) => {
+                    const user = teamMembers.find(
+                      (m) => m.id === member.user_id
+                    )
+                    const initials =
+                      user?.email
+                        ?.split('@')[0]
+                        ?.substring(0, 2)
+                        .toUpperCase() || '?'
+                    return (
+                      <span
+                        key={member.user_id}
+                        title={user?.email || 'Ukjent'}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '24px',
+                          height: '24px',
+                          backgroundColor: 'var(--color-primary, #3b82f6)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          fontSize: '10px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {initials}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+            </>
           )}
         </div>
 
