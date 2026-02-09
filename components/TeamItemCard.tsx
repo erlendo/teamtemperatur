@@ -6,7 +6,7 @@ import {
   updateItem,
   type TeamItem,
 } from '@/server/actions/dashboard'
-import { AlertCircle, Pencil } from 'lucide-react'
+import { AlertCircle, Pencil, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { PersonChip } from './PersonChip'
@@ -332,14 +332,16 @@ export function TeamItemCard({
             border: 'none',
             cursor: 'pointer',
             color: 'var(--color-neutral-500)',
-            fontSize: '1.2rem',
             padding: 'var(--space-xs)',
             transition: 'all 0.2s ease',
             flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = 'var(--color-error, #ef4444)'
-            e.currentTarget.style.transform = 'scale(1.2)'
+            e.currentTarget.style.transform = 'scale(1.1)'
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = 'var(--color-neutral-500)'
@@ -347,7 +349,7 @@ export function TeamItemCard({
           }}
           title="Slett oppgave"
         >
-          🗑️
+          <Trash2 size={18} />
         </button>
       </div>
 
