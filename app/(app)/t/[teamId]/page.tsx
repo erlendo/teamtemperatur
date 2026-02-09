@@ -128,7 +128,7 @@ export default async function TeamHome({
               teamMembers={teamMembers}
             />
             <DashboardSection
-              title="Pipeline (neste 4 uker)"
+              title="Pipeline"
               type="pipeline"
               items={pipelineItems}
               teamId={teamId}
