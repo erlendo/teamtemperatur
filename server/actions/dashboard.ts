@@ -293,6 +293,43 @@ export async function addMemberTag(
       ')'
     )
 
+    // Check current user's role
+    console.log('Checking current user authorization...')
+    const {
+      data: { user: currentUser },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !currentUser) {
+      console.error('✗ User not authenticated')
+      return { error: 'Ikke autentisert' }
+    }
+
+    const { data: callerMembership, error: callerMembError } = await supabase
+      .from('team_memberships')
+      .select('role')
+      .eq('team_id', itemData.team_id)
+      .eq('user_id', currentUser.id)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    if (callerMembError) {
+      console.error('✗ Error checking caller role:', callerMembError.message)
+      return { error: 'Kunne ikke verifisere tillatelser' }
+    }
+
+    if (!callerMembership) {
+      console.error('✗ Caller is not an active member of this team')
+      return { error: 'Du er ikke medlem av dette laget' }
+    }
+
+    if (callerMembership.role === 'viewer') {
+      console.error('✗ Viewers cannot assign members')
+      return { error: 'Leserettigheter gir ikke tilgang til å tildele medlemmer' }
+    }
+
+    console.log('✓ User has permission to assign members (role:', callerMembership.role, ')')
+
     // Verify user is a member of the team
     console.log('Verifying user is member of team...')
     const { data: membership, error: memberError } = await supabase

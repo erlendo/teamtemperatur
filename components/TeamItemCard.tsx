@@ -15,6 +15,7 @@ import { SystemTagInput } from './SystemTagInput'
 interface TeamItemCardProps {
   item: TeamItem
   teamMembers: Array<{ id: string; firstName: string }>
+  userRole: string
   onUpdate?: () => void
 }
 
@@ -23,6 +24,7 @@ type ItemStatus = 'planlagt' | 'pågår' | 'ferdig'
 export function TeamItemCard({
   item,
   teamMembers,
+  userRole,
   onUpdate,
 }: TeamItemCardProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -291,7 +293,8 @@ export function TeamItemCard({
           )}
         </div>
 
-        {/* Edit button (pencil) */}
+        {/* Edit button (pencil) - only for non-viewers */}
+        {userRole !== 'viewer' && (
         <button
           onClick={() => setIsEditMode(!isEditMode)}
           style={{
@@ -319,8 +322,10 @@ export function TeamItemCard({
         >
           <Pencil size={18} />
         </button>
+        )}
 
-        {/* Delete button (trash) */}
+        {/* Delete button (trash) - only for non-viewers */}
+        {userRole !== 'viewer' && (
         <button
           onClick={() => {
             void handleDelete()
@@ -349,6 +354,7 @@ export function TeamItemCard({
         >
           <Trash2 size={18} />
         </button>
+        )}
       </div>
 
       {isEditMode && (

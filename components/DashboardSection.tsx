@@ -41,10 +41,12 @@ function SortableItemWrapper({
   item,
   teamMembers,
   onUpdate,
+  userRole,
 }: {
   item: TeamItem
   teamMembers: Array<{ id: string; firstName: string }>
   onUpdate: () => void
+  userRole: string
 }) {
   const {
     attributes,
@@ -63,7 +65,7 @@ function SortableItemWrapper({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TeamItemCard item={item} teamMembers={teamMembers} onUpdate={onUpdate} />
+      <TeamItemCard item={item} teamMembers={teamMembers} onUpdate={onUpdate} userRole={userRole} />
     </div>
   )
 }
@@ -74,6 +76,7 @@ interface DashboardSectionProps {
   items: TeamItem[]
   teamId: string
   teamMembers: Array<{ id: string; firstName: string }>
+  userRole: string
   onUpdate?: () => void
 }
 
@@ -83,6 +86,7 @@ export function DashboardSection({
   items,
   teamId,
   teamMembers,
+  userRole,
   onUpdate,
 }: DashboardSectionProps) {
   const colors = NORDIC_COLORS[type]
@@ -327,6 +331,7 @@ export function DashboardSection({
                   key={item.id}
                   item={item}
                   teamMembers={teamMembers}
+                  userRole={userRole}
                   onUpdate={handleUpdate}
                 />
               ))
