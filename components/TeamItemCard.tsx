@@ -66,7 +66,7 @@ export function TeamItemCard({
       setIsLoadingRelations(false)
     }
     void fetchRelations()
-  }, [item.id, item.team_id])
+  }, [item])
 
   const handleSaveTitle = async () => {
     if (title.trim() && title !== item.title) {
