@@ -702,3 +702,231 @@ export async function reorderItem(
     return { error: message }
   }
 }
+
+export interface ItemRelation {
+  id: string
+  team_id: string
+  source_item_id: string
+  target_item_id: string
+  relation_type: 'next_step' | 'part_of'
+  created_at: string
+  created_by: string | null
+  source_title?: string
+  target_title?: string
+}
+
+export async function createRelation(
+  teamId: string,
+  sourceItemId: string,
+  targetItemId: string,
+  relationType: 'next_step' | 'part_of'
+): Promise<{ relationId?: string; error?: string }> {
+  const supabase = supabaseServer()
+
+  try {
+    console.log('=== createRelation START ===')
+    console.log({
+      teamId,
+      sourceItemId,
+      targetItemId,
+      relationType,
+    })
+
+    // Validate source and target items exist and belong to team
+    const { data: items, error: itemsError } = await supabase
+      .from('team_items')
+      .select('id, team_id, type, title')
+      .in('id', [sourceItemId, targetItemId])
+      .eq('team_id', teamId)
+
+    if (itemsError) {
+      console.error('✗ Error fetching items:', itemsError.message)
+      return { error: `Kunne ikke hente oppgaver: ${itemsError.message}` }
+    }
+
+    if (!items || items.length !== 2) {
+      console.error('✗ One or both items not found in team')
+      return {
+        error: 'En eller begge oppgavene finnes ikke i teamet',
+      }
+    }
+
+    const sourceItem = items.find((i) => i.id === sourceItemId)
+    const targetItem = items.find((i) => i.id === targetItemId)
+
+    if (!sourceItem || !targetItem) {
+      return {
+        error: 'Oppgavene finnes ikke i dette teamet',
+      }
+    }
+
+    console.log('✓ Items validated:', {
+      source: sourceItem.title,
+      target: targetItem.title,
+    })
+
+    // Insert relation
+    const { data, error: relationError } = await supabase
+      .from('team_item_relations')
+      .insert([
+        {
+          team_id: teamId,
+          source_item_id: sourceItemId,
+          target_item_id: targetItemId,
+          relation_type: relationType,
+        },
+      ])
+      .select('id')
+
+    if (relationError) {
+      console.error('✗ Error creating relation:', relationError.message)
+      // Check if it's a unique constraint violation (one-to-one constraint)
+      if (relationError.message.includes('duplicate key')) {
+        return {
+          error: `${sourceItem.title} er allerede koblet til en ${relationType === 'next_step' ? 'pipeline' : 'mål'}`,
+        }
+      }
+      return {
+        error: `Kunne ikke opprette relasjon: ${relationError.message}`,
+      }
+    }
+
+    if (!data || data.length === 0 || !data[0]) {
+      return { error: 'Relasjon ble ikke opprettet' }
+    }
+
+    const relationId = data[0].id
+    console.log('✓ Relation created:', relationId)
+
+    revalidatePath(`/t/${teamId}`)
+    return { relationId }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('✗ Unexpected error in createRelation:', message)
+    return { error: `Uventet feil: ${message}` }
+  }
+}
+
+export async function deleteRelation(
+  relationId: string,
+  teamId: string
+): Promise<{ error?: string }> {
+  const supabase = supabaseServer()
+
+  try {
+    console.log('=== deleteRelation START ===')
+    console.log({ relationId, teamId })
+
+    // Verify relation exists and belongs to team
+    const { data: relation, error: fetchError } = await supabase
+      .from('team_item_relations')
+      .select('id, team_id')
+      .eq('id', relationId)
+      .eq('team_id', teamId)
+
+    if (fetchError) {
+      console.error('✗ Error fetching relation:', fetchError.message)
+      return { error: `Kunne ikke finne relasjon: ${fetchError.message}` }
+    }
+
+    if (!relation || relation.length === 0) {
+      console.error('✗ Relation not found in team')
+      return { error: 'Relasjon finnes ikke i dette teamet' }
+    }
+
+    // Delete the relation
+    const { error: deleteError } = await supabase
+      .from('team_item_relations')
+      .delete()
+      .eq('id', relationId)
+      .eq('team_id', teamId)
+
+    if (deleteError) {
+      console.error('✗ Error deleting relation:', deleteError.message)
+      return { error: `Sletting feilet: ${deleteError.message}` }
+    }
+
+    console.log('✓ Relation deleted:', relationId)
+    revalidatePath(`/t/${teamId}`)
+    return {}
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('✗ Unexpected error in deleteRelation:', message)
+    return { error: `Uventet feil: ${message}` }
+  }
+}
+
+export async function getItemRelations(
+  itemId: string,
+  teamId: string
+): Promise<{
+  inbound: ItemRelation[]
+  outbound: ItemRelation[]
+  error?: string
+}> {
+  const supabase = supabaseServer()
+
+  try {
+    console.log('=== getItemRelations START ===')
+    console.log({ itemId, teamId })
+
+    // Get outbound relations (this item as source)
+    const { data: outbound, error: outboundError } = await supabase
+      .from('team_item_relations')
+      .select(
+        'id, team_id, source_item_id, target_item_id, relation_type, created_at, created_by'
+      )
+      .eq('source_item_id', itemId)
+      .eq('team_id', teamId)
+      .order('created_at', { ascending: false })
+
+    if (outboundError) {
+      console.error(
+        '✗ Error fetching outbound relations:',
+        outboundError.message
+      )
+      return {
+        inbound: [],
+        outbound: [],
+        error: outboundError.message,
+      }
+    }
+
+    // Get inbound relations (this item as target)
+    const { data: inbound, error: inboundError } = await supabase
+      .from('team_item_relations')
+      .select(
+        'id, team_id, source_item_id, target_item_id, relation_type, created_at, created_by'
+      )
+      .eq('target_item_id', itemId)
+      .eq('team_id', teamId)
+      .order('created_at', { ascending: false })
+
+    if (inboundError) {
+      console.error('✗ Error fetching inbound relations:', inboundError.message)
+      return {
+        inbound: [],
+        outbound: [],
+        error: inboundError.message,
+      }
+    }
+
+    console.log('✓ Relations fetched:', {
+      inbound: (inbound || []).length,
+      outbound: (outbound || []).length,
+    })
+
+    return {
+      inbound: (inbound || []) as ItemRelation[],
+      outbound: (outbound || []) as ItemRelation[],
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('✗ Unexpected error in getItemRelations:', message)
+    return {
+      inbound: [],
+      outbound: [],
+      error: message,
+    }
+  }
+}

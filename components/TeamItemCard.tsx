@@ -3,11 +3,21 @@
 import {
   addMemberTag,
   deleteItem,
+  deleteRelation,
+  getItemRelations,
   updateItem,
+  type ItemRelation,
   type TeamItem,
 } from '@/server/actions/dashboard'
-import { AlertCircle, Loader, Pencil, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import {
+  AlertCircle,
+  Link as LinkIcon,
+  Loader,
+  Pencil,
+  Trash2,
+  X,
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { PersonChip } from './PersonChip'
 import { SystemTagInput } from './SystemTagInput'
 
@@ -36,6 +46,27 @@ export function TeamItemCard({
   const [isStatusChanging, setIsStatusChanging] = useState(false)
   const [isAddingMember, setIsAddingMember] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [relations, setRelations] = useState<{
+    inbound: ItemRelation[]
+    outbound: ItemRelation[]
+  }>({ inbound: [], outbound: [] })
+  const [_isLoadingRelations, setIsLoadingRelations] = useState(false)
+
+  // Fetch relations for this item
+  useEffect(() => {
+    const fetchRelations = async () => {
+      setIsLoadingRelations(true)
+      const result = await getItemRelations(item.id, item.team_id)
+      if (!result.error) {
+        setRelations({
+          inbound: result.inbound,
+          outbound: result.outbound,
+        })
+      }
+      setIsLoadingRelations(false)
+    }
+    void fetchRelations()
+  }, [item.id, item.team_id])
 
   const handleSaveTitle = async () => {
     if (title.trim() && title !== item.title) {
@@ -138,6 +169,28 @@ export function TeamItemCard({
   const handleTagUpdate = () => {
     // revalidatePath is already called on the server side, no need for router.refresh
     onUpdate?.()
+  }
+
+  const handleDeleteRelation = async (relationId: string) => {
+    try {
+      const result = await deleteRelation(relationId, item.team_id)
+      if (result.error) {
+        alert(`Feil: ${result.error}`)
+        return
+      }
+      // Refresh relations
+      const updatedRelations = await getItemRelations(item.id, item.team_id)
+      if (!updatedRelations.error) {
+        setRelations({
+          inbound: updatedRelations.inbound,
+          outbound: updatedRelations.outbound,
+        })
+      }
+      onUpdate?.()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Ukjent feil'
+      alert(`Feil ved sletting av relasjon: ${msg}`)
+    }
   }
 
   const assignedUserIds = item.members.map((m) => m.user_id)
@@ -280,7 +333,6 @@ export function TeamItemCard({
               >
                 {item.title}
               </p>
-
               {/* Tags in view mode */}
               {item.tags.length > 0 && (
                 <div
@@ -309,7 +361,6 @@ export function TeamItemCard({
                   ))}
                 </div>
               )}
-
               {/* Members in view mode */}
               {item.members.length > 0 && (
                 <div
@@ -349,6 +400,109 @@ export function TeamItemCard({
                   })}
                 </div>
               )}
+              {/* Relations in view mode */}
+              {(relations.outbound.length > 0 ||
+                relations.inbound.length > 0) && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '4px',
+                    marginTop:
+                      item.tags.length > 0 || item.members.length > 0
+                        ? '4px'
+                        : 0,
+                  }}
+                >
+                  {/* Outbound relations (this item → target) */}
+                  {relations.outbound.map((rel) => (
+                    <div
+                      key={rel.id}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        color: '#059669',
+                        padding: '2px 6px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap',
+                      }}
+                      title={`Koblet til ${rel.relation_type}`}
+                    >
+                      <LinkIcon size={10} />
+                      <span>→</span>
+                      {userRole !== 'viewer' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            void handleDeleteRelation(rel.id)
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: 0,
+                            color: '#059669',
+                            display: 'flex',
+                            alignItems: 'center',
+                            fontSize: '10px',
+                          }}
+                          title="Fjern kobling"
+                        >
+                          <X size={10} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Inbound relations (source → this item) */}
+                  {relations.inbound.map((rel) => (
+                    <div
+                      key={rel.id}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        color: '#7c3aed',
+                        padding: '2px 6px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap',
+                      }}
+                      title={`Fra ${rel.relation_type}`}
+                    >
+                      <LinkIcon size={10} />
+                      <span>←</span>
+                      {userRole !== 'viewer' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            void handleDeleteRelation(rel.id)
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: 0,
+                            color: '#7c3aed',
+                            display: 'flex',
+                            alignItems: 'center',
+                            fontSize: '10px',
+                          }}
+                          title="Fjern kobling"
+                        >
+                          <X size={10} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}{' '}
             </>
           )}
         </div>

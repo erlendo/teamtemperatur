@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/AppHeader'
+import { DashboardGrid } from '@/components/DashboardGrid'
 import { DashboardSection } from '@/components/DashboardSection'
 import { HealthCard } from '@/components/HealthCard'
 import { supabaseServer } from '@/lib/supabase/server'
@@ -151,40 +152,15 @@ export default async function TeamHome({
             {formatDate(weekInfo.end)})
           </h1>
 
-          {/* Row 1: Ukemål | Pipeline | (Mål moved here) */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-              gap: 'var(--space-2xl)',
-              marginBottom: 'var(--space-2xl)',
-            }}
-          >
-            <DashboardSection
-              title="Ukemål denne uka"
-              type="ukemål"
-              items={ukemålItems}
-              teamId={teamId}
-              teamMembers={teamMembers}
-              userRole={userRole}
-            />
-            <DashboardSection
-              title="Pipeline"
-              type="pipeline"
-              items={pipelineItems}
-              teamId={teamId}
-              teamMembers={teamMembers}
-              userRole={userRole}
-            />
-            <DashboardSection
-              title={`Mål (T${Math.ceil((new Date().getMonth() + 1) / 4)} ${new Date().getFullYear()})`}
-              type="mål"
-              items={målItems}
-              teamId={teamId}
-              teamMembers={teamMembers}
-              userRole={userRole}
-            />
-          </div>
+          {/* Row 1: Ukemål | Pipeline | Mål (with cross-column linking) */}
+          <DashboardGrid
+            ukemålItems={ukemålItems}
+            pipelineItems={pipelineItems}
+            målItems={målItems}
+            teamId={teamId}
+            teamMembers={teamMembers}
+            userRole={userRole}
+          />
 
           {/* Row 2: Helse (full width - prominent) */}
           <div style={{ marginBottom: 'var(--space-2xl)' }}>
