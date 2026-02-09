@@ -76,8 +76,15 @@ export async function adminUpdateUserFirstName(
       .eq('user_id', currentUser.id)
       .single()
 
-    if (memberError || !membership || membership.role !== 'owner') {
-      return { error: 'Bare team-eiere kan oppdatere bruker-profiler' }
+    if (
+      memberError ||
+      !membership ||
+      (membership.role !== 'owner' && membership.role !== 'admin')
+    ) {
+      return {
+        error:
+          'Bare team-eiere og administratorer kan oppdatere bruker-profiler',
+      }
     }
 
     // Validate first_name
