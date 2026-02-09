@@ -426,7 +426,7 @@ export function TeamItemCard({
                     border: '1px solid var(--color-neutral-300)',
                     borderRadius: 'var(--radius-md)',
                     boxShadow: 'var(--shadow-md)',
-                    zIndex: 10,
+                    zIndex: 9999,
                     minWidth: '200px',
                   }}
                 >
