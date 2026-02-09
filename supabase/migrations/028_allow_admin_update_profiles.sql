@@ -1,0 +1,20 @@
+-- Migration 028: Allow admin/owner to update user profiles for team members
+
+BEGIN;
+
+-- Allow team admins/owners to update profiles for other team members
+CREATE POLICY "Team admins can update team member profiles"
+  ON public.user_profiles FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.team_memberships tm1
+      JOIN public.team_memberships tm2 ON tm1.team_id = tm2.team_id
+      WHERE tm1.user_id = auth.uid()
+      AND tm2.user_id = user_profiles.user_id
+      AND tm1.status = 'active'
+      AND tm2.status = 'active'
+      AND tm1.role IN ('owner', 'admin')
+    )
+  );
+
+COMMIT;

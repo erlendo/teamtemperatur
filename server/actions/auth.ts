@@ -97,11 +97,11 @@ export async function adminUpdateUserFirstName(
       .from('user_profiles')
       .select('user_id')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
 
-    if (checkError && checkError.code !== 'PGRST116') {
-      // PGRST116 = no rows returned
-      return { error: 'Feil ved sjekking av profil' }
+    if (checkError) {
+      // maybeSingle() returns null when no rows, but errors on permission issues
+      return { error: `Feil ved sjekking av profil: ${checkError.message}` }
     }
 
     let result
