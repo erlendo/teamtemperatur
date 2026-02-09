@@ -847,6 +847,35 @@ export async function deleteRelation(
   }
 }
 
+export async function getAllTeamRelations(
+  teamId: string
+): Promise<{ relations: ItemRelation[]; error?: string }> {
+  const supabase = supabaseServer()
+
+  try {
+    const { data: relations, error } = await supabase
+      .from('team_item_relations')
+      .select(
+        'id, team_id, source_item_id, target_item_id, relation_type, created_at, created_by'
+      )
+      .eq('team_id', teamId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('✗ Error fetching all team relations:', error.message)
+      return { relations: [], error: error.message }
+    }
+
+    return {
+      relations: (relations || []) as ItemRelation[],
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('✗ Unexpected error in getAllTeamRelations:', message)
+    return { relations: [], error: message }
+  }
+}
+
 export async function getItemRelations(
   itemId: string,
   teamId: string

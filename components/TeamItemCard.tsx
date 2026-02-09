@@ -26,6 +26,7 @@ interface TeamItemCardProps {
   teamMembers: Array<{ id: string; firstName: string }>
   userRole: string
   onUpdate?: () => void
+  onRelationDelete?: (relationId: string) => void
 }
 
 type ItemStatus = 'planlagt' | 'pågår' | 'ferdig'
@@ -35,6 +36,7 @@ export function TeamItemCard({
   teamMembers,
   userRole,
   onUpdate,
+  onRelationDelete,
 }: TeamItemCardProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
@@ -173,12 +175,36 @@ export function TeamItemCard({
 
   const handleDeleteRelation = async (relationId: string) => {
     try {
+      // Optimistic update - remove from local state immediately
+      setRelations((prev) => ({
+        inbound: prev.inbound.filter((r) => r.id !== relationId),
+        outbound: prev.outbound.filter((r) => r.id !== relationId),
+      }))
+
+      // Notify parent to update global state (removes arrow immediately)
+      onRelationDelete?.(relationId)
+
+      // Perform actual deletion on server
       const result = await deleteRelation(relationId, item.team_id)
       if (result.error) {
+        // On error, refetch to restore correct state
+        const updatedRelations = await getItemRelations(item.id, item.team_id)
+        if (!updatedRelations.error) {
+          setRelations({
+            inbound: updatedRelations.inbound,
+            outbound: updatedRelations.outbound,
+          })
+        }
         alert(`Feil: ${result.error}`)
         return
       }
-      // Refresh relations
+
+      // Trigger router refresh to ensure consistency
+      onUpdate?.()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Ukjent feil'
+      alert(`Feil ved sletting av relasjon: ${msg}`)
+      // Refetch on error
       const updatedRelations = await getItemRelations(item.id, item.team_id)
       if (!updatedRelations.error) {
         setRelations({
@@ -186,10 +212,6 @@ export function TeamItemCard({
           outbound: updatedRelations.outbound,
         })
       }
-      onUpdate?.()
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Ukjent feil'
-      alert(`Feil ved sletting av relasjon: ${msg}`)
     }
   }
 

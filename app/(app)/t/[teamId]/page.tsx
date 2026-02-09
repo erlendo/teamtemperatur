@@ -1,5 +1,4 @@
 import { AppHeader } from '@/components/AppHeader'
-import { DashboardGrid } from '@/components/DashboardGrid'
 import { DashboardSection } from '@/components/DashboardSection'
 import { HealthCard } from '@/components/HealthCard'
 import { supabaseServer } from '@/lib/supabase/server'
@@ -7,6 +6,7 @@ import { getTeamItems } from '@/server/actions/dashboard'
 import { getYearStats } from '@/server/actions/stats'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { DashboardClient } from './client'
 
 function getISOWeekInfo(): {
   week: number
@@ -153,7 +153,7 @@ export default async function TeamHome({
           </h1>
 
           {/* Row 1: Ukemål | Pipeline | Mål (with cross-column linking) */}
-          <DashboardGrid
+          <DashboardClient
             ukemålItems={ukemålItems}
             pipelineItems={pipelineItems}
             målItems={målItems}

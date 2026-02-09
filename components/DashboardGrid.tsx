@@ -3,7 +3,7 @@
 import {
   createItem,
   createRelation,
-  getItemRelations,
+  getAllTeamRelations,
   reorderItem,
   type ItemRelation,
   type TeamItem,
@@ -55,12 +55,14 @@ function SortableItemWrapper(
     onUpdate,
     userRole,
     onHover,
+    onRelationDelete,
   }: {
     item: TeamItem
     teamMembers: Array<{ id: string; firstName: string }>
     onUpdate: () => void
     userRole: string
     onHover?: (itemId: string | null) => void
+    onRelationDelete?: (relationId: string) => void
   },
   _ref: React.Ref<HTMLDivElement>
 ) {
@@ -94,6 +96,7 @@ function SortableItemWrapper(
         teamMembers={teamMembers}
         onUpdate={onUpdate}
         userRole={userRole}
+        onRelationDelete={onRelationDelete}
       />
     </div>
   )
@@ -110,6 +113,7 @@ function GridSection({
   userRole,
   onUpdate,
   onHover,
+  onRelationDelete,
 }: {
   title: string
   type: ItemType
@@ -119,6 +123,7 @@ function GridSection({
   userRole: string
   onUpdate?: () => void
   onHover?: (itemId: string | null) => void
+  onRelationDelete?: (relationId: string) => void
 }) {
   const colors = NORDIC_COLORS[type]
   const [isAdding, setIsAdding] = useState(false)
@@ -307,6 +312,7 @@ function GridSection({
                 userRole={userRole}
                 onUpdate={() => onUpdate?.()}
                 onHover={onHover}
+                onRelationDelete={onRelationDelete}
               />
             ))
           )}
@@ -352,27 +358,23 @@ export function DashboardGrid({
   const allItems = useRef([...ukemålItems, ...pipelineItems, ...målItems])
   allItems.current = [...ukemålItems, ...pipelineItems, ...målItems]
 
-  // Fetch all relations for all items
+  // Fetch all relations for the team (batch query)
   useEffect(() => {
     const fetchAllRelations = async () => {
-      const relationsByItem: ItemRelation[] = []
-
-      for (const item of allItems.current) {
-        const result = await getItemRelations(item.id, teamId)
-        if (!result.error) {
-          relationsByItem.push(...result.outbound, ...result.inbound)
-        }
+      const result = await getAllTeamRelations(teamId)
+      if (!result.error) {
+        setAllRelations(result.relations)
       }
-
-      // Deduplicate relations
-      const uniqueRelations = Array.from(
-        new Map(relationsByItem.map((r) => [r.id, r])).values()
-      )
-      setAllRelations(uniqueRelations)
     }
 
     void fetchAllRelations()
   }, [teamId])
+
+  // Optimistic delete handler - removes relation from state immediately
+  const handleRelationDelete = (relationId: string) => {
+    setAllRelations((prev) => prev.filter((r) => r.id !== relationId))
+    onUpdate?.()
+  }
 
   // Update card positions from DOM query selector
   useEffect(() => {
@@ -550,6 +552,7 @@ export function DashboardGrid({
           userRole={userRole}
           onUpdate={onUpdate}
           onHover={setHighlightedItemId}
+          onRelationDelete={handleRelationDelete}
         />
         <GridSection
           title="Pipeline"
@@ -560,6 +563,7 @@ export function DashboardGrid({
           userRole={userRole}
           onUpdate={onUpdate}
           onHover={setHighlightedItemId}
+          onRelationDelete={handleRelationDelete}
         />
         <GridSection
           title={`Mål (T${Math.ceil((new Date().getMonth() + 1) / 4)} ${new Date().getFullYear()})`}
@@ -570,6 +574,7 @@ export function DashboardGrid({
           userRole={userRole}
           onUpdate={onUpdate}
           onHover={setHighlightedItemId}
+          onRelationDelete={handleRelationDelete}
         />
       </div>
     </DndContext>
