@@ -169,7 +169,7 @@ export function TeamItemCard({
         border: '1px solid var(--color-neutral-200, #e5e5e5)',
         transition: 'all 0.3s ease',
         position: 'relative',
-        zIndex: 1,
+        zIndex: isEditMode ? 1000 : 1,
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'
