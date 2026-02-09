@@ -1,6 +1,7 @@
 # Team Temperature App - Copilot Instructions
 
 ## Tech Stack
+
 - **Frontend**: Next.js 14 (App Router), React 18, TypeScript
 - **Backend**: Supabase (PostgreSQL + Auth + RLS)
 - **Styling**: Inline styles + Tailwind CSS utilities (gradual migration in progress)
@@ -12,6 +13,7 @@
 ## Enforced Standards (Auto-checked)
 
 **This workspace has automated enforcement:**
+
 - ✅ ESLint catches errors before save (.eslintrc.js)
 - ✅ Prettier formats on save (.prettierrc)
 - ✅ TypeScript strict mode + noUncheckedIndexedAccess (tsconfig.json)
@@ -19,6 +21,7 @@
 - ⚠️ VSCode settings enforce formatOnSave + organizeImports
 
 **When suggesting code:**
+
 1. NO `any` types - use proper TypeScript
 2. NO unused variables (prefix with `_` if intentional)
 3. NO floating promises - always await or handle
@@ -29,6 +32,7 @@
 ## Architecture
 
 ### Database Schema (Supabase)
+
 - `teams` - team metadata, settings
 - `team_memberships` - user roles (owner/admin/member/viewer)
 - `user_profiles` - user metadata (first_name for display)
@@ -41,9 +45,10 @@
 - `answers` - individual answer values per question
 
 ### Key Patterns
+
 1. **Row-Level Security (RLS)**: All data access controlled by Supabase policies
 2. **Server Actions**: Use `'use server'` for mutations with error handling
-3. **Supabase Client**: 
+3. **Supabase Client**:
    - Browser: `supabaseBrowser()` from `@/lib/supabase/browser`
    - Server: `supabaseServer()` from `@/lib/supabase/server`
 4. **Auth**: Magic link OTP via Supabase Auth + email verification
@@ -53,6 +58,7 @@
 ## Code Conventions
 
 ### File Structure
+
 ```
 app/
   (app)/               # Authenticated routes
@@ -73,6 +79,7 @@ components/
 ```
 
 ### Naming & Styling
+
 - Server actions: `createTeam`, `updateItem`, `saveFirName`
 - Components: PascalCase, co-locate with routes when route-specific
 - Colors (Nordic Palette): Blue (#E3F2FD), Yellow (#FFFACD), Green (#E8F5E9)
@@ -80,6 +87,7 @@ components/
 - Font sizes: `12px` for compact, `13px` for body text
 
 ### Best Practices
+
 1. **Always validate input** before server actions
 2. **Use RLS policies** instead of manual auth checks
 3. **Prefer server components** unless interactivity needed
@@ -91,6 +99,7 @@ components/
 ## Recent Improvements (Feb 2026)
 
 ### Dashboard Optimization
+
 - ✅ 3-column grid layout (Ukemål | Pipeline | Mål)
 - ✅ Helse card (Health metrics) → full-width Row 2
 - ✅ Retro section → separate Row 3
@@ -100,6 +109,7 @@ components/
 - ✅ HealthCard compacted to match TeamItemCard sizing
 
 ### User Profiles & Display Names
+
 - ✅ `user_profiles` table with `first_name` column (Migration 027)
 - ✅ Signup form captures `first_name` (required field)
 - ✅ Dashboard displays first_name instead of email
@@ -108,6 +118,7 @@ components/
 - ✅ Inline editing + real-time save in admin interface
 
 ### Task Management Features
+
 - ✅ Tags display in view mode (blue badges)
 - ✅ Members display in view mode (avatar circles with initials)
 - ✅ Hover on avatar shows member's first_name
@@ -119,6 +130,7 @@ components/
 ## Current State (Feb 2026)
 
 ### ✅ Completed
+
 - Database schema + RLS all tiers
 - Auth flow (magic link OTP + email verification)
 - Dashboard with 3-column layout + health stats
@@ -131,11 +143,13 @@ components/
 - Team creation + membership
 
 ### 🚧 In Progress
+
 - Zod validation integration
 - Mobile responsive breakpoints
 - Additional admin features (questionnaire CRUD)
 
 ### ❌ TODO
+
 - Export/import tasks
 - Advanced filtering + search
 - Recurring tasks or templates
@@ -147,6 +161,7 @@ components/
 ## Environment Variables
 
 Required in `.env.local` and Vercel:
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-publishable-key
@@ -156,6 +171,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-secret-key
 ## Key Components
 
 ### TeamItemCard (`components/TeamItemCard.tsx`)
+
 - Displays task with title, status color, tags, assigned members
 - View mode: Read-only, shows all metadata
 - Edit mode: Toggle via pencil icon, edit title/status/members/tags
@@ -163,17 +179,20 @@ SUPABASE_SERVICE_ROLE_KEY=your-secret-key
 - Error display inline
 
 ### DashboardSection (`components/DashboardSection.tsx`)
+
 - Container for grouped items (Ukemål, Pipeline, Mål, Retro)
 - Handles drag-drop context, reordering, item creation
 - Color-coded by section type
 
 ### HealthCard (`components/HealthCard.tsx`)
+
 - Displays team health score (1-5 scale)
 - Trend chart (last 6 weeks)
 - Response rate + member count
 - Compact design matching TeamItemCard
 
 ### AdminUserProfiles (`components/AdminUserProfiles.tsx`)
+
 - Table of team members with email + first_name
 - Inline editing: click "Rediger" to update first_name
 - Save/Cancel buttons
@@ -183,12 +202,14 @@ SUPABASE_SERVICE_ROLE_KEY=your-secret-key
 ## Authentication & Authorization
 
 ### User Signup
+
 1. Enter first_name (required), email, password
 2. `saveUserProfile()` stores first_name in `user_profiles` table
 3. Email verification (if configured)
 4. Auto-redirect to `/teams` on success
 
 ### Admin Access
+
 1. Check user role in `team_memberships` (owner only)
 2. `/admin` page blocked if not owner (via server-side check)
 3. `adminUpdateUserFirstName()` validates owner role before update
@@ -196,22 +217,26 @@ SUPABASE_SERVICE_ROLE_KEY=your-secret-key
 ## Common Tasks
 
 **Update a user's first_name:**
+
 1. Go to `/t/[teamId]/admin`
 2. Find user in "Bruker-fornavn" section
 3. Click "Rediger" → type name → click "Lagre"
 
 **Add permissions for new feature:**
+
 1. Modify RLS policies in Supabase migration
 2. Test with `is_team_member()` helper in policies
 3. Server actions verify permissions before mutations
 
 **Style a new component:**
+
 1. Use inline `style={{}}` with CSS variables
 2. Spacing: `var(--space-md)`, `var(--space-lg)`
 3. Colors: Use Nordic palette or `var(--color-primary)`
 4. Fonts: `13px` body, `12px` for compact, `14px`+ for headers
 
 **Add a new task type:**
+
 1. Update ItemType enum in TeamItemCard.tsx
 2. Add case in `type === 'new-type'` conditions
 3. Create DashboardSection with appropriate color
@@ -219,13 +244,14 @@ SUPABASE_SERVICE_ROLE_KEY=your-secret-key
 ## Migration & Cleanup
 
 Last Cleanup: Feb 9, 2026
-- ✅ Removed all debug/test files (debug-*.sql, test-*.mjs, etc.)
-- ✅ Removed legacy implementations (team-temperature-*.php/html)
+
+- ✅ Removed all debug/test files (debug-_.sql, test-_.mjs, etc.)
+- ✅ Removed legacy implementations (team-temperature-\*.php/html)
 - ✅ Removed migration guides (already completed)
 - ✅ Cleaned up old test/analyze scripts
 - ✅ Repository is now production-ready
 
 Legacy files were migrated from:
+
 - **Old**: Static HTML + PHP + JSON file storage
 - **New**: Next.js + Supabase + Vercel
-

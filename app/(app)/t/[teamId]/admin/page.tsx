@@ -1,8 +1,8 @@
-import { getUsersWithSubmissions } from '@/server/actions/teams'
+import { AdminUserProfiles } from '@/components/AdminUserProfiles'
 import { supabaseServer } from '@/lib/supabase/server'
+import { getUsersWithSubmissions } from '@/server/actions/teams'
 import { redirect } from 'next/navigation'
 import AdminUsersWithSubmissions from './client'
-import { AdminUserProfiles } from '@/components/AdminUserProfiles'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,16 +44,14 @@ export default async function AdminPage({
         .select('user_id, first_name')
 
       const profileMap = new Map(
-        (profiles as Array<{ user_id: string; first_name: string }> || []).map(
-          (p) => [p.user_id, p.first_name]
-        )
+        (
+          (profiles as Array<{ user_id: string; first_name: string }>) || []
+        ).map((p) => [p.user_id, p.first_name])
       )
 
       // Get emails from auth users
       const { data } = await supabase.auth.admin.listUsers()
-      const usersMap = new Map(
-        (data?.users || []).map((u) => [u.id, u.email])
-      )
+      const usersMap = new Map((data?.users || []).map((u) => [u.id, u.email]))
 
       teamMembers = members.map((m) => ({
         user_id: m.user_id,

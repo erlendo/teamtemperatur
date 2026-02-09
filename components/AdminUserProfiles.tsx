@@ -1,8 +1,8 @@
 'use client'
 
 import { adminUpdateUserFirstName } from '@/server/actions/auth'
-import { useState } from 'react'
 import { AlertCircle, Check } from 'lucide-react'
+import { useState } from 'react'
 
 interface TeamMember {
   user_id: string
@@ -47,11 +47,7 @@ export function AdminUserProfiles({
 
     setSaving(true)
     try {
-      const result = await adminUpdateUserFirstName(
-        userId,
-        editValue,
-        teamId
-      )
+      const result = await adminUpdateUserFirstName(userId, editValue, teamId)
 
       if (result.error) {
         setMessage({ type: 'error', text: result.error })
@@ -89,7 +85,9 @@ export function AdminUserProfiles({
     <div style={{ padding: '2rem' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h2 style={{ marginBottom: '1rem' }}>Bruker-fornavn</h2>
-        <p style={{ color: 'var(--color-neutral-600)', marginBottom: '1.5rem' }}>
+        <p
+          style={{ color: 'var(--color-neutral-600)', marginBottom: '1.5rem' }}
+        >
           {membersWithoutNames.length > 0
             ? `${membersWithoutNames.length} bruker(e) mangler fornavn`
             : 'Alle brukere har fornavn satt ✓'}
@@ -239,8 +237,7 @@ export function AdminUserProfiles({
                         disabled={saving}
                         style={{
                           padding: '0.5rem 1rem',
-                          backgroundColor:
-                            'var(--color-primary, #3b82f6)',
+                          backgroundColor: 'var(--color-primary, #3b82f6)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '0.375rem',
@@ -257,8 +254,7 @@ export function AdminUserProfiles({
                         disabled={saving}
                         style={{
                           padding: '0.5rem 1rem',
-                          backgroundColor:
-                            'var(--color-neutral-100)',
+                          backgroundColor: 'var(--color-neutral-100)',
                           color: 'var(--color-neutral-700)',
                           border: '1px solid var(--color-neutral-300)',
                           borderRadius: '0.375rem',
@@ -275,8 +271,7 @@ export function AdminUserProfiles({
                       onClick={() => handleEdit(member)}
                       style={{
                         padding: '0.5rem 1rem',
-                        backgroundColor:
-                          'var(--color-neutral-100)',
+                        backgroundColor: 'var(--color-neutral-100)',
                         color: 'var(--color-neutral-700)',
                         border: '1px solid var(--color-neutral-300)',
                         borderRadius: '0.375rem',
@@ -286,13 +281,11 @@ export function AdminUserProfiles({
                       }}
                       onMouseEnter={(e) => {
                         const btn = e.currentTarget as HTMLButtonElement
-                        btn.style.backgroundColor =
-                          'var(--color-neutral-200)'
+                        btn.style.backgroundColor = 'var(--color-neutral-200)'
                       }}
                       onMouseLeave={(e) => {
                         const btn = e.currentTarget as HTMLButtonElement
-                        btn.style.backgroundColor =
-                          'var(--color-neutral-100)'
+                        btn.style.backgroundColor = 'var(--color-neutral-100)'
                       }}
                     >
                       Rediger

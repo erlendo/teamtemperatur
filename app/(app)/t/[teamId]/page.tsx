@@ -5,6 +5,7 @@ import { supabaseServer } from '@/lib/supabase/server'
 import { getTeamItems } from '@/server/actions/dashboard'
 import { getYearStats } from '@/server/actions/stats'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 function currentWeekNumberSimple(): number {
   const now = new Date()
@@ -21,8 +22,26 @@ export default async function TeamHome({
 }) {
   const { teamId } = await params
 
-  // Fetch team members with first names from user_profiles
+  // Get current user
   const supabase = supabaseServer()
+  const { data: authUser, error: authError } = await supabase.auth.getUser()
+  if (authError || !authUser.user) {
+    redirect('/login')
+  }
+
+  // Fetch user role
+  const { data: membership } = await supabase
+    .from('team_memberships')
+    .select('role')
+    .eq('team_id', teamId)
+    .eq('user_id', authUser.user.id)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  const userRole = membership?.role || 'viewer'
+  const isTeamAdmin = userRole === 'owner' || userRole === 'admin'
+
+  // Fetch team members with first names from user_profiles
   const { data: members } = await supabase
     .from('team_memberships')
     .select('user_id')
@@ -71,7 +90,7 @@ export default async function TeamHome({
 
   return (
     <>
-      <AppHeader teamId={teamId} />
+      <AppHeader teamId={teamId} isTeamAdmin={isTeamAdmin} />
       <main style={{ flex: 1, backgroundColor: 'var(--color-neutral-50)' }}>
         <div
           style={{

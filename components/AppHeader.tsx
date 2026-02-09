@@ -5,9 +5,11 @@ import { AppHeaderNav } from './AppHeaderNav'
 export function AppHeader({
   teamId,
   teamName,
+  isTeamAdmin,
 }: {
   teamId?: string
   teamName?: string
+  isTeamAdmin?: boolean
 }) {
   return (
     <header
@@ -90,7 +92,9 @@ export function AppHeader({
               </div>
             )}
 
-            {teamId && <AppHeaderNav teamId={teamId} />}
+            {teamId && (
+              <AppHeaderNav teamId={teamId} isTeamAdmin={isTeamAdmin} />
+            )}
           </div>
         </div>
       </div>

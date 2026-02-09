@@ -3,7 +3,13 @@
 import { BarChart3, PenTool, Users } from 'lucide-react'
 import Link from 'next/link'
 
-export function AppHeaderNav({ teamId }: { teamId: string }) {
+export function AppHeaderNav({
+  teamId,
+  isTeamAdmin,
+}: {
+  teamId: string
+  isTeamAdmin?: boolean
+}) {
   return (
     <nav
       style={{
@@ -72,6 +78,38 @@ export function AppHeaderNav({ teamId }: { teamId: string }) {
         <BarChart3 size={16} />
         Statistikk
       </Link>
+      {isTeamAdmin && (
+        <Link
+          href={`/t/${teamId}/admin`}
+          style={{
+            color: 'var(--color-neutral-600)',
+            fontSize: 'var(--font-size-sm)',
+            fontWeight: '500',
+            padding: 'var(--space-sm) var(--space-md)',
+            borderRadius: 'var(--border-radius-md)',
+            transition: 'all 0.2s ease',
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-xs)',
+          }}
+          onMouseEnter={(e) => {
+            ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+              'var(--color-neutral-100)'
+            ;(e.currentTarget as HTMLAnchorElement).style.color =
+              'var(--color-primary)'
+          }}
+          onMouseLeave={(e) => {
+            ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+              'transparent'
+            ;(e.currentTarget as HTMLAnchorElement).style.color =
+              'var(--color-neutral-600)'
+          }}
+        >
+          <Users size={16} />
+          Team Admin
+        </Link>
+      )}
       <Link
         href="/teams"
         style={{

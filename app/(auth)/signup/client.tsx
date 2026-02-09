@@ -1,7 +1,7 @@
 'use client'
 
-import { saveUserProfile } from '@/server/actions/auth'
 import { supabaseBrowser } from '@/lib/supabase/browser'
+import { saveUserProfile } from '@/server/actions/auth'
 import { Loader, Lock, Mail, Thermometer, User } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
