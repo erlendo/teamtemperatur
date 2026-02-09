@@ -3,7 +3,9 @@
 import {
   createItem,
   createRelation,
+  getItemRelations,
   reorderItem,
+  type ItemRelation,
   type TeamItem,
 } from '@/server/actions/dashboard'
 import {
@@ -23,7 +25,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useState } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
+import { RelationConnectors } from './RelationConnectors'
 import { TeamItemCard } from './TeamItemCard'
 
 type ItemType = 'ukemål' | 'pipeline' | 'mål' | 'retro'
@@ -45,17 +48,22 @@ const NORDIC_COLORS: Record<ItemType, { accent: string; light: string }> = {
   retro: { accent: '#92400e', light: '#fefce8' },
 }
 
-function SortableItemWrapper({
-  item,
-  teamMembers,
-  onUpdate,
-  userRole,
-}: {
-  item: TeamItem
-  teamMembers: Array<{ id: string; firstName: string }>
-  onUpdate: () => void
-  userRole: string
-}) {
+function SortableItemWrapper(
+  {
+    item,
+    teamMembers,
+    onUpdate,
+    userRole,
+    onHover,
+  }: {
+    item: TeamItem
+    teamMembers: Array<{ id: string; firstName: string }>
+    onUpdate: () => void
+    userRole: string
+    onHover?: (itemId: string | null) => void
+  },
+  _ref: React.Ref<HTMLDivElement>
+) {
   const {
     attributes,
     listeners,
@@ -72,7 +80,15 @@ function SortableItemWrapper({
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      data-item-id={item.id}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onMouseEnter={() => onHover?.(item.id)}
+      onMouseLeave={() => onHover?.(null)}
+    >
       <TeamItemCard
         item={item}
         teamMembers={teamMembers}
@@ -83,6 +99,8 @@ function SortableItemWrapper({
   )
 }
 
+const SortableItemWrapperForward = forwardRef(SortableItemWrapper)
+
 function GridSection({
   title,
   type,
@@ -91,6 +109,7 @@ function GridSection({
   teamMembers,
   userRole,
   onUpdate,
+  onHover,
 }: {
   title: string
   type: ItemType
@@ -99,6 +118,7 @@ function GridSection({
   teamMembers: Array<{ id: string; firstName: string }>
   userRole: string
   onUpdate?: () => void
+  onHover?: (itemId: string | null) => void
 }) {
   const colors = NORDIC_COLORS[type]
   const [isAdding, setIsAdding] = useState(false)
@@ -280,12 +300,13 @@ function GridSection({
             </p>
           ) : (
             items.map((item) => (
-              <SortableItemWrapper
+              <SortableItemWrapperForward
                 key={item.id}
                 item={item}
                 teamMembers={teamMembers}
                 userRole={userRole}
                 onUpdate={() => onUpdate?.()}
+                onHover={onHover}
               />
             ))
           )}
@@ -315,6 +336,91 @@ export function DashboardGrid({
     })
   )
 
+  // State for tracking card positions and relations
+  const [itemPositions, setItemPositions] = useState(
+    new Map<
+      string,
+      { id: string; x: number; y: number; width: number; height: number }
+    >()
+  )
+  const [allRelations, setAllRelations] = useState<ItemRelation[]>([])
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(
+    null
+  )
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const allItems = useRef([...ukemålItems, ...pipelineItems, ...målItems])
+  allItems.current = [...ukemålItems, ...pipelineItems, ...målItems]
+
+  // Fetch all relations for all items
+  useEffect(() => {
+    const fetchAllRelations = async () => {
+      const relationsByItem: ItemRelation[] = []
+
+      for (const item of allItems.current) {
+        const result = await getItemRelations(item.id, teamId)
+        if (!result.error) {
+          relationsByItem.push(...result.outbound, ...result.inbound)
+        }
+      }
+
+      // Deduplicate relations
+      const uniqueRelations = Array.from(
+        new Map(relationsByItem.map((r) => [r.id, r])).values()
+      )
+      setAllRelations(uniqueRelations)
+    }
+
+    void fetchAllRelations()
+  }, [teamId])
+
+  // Update card positions from DOM query selector
+  useEffect(() => {
+    const updatePositions = () => {
+      if (!containerRef.current) return
+
+      const positions = new Map<
+        string,
+        { id: string; x: number; y: number; width: number; height: number }
+      >()
+      const containerRect = containerRef.current.getBoundingClientRect()
+
+      // Query all cards in the container
+      const cardElements =
+        containerRef.current.querySelectorAll('[data-item-id]')
+
+      cardElements.forEach((element) => {
+        const itemId = element.getAttribute('data-item-id')
+        if (itemId) {
+          const rect = element.getBoundingClientRect()
+          positions.set(itemId, {
+            id: itemId,
+            x: rect.left - containerRect.left,
+            y: rect.top - containerRect.top,
+            width: rect.width,
+            height: rect.height,
+          })
+        }
+      })
+
+      setItemPositions(positions)
+    }
+
+    // Initial update
+    updatePositions()
+
+    // Update on window resize and scroll
+    const timer = setTimeout(updatePositions, 100)
+    window.addEventListener('resize', updatePositions)
+    window.addEventListener('scroll', updatePositions)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', updatePositions)
+      window.removeEventListener('scroll', updatePositions)
+    }
+  }, [])
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
 
@@ -337,11 +443,6 @@ export function DashboardGrid({
 
     // Check if this is a cross-column drag
     if (activeItem.type !== overItem.type) {
-      console.log('Cross-column drag detected:', {
-        from: activeItem.type,
-        to: overItem.type,
-      })
-
       // Validate relation type based on source and target types
       let relationType: 'next_step' | 'part_of' | null = null
 
@@ -384,7 +485,6 @@ export function DashboardGrid({
           console.error('Failed to create relation:', result.error)
           alert(`Feil: ${result.error}`)
         } else {
-          console.log('Relation created successfully')
           onUpdate?.()
         }
       }
@@ -426,13 +526,21 @@ export function DashboardGrid({
       onDragEnd={handleDragEnd}
     >
       <div
+        ref={containerRef}
         style={{
+          position: 'relative',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
           gap: 'var(--space-2xl)',
           marginBottom: 'var(--space-2xl)',
         }}
       >
+        <RelationConnectors
+          relations={allRelations}
+          itemPositions={itemPositions}
+          highlightedItemId={highlightedItemId}
+        />
+
         <GridSection
           title="Ukemål denne uka"
           type="ukemål"
@@ -441,6 +549,7 @@ export function DashboardGrid({
           teamMembers={teamMembers}
           userRole={userRole}
           onUpdate={onUpdate}
+          onHover={setHighlightedItemId}
         />
         <GridSection
           title="Pipeline"
@@ -450,6 +559,7 @@ export function DashboardGrid({
           teamMembers={teamMembers}
           userRole={userRole}
           onUpdate={onUpdate}
+          onHover={setHighlightedItemId}
         />
         <GridSection
           title={`Mål (T${Math.ceil((new Date().getMonth() + 1) / 4)} ${new Date().getFullYear()})`}
@@ -459,6 +569,7 @@ export function DashboardGrid({
           teamMembers={teamMembers}
           userRole={userRole}
           onUpdate={onUpdate}
+          onHover={setHighlightedItemId}
         />
       </div>
     </DndContext>
