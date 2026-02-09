@@ -165,9 +165,7 @@ function GridSection({
           ? `2px dashed ${colors.accent}`
           : '2px solid transparent',
         transition: 'all 0.2s ease',
-        boxShadow: isValidDropZone
-          ? '0 4px 12px rgba(0,0,0,0.1)'
-          : 'none',
+        boxShadow: isValidDropZone ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
       }}
     >
       <div

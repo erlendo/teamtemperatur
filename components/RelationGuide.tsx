@@ -124,9 +124,7 @@ export function RelationGuide() {
             <li>
               <strong>Dra og slipp</strong> et kort fra én kolonne til en annen
             </li>
-            <li>
-              Pilene vises automatisk når du slipper kortet
-            </li>
+            <li>Pilene vises automatisk når du slipper kortet</li>
           </ul>
         </div>
 
