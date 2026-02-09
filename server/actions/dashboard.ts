@@ -201,12 +201,6 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
   }
 
   if (!memberships || memberships.length === 0) {
-    // Verify team exists and user has any relation to it
-    const { data: allMemberships } = await supabase
-      .from('team_memberships')
-      .select('role, status, user_id')
-      .eq('team_id', item.team_id)
-
     return {
       error: 'Du har ikke tilgang til denne oppgaven (ikke medlem av teamet)',
     }
@@ -220,12 +214,12 @@ export async function deleteItem(itemId: string): Promise<{ error?: string }> {
   }
 
   // Delete related records first (CASCADE should handle but being explicit)
-  const { error: membersDeleteError } = await supabase
+  const { error: _membersDeleteError } = await supabase
     .from('team_item_members')
     .delete()
     .eq('item_id', itemId)
 
-  const { error: tagsDeleteError } = await supabase
+  const { error: _tagsDeleteError } = await supabase
     .from('team_item_tags')
     .delete()
     .eq('item_id', itemId)
