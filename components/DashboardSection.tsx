@@ -22,7 +22,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { TeamItemCard } from './TeamItemCard'
 
@@ -101,7 +100,6 @@ export function DashboardSection({
   const [sortedItems, setSortedItems] = useState<TeamItem[]>(
     [...items].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
   )
-  const router = useRouter()
 
   // Re-sync sorted items when items prop changes
   useEffect(() => {
@@ -132,7 +130,6 @@ export function DashboardSection({
         setNewItemTitle('')
         setIsAdding(false)
         setErrorMsg(null)
-        router.refresh()
         onUpdate?.()
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Unknown error'
@@ -160,14 +157,12 @@ export function DashboardSection({
           }
         }
 
-        router.refresh()
         onUpdate?.()
       }
     }
   }
 
   const handleUpdate = () => {
-    router.refresh()
     onUpdate?.()
   }
 

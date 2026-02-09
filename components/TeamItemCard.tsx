@@ -6,8 +6,7 @@ import {
   updateItem,
   type TeamItem,
 } from '@/server/actions/dashboard'
-import { AlertCircle, Pencil, Trash2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { AlertCircle, Loader, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { PersonChip } from './PersonChip'
 import { SystemTagInput } from './SystemTagInput'
@@ -32,75 +31,107 @@ export function TeamItemCard({
   const [title, setTitle] = useState(item.title)
   const [showMemberDropdown, setShowMemberDropdown] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isStatusChanging, setIsStatusChanging] = useState(false)
+  const [isAddingMember, setIsAddingMember] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
   const handleSaveTitle = async () => {
     if (title.trim() && title !== item.title) {
+      setIsSaving(true)
+      setStatusMessage('Lagrer...')
       try {
         const result = await updateItem(item.id, { title: title.trim() })
         if (result.error) {
           setError(result.error)
+          setStatusMessage(null)
           return
         }
         setError(null)
-        router.refresh()
+        setStatusMessage('✓ Lagret')
+        setTimeout(() => setStatusMessage(null), 2000)
         onUpdate?.()
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Ukjent feil'
         setError(msg)
+        setStatusMessage(null)
+      } finally {
+        setIsSaving(false)
       }
     }
     setIsEditingTitle(false)
   }
 
   const handleDelete = async () => {
+    setIsDeleting(true)
+    setStatusMessage('Sletter...')
     try {
       const result = await deleteItem(item.id)
 
       if (result.error) {
         setError(result.error)
+        setStatusMessage(null)
         return
       }
 
       setError(null)
-      router.refresh()
+      setStatusMessage('✓ Slettet')
+      setTimeout(() => setStatusMessage(null), 2000)
       onUpdate?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
       setError(msg)
+      setStatusMessage(null)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   const handleStatusChange = async (newStatus: ItemStatus) => {
+    setIsStatusChanging(true)
+    setStatusMessage('Oppdaterer status...')
     try {
       const result = await updateItem(item.id, { status: newStatus })
       if (result.error) {
         setError(result.error)
+        setStatusMessage(null)
         return
       }
       setError(null)
-      router.refresh()
+      setStatusMessage('✓ Status oppdatert')
+      setTimeout(() => setStatusMessage(null), 2000)
       onUpdate?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
       setError(msg)
+      setStatusMessage(null)
+    } finally {
+      setIsStatusChanging(false)
     }
   }
 
   const handleAddMember = async (userId: string) => {
+    setIsAddingMember(true)
+    setStatusMessage('Legger til medlem...')
     try {
       const result = await addMemberTag(item.id, userId)
       if (result.error) {
         setError(result.error)
+        setStatusMessage(null)
         return
       }
       setError(null)
+      setStatusMessage('✓ Medlem lagt til')
+      setTimeout(() => setStatusMessage(null), 2000)
       setShowMemberDropdown(false)
-      router.refresh()
       onUpdate?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
       setError(msg)
+      setStatusMessage(null)
+    } finally {
+      setIsAddingMember(false)
     }
   }
 
@@ -163,6 +194,33 @@ export function TeamItemCard({
         >
           <AlertCircle size={16} />
           {error}
+        </div>
+      )}
+      {statusMessage && (
+        <div
+          style={{
+            backgroundColor: statusMessage.startsWith('✓')
+              ? 'rgba(34, 197, 94, 0.1)'
+              : 'rgba(96, 165, 250, 0.1)',
+            color: statusMessage.startsWith('✓') ? '#22c55e' : '#3b82f6',
+            padding: 'var(--space-sm)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '12px',
+            marginBottom: 'var(--space-md)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-xs)',
+          }}
+        >
+          {statusMessage.startsWith('✓') ? (
+            <span>✓</span>
+          ) : (
+            <Loader
+              size={16}
+              style={{ animation: 'spin 1s linear infinite' }}
+            />
+          )}
+          {statusMessage}
         </div>
       )}
       <div
@@ -297,20 +355,24 @@ export function TeamItemCard({
         {userRole !== 'viewer' && (
           <button
             onClick={() => setIsEditMode(!isEditMode)}
+            disabled={isSaving || isDeleting}
             style={{
               background: 'none',
               border: 'none',
-              cursor: 'pointer',
+              cursor: isSaving || isDeleting ? 'not-allowed' : 'pointer',
               color: isEditMode
                 ? 'var(--color-primary)'
                 : 'var(--color-neutral-500)',
               padding: 'var(--space-xs)',
               transition: 'all 0.2s ease',
               flexShrink: 0,
+              opacity: isSaving || isDeleting ? 0.5 : 1,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--color-primary)'
-              e.currentTarget.style.transform = 'scale(1.1)'
+              if (!isSaving && !isDeleting) {
+                e.currentTarget.style.color = 'var(--color-primary)'
+                e.currentTarget.style.transform = 'scale(1.1)'
+              }
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = isEditMode
@@ -320,7 +382,14 @@ export function TeamItemCard({
             }}
             title="Rediger"
           >
-            <Pencil size={18} />
+            {isSaving ? (
+              <Loader
+                size={18}
+                style={{ animation: 'spin 1s linear infinite' }}
+              />
+            ) : (
+              <Pencil size={18} />
+            )}
           </button>
         )}
 
@@ -330,10 +399,11 @@ export function TeamItemCard({
             onClick={() => {
               void handleDelete()
             }}
+            disabled={isDeleting || isSaving}
             style={{
               background: 'none',
               border: 'none',
-              cursor: 'pointer',
+              cursor: isDeleting || isSaving ? 'not-allowed' : 'pointer',
               color: 'var(--color-neutral-500)',
               padding: 'var(--space-xs)',
               transition: 'all 0.2s ease',
@@ -341,10 +411,13 @@ export function TeamItemCard({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              opacity: isDeleting || isSaving ? 0.5 : 1,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--color-error, #ef4444)'
-              e.currentTarget.style.transform = 'scale(1.1)'
+              if (!isDeleting && !isSaving) {
+                e.currentTarget.style.color = 'var(--color-error, #ef4444)'
+                e.currentTarget.style.transform = 'scale(1.1)'
+              }
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = 'var(--color-neutral-500)'
@@ -352,7 +425,14 @@ export function TeamItemCard({
             }}
             title="Slett oppgave"
           >
-            <Trash2 size={18} />
+            {isDeleting ? (
+              <Loader
+                size={18}
+                style={{ animation: 'spin 1s linear infinite' }}
+              />
+            ) : (
+              <Trash2 size={18} />
+            )}
           </button>
         )}
       </div>
@@ -370,12 +450,14 @@ export function TeamItemCard({
             <select
               value={item.status}
               onChange={(e) => handleStatusChange(e.target.value as ItemStatus)}
+              disabled={isStatusChanging}
               style={{
                 padding: '4px 6px',
                 border: '1px solid var(--color-neutral-300)',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '12px',
-                cursor: 'pointer',
+                cursor: isStatusChanging ? 'not-allowed' : 'pointer',
+                opacity: isStatusChanging ? 0.6 : 1,
               }}
             >
               <option value="planlagt">◆ Planlagt</option>
@@ -408,17 +490,32 @@ export function TeamItemCard({
             <div style={{ position: 'relative', zIndex: 50 }}>
               <button
                 onClick={() => setShowMemberDropdown(!showMemberDropdown)}
+                disabled={isAddingMember}
                 style={{
                   padding: '4px 8px',
                   backgroundColor: 'var(--color-neutral-100)',
                   border: '1px dashed var(--color-neutral-400)',
                   borderRadius: 'var(--radius-full)',
-                  cursor: 'pointer',
+                  cursor: isAddingMember ? 'not-allowed' : 'pointer',
                   fontSize: '12px',
                   fontWeight: 500,
+                  opacity: isAddingMember ? 0.6 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
                 }}
               >
-                + Legg til person
+                {isAddingMember ? (
+                  <>
+                    <Loader
+                      size={12}
+                      style={{ animation: 'spin 1s linear infinite' }}
+                    />
+                    Legger til...
+                  </>
+                ) : (
+                  '+ Legg til person'
+                )}
               </button>
 
               {showMemberDropdown && availableMembers.length > 0 && (
