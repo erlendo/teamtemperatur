@@ -10,8 +10,11 @@ CREATE TABLE IF NOT EXISTS public.team_item_relations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   
-  -- Enforce one-to-one for ukemål → pipeline (next_step relation only has one source per type)
-  UNIQUE(source_item_id, relation_type)
+  -- Enforce strict one-to-one for both directions:
+  -- One source can only link to one target per relation_type
+  -- One target can only be linked from one source per relation_type
+  UNIQUE(source_item_id, relation_type),
+  UNIQUE(target_item_id, relation_type)
 );
 
 -- Index for efficient lookups

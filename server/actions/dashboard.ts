@@ -724,14 +724,6 @@ export async function createRelation(
   const supabase = supabaseServer()
 
   try {
-    console.log('=== createRelation START ===')
-    console.log({
-      teamId,
-      sourceItemId,
-      targetItemId,
-      relationType,
-    })
-
     // Validate source and target items exist and belong to team
     const { data: items, error: itemsError } = await supabase
       .from('team_items')
@@ -740,12 +732,10 @@ export async function createRelation(
       .eq('team_id', teamId)
 
     if (itemsError) {
-      console.error('✗ Error fetching items:', itemsError.message)
       return { error: `Kunne ikke hente oppgaver: ${itemsError.message}` }
     }
 
     if (!items || items.length !== 2) {
-      console.error('✗ One or both items not found in team')
       return {
         error: 'En eller begge oppgavene finnes ikke i teamet',
       }
@@ -760,12 +750,23 @@ export async function createRelation(
       }
     }
 
-    console.log('✓ Items validated:', {
-      source: sourceItem.title,
-      target: targetItem.title,
-    })
+    // Auto-replace: Delete any existing relation from source with same type
+    // (ensures source has only one target per relation_type)
+    await supabase
+      .from('team_item_relations')
+      .delete()
+      .eq('source_item_id', sourceItemId)
+      .eq('relation_type', relationType)
 
-    // Insert relation
+    // Auto-replace: Delete any existing relation to target with same type
+    // (ensures target has only one source per relation_type)
+    await supabase
+      .from('team_item_relations')
+      .delete()
+      .eq('target_item_id', targetItemId)
+      .eq('relation_type', relationType)
+
+    // Create new relation
     const { data, error: relationError } = await supabase
       .from('team_item_relations')
       .insert([
@@ -779,13 +780,6 @@ export async function createRelation(
       .select('id')
 
     if (relationError) {
-      console.error('✗ Error creating relation:', relationError.message)
-      // Check if it's a unique constraint violation (one-to-one constraint)
-      if (relationError.message.includes('duplicate key')) {
-        return {
-          error: `${sourceItem.title} er allerede koblet til en ${relationType === 'next_step' ? 'pipeline' : 'mål'}`,
-        }
-      }
       return {
         error: `Kunne ikke opprette relasjon: ${relationError.message}`,
       }
@@ -796,13 +790,10 @@ export async function createRelation(
     }
 
     const relationId = data[0].id
-    console.log('✓ Relation created:', relationId)
-
     revalidatePath(`/t/${teamId}`)
     return { relationId }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('✗ Unexpected error in createRelation:', message)
     return { error: `Uventet feil: ${message}` }
   }
 }
