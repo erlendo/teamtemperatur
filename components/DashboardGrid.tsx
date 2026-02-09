@@ -1,5 +1,6 @@
 'use client'
 
+import { useVisibleRelations } from '@/hooks/useVisibleRelations'
 import {
   createItem,
   createRelation,
@@ -342,6 +343,7 @@ export function DashboardGrid({
   userRole,
   onUpdate,
 }: DashboardGridProps) {
+  const { showRelations } = useVisibleRelations()
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -580,11 +582,13 @@ export function DashboardGrid({
           marginBottom: 'var(--space-2xl)',
         }}
       >
-        <RelationConnectors
-          relations={allRelations}
-          itemPositions={itemPositions}
-          highlightedItemId={highlightedItemId}
-        />
+        {showRelations && (
+          <RelationConnectors
+            relations={allRelations}
+            itemPositions={itemPositions}
+            highlightedItemId={highlightedItemId}
+          />
+        )}
 
         <GridSection
           title="Ukemål denne uka"

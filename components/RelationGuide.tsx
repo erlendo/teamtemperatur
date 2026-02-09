@@ -1,10 +1,12 @@
 'use client'
 
-import { Info, X } from 'lucide-react'
+import { useVisibleRelations } from '@/hooks/useVisibleRelations'
+import { Eye, EyeOff, Info, X } from 'lucide-react'
 import { useState } from 'react'
 
 export function RelationGuide() {
   const [isOpen, setIsOpen] = useState(true)
+  const { showRelations, toggleRelations } = useVisibleRelations()
 
   if (!isOpen) {
     return (
@@ -77,21 +79,41 @@ export function RelationGuide() {
           <Info size={20} />
           Lag forbindelser
         </h3>
-        <button
-          onClick={() => setIsOpen(false)}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--color-neutral-500)',
-            padding: 'var(--space-xs)',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-          title="Lukk"
-        >
-          <X size={20} />
-        </button>
+        <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+          <button
+            onClick={toggleRelations}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: showRelations
+                ? 'var(--color-primary)'
+                : 'var(--color-neutral-400)',
+              padding: 'var(--space-xs)',
+              display: 'flex',
+              alignItems: 'center',
+              transition: 'color 0.2s ease',
+            }}
+            title={showRelations ? 'Skjul piler' : 'Vis piler'}
+          >
+            {showRelations ? <Eye size={20} /> : <EyeOff size={20} />}
+          </button>
+          <button
+            onClick={() => setIsOpen(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--color-neutral-500)',
+              padding: 'var(--space-xs)',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            title="Lukk"
+          >
+            <X size={20} />
+          </button>
+        </div>
       </div>
 
       <div
