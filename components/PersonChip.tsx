@@ -15,7 +15,6 @@ export function PersonChip({
   itemId,
   onUpdate,
 }: PersonChipProps) {
-
   const handleRemove = async () => {
     await removeMemberTag(itemId, userId)
     onUpdate?.()
