@@ -21,7 +21,7 @@ export default async function TeamHome({
 }) {
   const { teamId } = await params
 
-  // Fetch team members with email lookup
+  // Fetch team members with first names from user_profiles
   const supabase = supabaseServer()
   const { data: members } = await supabase
     .from('team_memberships')
@@ -29,25 +29,22 @@ export default async function TeamHome({
     .eq('team_id', teamId)
     .eq('status', 'active')
 
-  // Get user emails from auth.users via admin API
-  let userEmails: Record<string, string> = {}
+  // Get user first names from user_profiles
+  const userFirstNames: Record<string, string> = {}
   if (members && members.length > 0) {
     try {
       const userIds = members.map((m) => m.user_id)
-      // Query to get user emails
-      const { data } = await supabase.auth.admin.listUsers()
-      const users = data?.users || []
-      userEmails = users
-        .filter((u) => userIds.includes(u.id))
-        .reduce(
-          (acc, u) => {
-            acc[u.id] = u.email || u.id
-            return acc
-          },
-          {} as Record<string, string>
-        )
+      // Query to get first names from user_profiles
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('user_id, first_name')
+        .in('user_id', userIds)
+
+      profiles?.forEach((p) => {
+        userFirstNames[p.user_id] = p.first_name
+      })
     } catch (err) {
-      console.error('Error fetching user emails:', err)
+      console.error('Error fetching user profiles:', err)
     }
   }
 
@@ -55,7 +52,7 @@ export default async function TeamHome({
     (members as Array<{ user_id: string }> | null)
       ?.map((m) => ({
         id: m.user_id,
-        email: userEmails[m.user_id] || m.user_id.slice(0, 8) + '...',
+        firstName: userFirstNames[m.user_id] || m.user_id.slice(0, 8) + '...',
       }))
       .filter((m) => m.id) || []
 

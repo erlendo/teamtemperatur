@@ -43,7 +43,7 @@ function SortableItemWrapper({
   onUpdate,
 }: {
   item: TeamItem
-  teamMembers: Array<{ id: string; email: string }>
+  teamMembers: Array<{ id: string; firstName: string }>
   onUpdate: () => void
 }) {
   const {
@@ -73,7 +73,7 @@ interface DashboardSectionProps {
   type: ItemType
   items: TeamItem[]
   teamId: string
-  teamMembers: Array<{ id: string; email: string }>
+  teamMembers: Array<{ id: string; firstName: string }>
   onUpdate?: () => void
 }
 

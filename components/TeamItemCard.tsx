@@ -14,7 +14,7 @@ import { SystemTagInput } from './SystemTagInput'
 
 interface TeamItemCardProps {
   item: TeamItem
-  teamMembers: Array<{ id: string; email: string }>
+  teamMembers: Array<{ id: string; firstName: string }>
   onUpdate?: () => void
 }
 
@@ -261,15 +261,13 @@ export function TeamItemCard({
                     const user = teamMembers.find(
                       (m) => m.id === member.user_id
                     )
-                    const initials =
-                      user?.email
-                        ?.split('@')[0]
-                        ?.substring(0, 2)
-                        .toUpperCase() || '?'
+                    const initials = user?.firstName
+                      ? user.firstName.substring(0, 2).toUpperCase()
+                      : '?'
                     return (
                       <span
                         key={member.user_id}
-                        title={user?.email || 'Ukjent'}
+                        title={user?.firstName || 'Ukjent'}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -394,7 +392,7 @@ export function TeamItemCard({
                 <PersonChip
                   key={member.user_id}
                   userId={member.user_id}
-                  displayName={user?.email.split('@')[0] || 'Ukjent'}
+                  displayName={user?.firstName || 'Ukjent'}
                   itemId={item.id}
                   onUpdate={handleTagUpdate}
                 />
@@ -454,7 +452,7 @@ export function TeamItemCard({
                         e.currentTarget.style.backgroundColor = 'transparent'
                       }}
                     >
-                      {member.email.split('@')[0]}
+                      {member.firstName}
                     </button>
                   ))}
                 </div>
