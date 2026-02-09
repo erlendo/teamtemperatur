@@ -7,12 +7,45 @@ import { getYearStats } from '@/server/actions/stats'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-function currentWeekNumberSimple(): number {
+function getISOWeekInfo(): { week: number; year: number; start: Date; end: Date } {
   const now = new Date()
-  const start = new Date(now.getFullYear(), 0, 1)
-  const diff = now.getTime() - start.getTime()
-  const oneWeek = 1000 * 60 * 60 * 24 * 7
-  return Math.ceil(diff / oneWeek)
+  
+  // ISO 8601: Week 1 is the week with the first Thursday of the year
+  // Or equivalently: the first week with a Monday on or after January 4
+  const jan4 = new Date(now.getFullYear(), 0, 4)
+  const dayOfWeek = jan4.getDay()
+  // Monday = 1, Sunday = 0 in getDay(), but we need Monday = 1, Sunday = 7
+  const monday = new Date(jan4)
+  monday.setDate(jan4.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
+  
+  // Calculate week number from Monday of week 1
+  const timeDiff = now.getTime() - monday.getTime()
+  const daysDiff = timeDiff / (1000 * 60 * 60 * 24)
+  const week = Math.floor(daysDiff / 7) + 1
+  
+  // Get Monday of current week (Norway: week starts Monday)
+  const dayInWeek = now.getDay() === 0 ? 6 : now.getDay() - 1 // Monday = 0
+  const startDate = new Date(now)
+  startDate.setDate(now.getDate() - dayInWeek)
+  startDate.setHours(0, 0, 0, 0)
+  
+  // Get Sunday of current week
+  const endDate = new Date(startDate)
+  endDate.setDate(startDate.getDate() + 6)
+  endDate.setHours(23, 59, 59, 999)
+  
+  return {
+    week,
+    year: now.getFullYear(),
+    start: startDate,
+    end: endDate,
+  }
+}
+
+function formatDate(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  return `${day}.${month}`
 }
 
 export default async function TeamHome({
@@ -83,7 +116,8 @@ export default async function TeamHome({
   const retroItems = items.filter((i) => i.type === 'retro')
 
   // Fetch health stats
-  const currentWeek = currentWeekNumberSimple()
+  const weekInfo = getISOWeekInfo()
+  const currentWeek = weekInfo.week
   const statsData = await getYearStats(teamId, currentWeek)
   const currentWeekStats = statsData?.find((s) => s.week === currentWeek)
   const previousWeekStats = statsData?.find((s) => s.week === currentWeek - 1)
@@ -108,7 +142,7 @@ export default async function TeamHome({
               letterSpacing: '-0.02em',
             }}
           >
-            Dashboard – Uke {currentWeek}, {new Date().getFullYear()}
+            Dashboard – Uke {weekInfo.week} ({formatDate(weekInfo.start)}–{formatDate(weekInfo.end)})
           </h1>
 
           {/* Row 1: Ukemål | Pipeline | (Mål moved here) */}
