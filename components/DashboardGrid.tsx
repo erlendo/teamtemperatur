@@ -11,6 +11,7 @@ import {
 import {
   DndContext,
   DragEndEvent,
+  DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   closestCenter,
@@ -114,6 +115,7 @@ function GridSection({
   onUpdate,
   onHover,
   onRelationDelete,
+  isValidDropZone,
 }: {
   title: string
   type: ItemType
@@ -124,6 +126,7 @@ function GridSection({
   onUpdate?: () => void
   onHover?: (itemId: string | null) => void
   onRelationDelete?: (relationId: string) => void
+  isValidDropZone?: boolean
 }) {
   const colors = NORDIC_COLORS[type]
   const [isAdding, setIsAdding] = useState(false)
@@ -155,6 +158,16 @@ function GridSection({
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-lg)',
+        padding: isValidDropZone ? 'var(--space-md)' : '0',
+        backgroundColor: isValidDropZone ? colors.light : 'transparent',
+        borderRadius: isValidDropZone ? 'var(--radius-lg)' : '0',
+        border: isValidDropZone
+          ? `2px dashed ${colors.accent}`
+          : '2px solid transparent',
+        transition: 'all 0.2s ease',
+        boxShadow: isValidDropZone
+          ? '0 4px 12px rgba(0,0,0,0.1)'
+          : 'none',
       }}
     >
       <div
@@ -353,6 +366,7 @@ export function DashboardGrid({
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(
     null
   )
+  const [activeDragItem, setActiveDragItem] = useState<TeamItem | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const allItems = useRef([...ukemålItems, ...pipelineItems, ...målItems])
@@ -521,11 +535,42 @@ export function DashboardGrid({
     }
   }
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const activeId = String(event.active.id)
+    const item = [...ukemålItems, ...pipelineItems, ...målItems].find(
+      (item) => item.id === activeId
+    )
+    if (item) {
+      setActiveDragItem(item)
+    }
+  }
+
+  const handleDragCancel = () => {
+    setActiveDragItem(null)
+  }
+
+  // Helper function to determine if a drop is valid
+  const isValidDropZone = (type: ItemType) => {
+    if (!activeDragItem) return false
+
+    if (activeDragItem.type === 'ukemål' && type === 'pipeline') return true
+    if (activeDragItem.type === 'pipeline' && type === 'ukemål') return true
+    if (activeDragItem.type === 'pipeline' && type === 'mål') return true
+    if (activeDragItem.type === 'mål' && type === 'pipeline') return true
+
+    return false
+  }
+
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
+      onDragStart={handleDragStart}
+      onDragEnd={(event) => {
+        void handleDragEnd(event)
+        setActiveDragItem(null)
+      }}
+      onDragCancel={handleDragCancel}
     >
       <div
         ref={containerRef}
@@ -553,6 +598,7 @@ export function DashboardGrid({
           onUpdate={onUpdate}
           onHover={setHighlightedItemId}
           onRelationDelete={handleRelationDelete}
+          isValidDropZone={isValidDropZone('ukemål')}
         />
         <GridSection
           title="Pipeline"
@@ -564,6 +610,7 @@ export function DashboardGrid({
           onUpdate={onUpdate}
           onHover={setHighlightedItemId}
           onRelationDelete={handleRelationDelete}
+          isValidDropZone={isValidDropZone('pipeline')}
         />
         <GridSection
           title={`Mål (T${Math.ceil((new Date().getMonth() + 1) / 4)} ${new Date().getFullYear()})`}
@@ -575,6 +622,7 @@ export function DashboardGrid({
           onUpdate={onUpdate}
           onHover={setHighlightedItemId}
           onRelationDelete={handleRelationDelete}
+          isValidDropZone={isValidDropZone('mål')}
         />
       </div>
     </DndContext>

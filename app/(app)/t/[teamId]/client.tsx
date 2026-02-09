@@ -1,6 +1,7 @@
 'use client'
 
 import { DashboardGrid } from '@/components/DashboardGrid'
+import { RelationGuide } from '@/components/RelationGuide'
 import type { TeamItem } from '@/server/actions/dashboard'
 import { useRouter } from 'next/navigation'
 
@@ -28,14 +29,17 @@ export function DashboardClient({
   }
 
   return (
-    <DashboardGrid
-      ukemålItems={ukemålItems}
-      pipelineItems={pipelineItems}
-      målItems={målItems}
-      teamId={teamId}
-      teamMembers={teamMembers}
-      userRole={userRole}
-      onUpdate={handleUpdate}
-    />
+    <>
+      <DashboardGrid
+        ukemålItems={ukemålItems}
+        pipelineItems={pipelineItems}
+        målItems={målItems}
+        teamId={teamId}
+        teamMembers={teamMembers}
+        userRole={userRole}
+        onUpdate={handleUpdate}
+      />
+      <RelationGuide />
+    </>
   )
 }
