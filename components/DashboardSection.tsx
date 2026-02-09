@@ -65,7 +65,12 @@ function SortableItemWrapper({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TeamItemCard item={item} teamMembers={teamMembers} onUpdate={onUpdate} userRole={userRole} />
+      <TeamItemCard
+        item={item}
+        teamMembers={teamMembers}
+        onUpdate={onUpdate}
+        userRole={userRole}
+      />
     </div>
   )
 }

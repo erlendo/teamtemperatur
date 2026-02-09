@@ -325,10 +325,16 @@ export async function addMemberTag(
 
     if (callerMembership.role === 'viewer') {
       console.error('✗ Viewers cannot assign members')
-      return { error: 'Leserettigheter gir ikke tilgang til å tildele medlemmer' }
+      return {
+        error: 'Leserettigheter gir ikke tilgang til å tildele medlemmer',
+      }
     }
 
-    console.log('✓ User has permission to assign members (role:', callerMembership.role, ')')
+    console.log(
+      '✓ User has permission to assign members (role:',
+      callerMembership.role,
+      ')'
+    )
 
     // Verify user is a member of the team
     console.log('Verifying user is member of team...')

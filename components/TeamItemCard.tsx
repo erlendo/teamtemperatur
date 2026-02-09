@@ -295,65 +295,65 @@ export function TeamItemCard({
 
         {/* Edit button (pencil) - only for non-viewers */}
         {userRole !== 'viewer' && (
-        <button
-          onClick={() => setIsEditMode(!isEditMode)}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: isEditMode
-              ? 'var(--color-primary)'
-              : 'var(--color-neutral-500)',
-            padding: 'var(--space-xs)',
-            transition: 'all 0.2s ease',
-            flexShrink: 0,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = 'var(--color-primary)'
-            e.currentTarget.style.transform = 'scale(1.1)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = isEditMode
-              ? 'var(--color-primary)'
-              : 'var(--color-neutral-500)'
-            e.currentTarget.style.transform = 'scale(1)'
-          }}
-          title="Rediger"
-        >
-          <Pencil size={18} />
-        </button>
+          <button
+            onClick={() => setIsEditMode(!isEditMode)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: isEditMode
+                ? 'var(--color-primary)'
+                : 'var(--color-neutral-500)',
+              padding: 'var(--space-xs)',
+              transition: 'all 0.2s ease',
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--color-primary)'
+              e.currentTarget.style.transform = 'scale(1.1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = isEditMode
+                ? 'var(--color-primary)'
+                : 'var(--color-neutral-500)'
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+            title="Rediger"
+          >
+            <Pencil size={18} />
+          </button>
         )}
 
         {/* Delete button (trash) - only for non-viewers */}
         {userRole !== 'viewer' && (
-        <button
-          onClick={() => {
-            void handleDelete()
-          }}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--color-neutral-500)',
-            padding: 'var(--space-xs)',
-            transition: 'all 0.2s ease',
-            flexShrink: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = 'var(--color-error, #ef4444)'
-            e.currentTarget.style.transform = 'scale(1.1)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'var(--color-neutral-500)'
-            e.currentTarget.style.transform = 'scale(1)'
-          }}
-          title="Slett oppgave"
-        >
-          <Trash2 size={18} />
-        </button>
+          <button
+            onClick={() => {
+              void handleDelete()
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--color-neutral-500)',
+              padding: 'var(--space-xs)',
+              transition: 'all 0.2s ease',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--color-error, #ef4444)'
+              e.currentTarget.style.transform = 'scale(1.1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--color-neutral-500)'
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+            title="Slett oppgave"
+          >
+            <Trash2 size={18} />
+          </button>
         )}
       </div>
 
@@ -405,7 +405,7 @@ export function TeamItemCard({
               )
             })}
 
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', zIndex: 50 }}>
               <button
                 onClick={() => setShowMemberDropdown(!showMemberDropdown)}
                 style={{
