@@ -37,7 +37,8 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null)
 
   const weeksWithResponses = data.filter((week) => week.response_count > 0)
-  const selectableWeeks = weeksWithResponses.length > 0 ? weeksWithResponses : data
+  const selectableWeeks =
+    weeksWithResponses.length > 0 ? weeksWithResponses : data
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(
     Math.max(selectableWeeks.length - 1, 0)
   )
@@ -103,7 +104,8 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
               onClick={() => setSelectedWeekIndex(idx)}
               style={{
                 padding: '0.5rem 1rem',
-                backgroundColor: idx === selectedWeekIndex ? '#3b82f6' : '#e5e7eb',
+                backgroundColor:
+                  idx === selectedWeekIndex ? '#3b82f6' : '#e5e7eb',
                 color: idx === selectedWeekIndex ? '#fff' : '#000',
                 border: 'none',
                 borderRadius: 6,
