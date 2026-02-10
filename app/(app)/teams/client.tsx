@@ -131,7 +131,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
           padding: 'var(--space-3xl) var(--space-md)',
         }}
       >
-        <div style={{ maxWidth: '600px' }}>
+        <div>
           <h1
             style={{
               marginBottom: 'var(--space-lg)',
@@ -163,6 +163,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
               border: '1px solid var(--color-neutral-200)',
               padding: 'var(--space-xl)',
               marginBottom: 'var(--space-2xl)',
+              maxWidth: '600px',
             }}
           >
             <h2
@@ -285,7 +286,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
               >
                 Dine Team
               </h2>
-              <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 'var(--space-lg)' }}>
                 {myTeams.map((t) => (
                   <Link
                     key={t.id}
@@ -514,7 +515,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
               >
                 Tilgjengelige Team
               </h2>
-              <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 'var(--space-lg)' }}>
                 {availableTeams.map((t) => (
                   <div
                     key={t.id}
