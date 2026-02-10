@@ -108,26 +108,6 @@ export function RelationConnectors({
             filter: drop-shadow(0 0 6px currentColor);
           }
         `}</style>
-        <marker
-          id="arrowhead-green"
-          markerWidth="10"
-          markerHeight="10"
-          refX="9"
-          refY="3"
-          orient="auto"
-        >
-          <polygon points="0 0, 10 3, 0 6" fill="#10b981" />
-        </marker>
-        <marker
-          id="arrowhead-blue"
-          markerWidth="10"
-          markerHeight="10"
-          refX="9"
-          refY="3"
-          orient="auto"
-        >
-          <polygon points="0 0, 10 3, 0 6" fill="#3b82f6" />
-        </marker>
       </defs>
 
       {relations.map((relation) => {
@@ -140,10 +120,6 @@ export function RelationConnectors({
           relation.source_item_id === highlightedItemId ||
           relation.target_item_id === highlightedItemId
         const color = getLineColor(relation.relation_type)
-        const markerUrl =
-          relation.relation_type === 'next_step'
-            ? 'url(#arrowhead-green)'
-            : 'url(#arrowhead-blue)'
 
         return (
           <path
@@ -153,7 +129,6 @@ export function RelationConnectors({
             className={`relation-line ${isHighlighted ? 'highlighted' : ''}`}
             strokeDasharray="4 4"
             opacity={isHighlighted ? 1 : 0.5}
-            markerEnd={markerUrl}
           />
         )
       })}
