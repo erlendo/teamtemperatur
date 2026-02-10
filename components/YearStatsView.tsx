@@ -36,6 +36,9 @@ type WeekData = {
 export function YearStatsView({ data }: { data: WeekData[] }) {
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null)
 
+  console.log('[YearStatsView] Received data:', data)
+  console.log('[YearStatsView] Current week:', data.length > 0 ? data[data.length - 1] : null)
+
   const currentWeek = data.length > 0 ? data[data.length - 1] : null
   const previousWeek = data.length > 1 ? data[data.length - 2] : null
 
@@ -57,6 +60,8 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
   const questions =
     currentWeek?.question_stats?.sort((a, b) => a.sort_order - b.sort_order) ||
     []
+
+  console.log('[YearStatsView] Questions in current week:', questions)
 
   // Get question trend data (last 12 weeks) for each question
   const getQuestionTrend = (questionKey: string) => {

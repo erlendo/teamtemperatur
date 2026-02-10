@@ -51,10 +51,20 @@ export async function getYearStats(
 
   if (error) throw error
 
+  console.log('[getYearStats] Raw data from DB:', data)
+  console.log('[getYearStats] Data length:', data?.length)
+
   // Parse the data and ensure question_stats is properly formatted
-  return (data ?? []).map((week: unknown) => {
+  return (data ?? []).map((week: unknown, idx: number) => {
     const w = week as Record<string, unknown>
     const question_stats = w.question_stats
+
+    console.log(`[getYearStats] Week ${idx}:`, {
+      week: w.week,
+      question_stats,
+      question_stats_type: typeof question_stats,
+    })
+
     let parsedQuestionStats: QuestionStat[] = []
 
     if (question_stats) {
@@ -65,7 +75,12 @@ export async function getYearStats(
             ? JSON.parse(question_stats)
             : question_stats
         parsedQuestionStats = Array.isArray(parsed) ? parsed : []
-      } catch (_) {
+        console.log(
+          `[getYearStats] Week ${idx} parsed questions:`,
+          parsedQuestionStats
+        )
+      } catch (e) {
+        console.error(`[getYearStats] Week ${idx} parse error:`, e)
         parsedQuestionStats = []
       }
     }
