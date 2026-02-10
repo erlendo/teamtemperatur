@@ -53,8 +53,8 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
       ? (selectedWeek.overall_avg - previousWeek.overall_avg).toFixed(2)
       : null
 
-  // Transform data for main chart
-  const chartData = data.map((w) => ({
+  // Transform data for main chart - only show weeks with responses
+  const chartData = weeksWithResponses.map((w) => ({
     week: w.week,
     råscore: Number(w.overall_avg.toFixed(2)),
     bayesiansk: Number(w.bayesian_adjusted.toFixed(2)),
@@ -67,10 +67,9 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
     selectedWeek?.question_stats?.sort((a, b) => a.sort_order - b.sort_order) ||
     []
 
-  // Get question trend data (last 12 weeks) for each question
+  // Get question trend data for each question - only weeks with responses
   const getQuestionTrend = (questionKey: string) => {
-    const last12 = data.slice(-12)
-    return last12.map((w) => {
+    return weeksWithResponses.map((w) => {
       const qStat = w.question_stats?.find(
         (q) => q.question_key === questionKey
       )

@@ -2,15 +2,15 @@
 
 import { createTeam, joinTeam, removeMember } from '@/server/actions/teams'
 import {
-    Crown,
-    LogOut,
-    Plus,
-    Settings,
-    Thermometer,
-    Trash2,
-    User,
-    Users,
-    X,
+  Crown,
+  LogOut,
+  Plus,
+  Settings,
+  Thermometer,
+  Trash2,
+  User,
+  Users,
+  X,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
@@ -286,7 +286,13 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
               >
                 Dine Team
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 'var(--space-lg)' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                  gap: 'var(--space-lg)',
+                }}
+              >
                 {myTeams.map((t) => (
                   <Link
                     key={t.id}
@@ -515,7 +521,13 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
               >
                 Tilgjengelige Team
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 'var(--space-lg)' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                  gap: 'var(--space-lg)',
+                }}
+              >
                 {availableTeams.map((t) => (
                   <div
                     key={t.id}
