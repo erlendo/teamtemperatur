@@ -60,7 +60,11 @@ export default async function StatsPage({
 
   return (
     <>
-      <AppHeader teamId={teamId} teamName={teamName} isTeamAdmin={isTeamAdmin} />
+      <AppHeader
+        teamId={teamId}
+        teamName={teamName}
+        isTeamAdmin={isTeamAdmin}
+      />
       <main style={{ flex: 1 }}>
         <div
           style={{

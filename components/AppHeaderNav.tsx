@@ -43,10 +43,7 @@ export function AppHeaderNav({
         marginLeft: 'auto',
       }}
     >
-      <Link
-        href={`/t/${teamId}`}
-        style={getStyle(pathname === `/t/${teamId}`)}
-      >
+      <Link href={`/t/${teamId}`} style={getStyle(pathname === `/t/${teamId}`)}>
         <LayoutDashboard size={16} />
         Dashboard
       </Link>

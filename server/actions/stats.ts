@@ -54,8 +54,6 @@ export async function getYearStats(
     throw error
   }
 
-  console.log('[getYearStats] Raw DB response:', JSON.stringify(data, null, 2))
-
   // Parse the data and ensure question_stats is properly formatted
   const result = (data ?? []).map((week: unknown) => {
     const w = week as Record<string, unknown>
@@ -88,4 +86,6 @@ export async function getYearStats(
       question_stats: parsedQuestionStats,
     }
   }) as WeekStat[]
+
+  return result
 }
