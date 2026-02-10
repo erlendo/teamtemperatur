@@ -39,6 +39,16 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
   const currentWeek = data.length > 0 ? data[data.length - 1] : null
   const previousWeek = data.length > 1 ? data[data.length - 2] : null
 
+  // Debug log to see what data we're getting
+  if (typeof window !== 'undefined' && data.length > 0) {
+    console.log('YearStatsView data:', {
+      totalWeeks: data.length,
+      currentWeek,
+      currentWeekQuestions: currentWeek?.question_stats,
+      firstWeekData: data[0],
+    })
+  }
+
   const delta =
     currentWeek && previousWeek
       ? (currentWeek.overall_avg - previousWeek.overall_avg).toFixed(2)
