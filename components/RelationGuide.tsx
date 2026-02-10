@@ -6,7 +6,12 @@ import { useState } from 'react'
 
 export function RelationGuide() {
   const [isOpen, setIsOpen] = useState(true)
-  const { showRelations, toggleRelations } = useVisibleRelations()
+  const { showRelations, toggleRelations, mounted } = useVisibleRelations()
+
+  // Don't render until mounted (client-side) to avoid hydration mismatch
+  if (!mounted) {
+    return null
+  }
 
   if (!isOpen) {
     return (
