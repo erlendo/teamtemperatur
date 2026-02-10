@@ -1,7 +1,9 @@
 import { AppHeader } from '@/components/AppHeader'
+import { supabaseServer } from '@/lib/supabase/server'
 import { loadDraft } from '@/server/actions/drafts'
 import { loadActiveQuestionnaire } from '@/server/queries/questionnaires'
 import { SurveyForm } from './SurveyForm'
+import { redirect } from 'next/navigation'
 
 function currentWeekNumberSimple() {
   const d = new Date()
@@ -18,6 +20,32 @@ export default async function SurveyPage({
   searchParams: Promise<{ error?: string; submitted?: string; week?: string }>
 }) {
   const { teamId } = await params
+
+  const supabase = supabaseServer()
+  const { data: authUser, error: authError } = await supabase.auth.getUser()
+  if (authError || !authUser.user) {
+    redirect('/login')
+  }
+
+  const { data: membership } = await supabase
+    .from('team_memberships')
+    .select('role')
+    .eq('team_id', teamId)
+    .eq('user_id', authUser.user.id)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  const isTeamAdmin =
+    membership?.role === 'owner' || membership?.role === 'admin'
+
+  const { data: team } = await supabase
+    .from('teams')
+    .select('name')
+    .eq('id', teamId)
+    .maybeSingle()
+
+  const teamName = team?.name ?? undefined
+
   const { questionnaire, questions, error } =
     await loadActiveQuestionnaire(teamId)
   const week = currentWeekNumberSimple()
@@ -32,7 +60,11 @@ export default async function SurveyPage({
   if (!questionnaire) {
     return (
       <>
-        <AppHeader teamId={teamId} />
+        <AppHeader
+          teamId={teamId}
+          teamName={teamName}
+          isTeamAdmin={isTeamAdmin}
+        />
         <main style={{ flex: 1 }}>
           <div
             style={{
@@ -70,7 +102,11 @@ export default async function SurveyPage({
 
   return (
     <>
-      <AppHeader teamId={teamId} teamName={questionnaire.name} />
+      <AppHeader
+        teamId={teamId}
+        teamName={teamName}
+        isTeamAdmin={isTeamAdmin}
+      />
       <main style={{ flex: 1 }}>
         <div
           style={{

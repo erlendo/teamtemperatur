@@ -80,6 +80,14 @@ export default async function TeamHome({
   const userRole = membership?.role || 'viewer'
   const isTeamAdmin = userRole === 'owner' || userRole === 'admin'
 
+  const { data: team } = await supabase
+    .from('teams')
+    .select('name')
+    .eq('id', teamId)
+    .maybeSingle()
+
+  const teamName = team?.name ?? undefined
+
   // Fetch team members with first names from user_profiles
   const { data: members } = await supabase
     .from('team_memberships')
@@ -130,7 +138,11 @@ export default async function TeamHome({
 
   return (
     <>
-      <AppHeader teamId={teamId} isTeamAdmin={isTeamAdmin} />
+      <AppHeader
+        teamId={teamId}
+        teamName={teamName}
+        isTeamAdmin={isTeamAdmin}
+      />
       <main style={{ flex: 1, backgroundColor: 'var(--color-neutral-50)' }}>
         <div
           style={{

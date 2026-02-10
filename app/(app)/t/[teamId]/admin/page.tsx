@@ -1,6 +1,8 @@
 import { AdminUserProfiles } from '@/components/AdminUserProfiles'
+import { AppHeader } from '@/components/AppHeader'
 import { supabaseServer } from '@/lib/supabase/server'
 import { getUsersWithSubmissions } from '@/server/actions/teams'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import AdminUsersWithSubmissions from './client'
 
@@ -28,8 +30,32 @@ export default async function AdminPage({
       redirect(`/t/${teamId}`)
     }
 
-    // Fetch team members with their profiles
     const supabase = supabaseServer()
+    const { data: authUser, error: authError } = await supabase.auth.getUser()
+    if (authError || !authUser.user) {
+      redirect('/login')
+    }
+
+    const { data: membership } = await supabase
+      .from('team_memberships')
+      .select('role')
+      .eq('team_id', teamId)
+      .eq('user_id', authUser.user.id)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    const isTeamAdmin =
+      membership?.role === 'owner' || membership?.role === 'admin'
+
+    const { data: team } = await supabase
+      .from('teams')
+      .select('name')
+      .eq('id', teamId)
+      .maybeSingle()
+
+    const teamName = team?.name ?? undefined
+
+    // Fetch team members with their profiles
     const { data: members } = await supabase
       .from('team_memberships')
       .select('user_id')
@@ -61,35 +87,74 @@ export default async function AdminPage({
     }
 
     return (
-      <div>
-        <div
-          style={{
-            borderBottom: '1px solid #e0e0e0',
-            padding: '1.5rem 2rem',
-            backgroundColor: '#fff',
-          }}
-        >
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 600, margin: 0 }}>
-            Team Admin
-          </h1>
-        </div>
+      <>
+        <AppHeader
+          teamId={teamId}
+          teamName={teamName}
+          isTeamAdmin={isTeamAdmin}
+        />
+        <main style={{ flex: 1 }}>
+          <div
+            style={{
+              maxWidth: '1200px',
+              margin: '0 auto',
+              padding: 'var(--space-3xl) var(--space-md)',
+            }}
+          >
+            <nav
+              aria-label="Brødsmule"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-xs)',
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--color-neutral-600)',
+                marginBottom: 'var(--space-lg)',
+              }}
+            >
+              <Link
+                href={`/t/${teamId}`}
+                style={{
+                  color: 'var(--color-primary)',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                }}
+              >
+                Teamoversikt
+              </Link>
+              <span aria-hidden="true">/</span>
+              <span>Team Admin</span>
+            </nav>
 
-        {/* User Profiles Section */}
-        <AdminUserProfiles teamId={teamId} teamMembers={teamMembers} />
+            <h1
+              style={{
+                fontSize: '1.75rem',
+                fontWeight: 600,
+                margin: 0,
+                marginBottom: 'var(--space-2xl)',
+              }}
+            >
+              Team Admin
+            </h1>
 
-        {/* Submissions Section */}
-        <div
-          style={{
-            borderTop: '2px solid #e0e0e0',
-            marginTop: '2rem',
-          }}
-        >
-          <AdminUsersWithSubmissions
-            teamId={teamId}
-            initialUsers={result.data ?? []}
-          />
-        </div>
-      </div>
+            {/* User Profiles Section */}
+            <AdminUserProfiles teamId={teamId} teamMembers={teamMembers} />
+
+            {/* Submissions Section */}
+            <div
+              style={{
+                borderTop: '2px solid #e0e0e0',
+                marginTop: '2rem',
+              }}
+            >
+              <AdminUsersWithSubmissions
+                teamId={teamId}
+                initialUsers={result.data ?? []}
+              />
+            </div>
+          </div>
+        </main>
+      </>
     )
   } catch (error) {
     console.error('[AdminPage] Unexpected error:', error)

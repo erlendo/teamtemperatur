@@ -78,7 +78,7 @@ export function AppHeaderNav({
         style={getStyle(pathname?.startsWith('/teams') ?? false)}
       >
         <Users size={16} />
-        Team
+        Teamoversikt
       </Link>
     </nav>
   )

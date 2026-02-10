@@ -4,8 +4,11 @@ import {
   NewMeasurementButton,
 } from '@/components/StatsPageLinks'
 import { YearStatsView } from '@/components/YearStatsView'
+import { supabaseServer } from '@/lib/supabase/server'
 import { getYearStats } from '@/server/actions/stats'
 import { BarChart3 } from 'lucide-react'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 function currentWeekNumberSimple() {
   const d = new Date()
@@ -22,6 +25,31 @@ export default async function StatsPage({
   const { teamId } = await params
   const currentWeek = currentWeekNumberSimple()
 
+  const supabase = supabaseServer()
+  const { data: authUser, error: authError } = await supabase.auth.getUser()
+  if (authError || !authUser.user) {
+    redirect('/login')
+  }
+
+  const { data: membership } = await supabase
+    .from('team_memberships')
+    .select('role')
+    .eq('team_id', teamId)
+    .eq('user_id', authUser.user.id)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  const isTeamAdmin =
+    membership?.role === 'owner' || membership?.role === 'admin'
+
+  const { data: team } = await supabase
+    .from('teams')
+    .select('name')
+    .eq('id', teamId)
+    .maybeSingle()
+
+  const teamName = team?.name ?? undefined
+
   let stats: Awaited<ReturnType<typeof getYearStats>> = []
   try {
     stats = await getYearStats(teamId, currentWeek)
@@ -32,7 +60,7 @@ export default async function StatsPage({
 
   return (
     <>
-      <AppHeader teamId={teamId} />
+      <AppHeader teamId={teamId} teamName={teamName} isTeamAdmin={isTeamAdmin} />
       <main style={{ flex: 1 }}>
         <div
           style={{
@@ -41,6 +69,30 @@ export default async function StatsPage({
             padding: 'var(--space-3xl) var(--space-md)',
           }}
         >
+          <nav
+            aria-label="Brødsmule"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-xs)',
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-neutral-600)',
+              marginBottom: 'var(--space-lg)',
+            }}
+          >
+            <Link
+              href={`/t/${teamId}`}
+              style={{
+                color: 'var(--color-primary)',
+                textDecoration: 'none',
+                fontWeight: 500,
+              }}
+            >
+              Teamoversikt
+            </Link>
+            <span aria-hidden="true">/</span>
+            <span>Statistikk</span>
+          </nav>
           <h1
             style={{
               marginBottom: 'var(--space-lg)',
