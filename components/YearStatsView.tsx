@@ -36,9 +36,6 @@ type WeekData = {
 export function YearStatsView({ data }: { data: WeekData[] }) {
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null)
 
-  // Debug: log raw data to see what we're getting
-  console.log('[YearStatsView] Raw data:', data)
-
   const weeksWithResponses = data.filter(
     (week) =>
       week.response_count > 0 &&
@@ -46,8 +43,6 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
       week.question_stats.length > 0 &&
       week.overall_avg > 0
   )
-
-  console.log('[YearStatsView] Filtered weeks:', weeksWithResponses)
 
   const selectableWeeks =
     weeksWithResponses.length > 0 ? weeksWithResponses : data
