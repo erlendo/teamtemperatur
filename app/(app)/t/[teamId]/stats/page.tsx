@@ -109,6 +109,105 @@ export default async function StatsPage({
             Statistikk
           </h1>
 
+          {/* Forklaring av målinger */}
+          <div
+            style={{
+              backgroundColor: '#f0f9ff',
+              border: '1px solid #bae6fd',
+              borderRadius: 'var(--border-radius-lg)',
+              padding: 'var(--space-xl)',
+              marginBottom: 'var(--space-2xl)',
+            }}
+          >
+            <h2
+              style={{
+                fontSize: 'var(--font-size-lg)',
+                fontWeight: '700',
+                marginBottom: 'var(--space-md)',
+                color: '#0369a1',
+              }}
+            >
+              Om målingene
+            </h2>
+            <div
+              style={{
+                display: 'grid',
+                gap: 'var(--space-lg)',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    fontSize: 'var(--font-size-base)',
+                    fontWeight: '600',
+                    marginBottom: 'var(--space-xs)',
+                    color: '#0c4a6e',
+                  }}
+                >
+                  Råscore
+                </h3>
+                <p
+                  style={{
+                    fontSize: '13px',
+                    color: '#334155',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  Det rene gjennomsnittet av alle svar for uken. Gir et
+                  umiddelbart bilde, men kan være upålitelig ved få
+                  respondenter.
+                </p>
+              </div>
+              <div>
+                <h3
+                  style={{
+                    fontSize: 'var(--font-size-base)',
+                    fontWeight: '600',
+                    marginBottom: 'var(--space-xs)',
+                    color: '#0c4a6e',
+                  }}
+                >
+                  Bayesiansk justert
+                </h3>
+                <p
+                  style={{
+                    fontSize: '13px',
+                    color: '#334155',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  Justerer for lav svarprosent ved å trekke mot middels verdi
+                  (3.0). Dette gir mer pålitelige tall når få har svart, og
+                  belønner høy deltakelse.
+                </p>
+              </div>
+              <div>
+                <h3
+                  style={{
+                    fontSize: 'var(--font-size-base)',
+                    fontWeight: '600',
+                    marginBottom: 'var(--space-xs)',
+                    color: '#0c4a6e',
+                  }}
+                >
+                  Glidende gjennomsnitt
+                </h3>
+                <p
+                  style={{
+                    fontSize: '13px',
+                    color: '#334155',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  Jevner ut tilfeldige svingninger ved å vekte nåværende uke
+                  (60%), forrige uke (30%) og to uker tilbake (10%). Viser
+                  underliggende trend.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {stats.length === 0 ? (
             <div
               style={{
