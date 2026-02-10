@@ -50,5 +50,35 @@ export async function getYearStats(
   })
 
   if (error) throw error
-  return (data ?? []) as WeekStat[]
+
+  // Parse the data and ensure question_stats is properly formatted
+  return (data ?? []).map((week: unknown) => {
+    const w = week as Record<string, unknown>
+    const question_stats = w.question_stats
+    let parsedQuestionStats: QuestionStat[] = []
+
+    if (question_stats) {
+      try {
+        // If it's a string, parse it; if it's already an array/object, use it directly
+        const parsed =
+          typeof question_stats === 'string'
+            ? JSON.parse(question_stats)
+            : question_stats
+        parsedQuestionStats = Array.isArray(parsed) ? parsed : []
+      } catch (_) {
+        parsedQuestionStats = []
+      }
+    }
+
+    return {
+      week: w.week as number,
+      overall_avg: w.overall_avg as number,
+      bayesian_adjusted: w.bayesian_adjusted as number,
+      moving_average: w.moving_average as number,
+      response_count: w.response_count as number,
+      member_count: w.member_count as number,
+      response_rate: w.response_rate as number,
+      question_stats: parsedQuestionStats,
+    }
+  }) as WeekStat[]
 }
