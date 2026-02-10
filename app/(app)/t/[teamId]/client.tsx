@@ -2,6 +2,7 @@
 
 import { DashboardGrid } from '@/components/DashboardGrid'
 import { RelationGuide } from '@/components/RelationGuide'
+import { RelationToggle } from '@/components/RelationToggle'
 import type { TeamItem } from '@/server/actions/dashboard'
 import { useRouter } from 'next/navigation'
 
@@ -39,6 +40,7 @@ export function DashboardClient({
         userRole={userRole}
         onUpdate={handleUpdate}
       />
+      <RelationToggle />
       <RelationGuide />
     </>
   )

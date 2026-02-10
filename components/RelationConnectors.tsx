@@ -51,16 +51,19 @@ export function RelationConnectors({
   }, [])
 
   // Generate SVG path with quadratic curve
+  // Arrow goes from right middle of source card to left middle of target card
   const generatePath = (fromPos: CardPosition, toPos: CardPosition): string => {
-    const fromCenterX = fromPos.x + fromPos.width / 2
+    // Start from right middle of source card
+    const fromCenterX = fromPos.x + fromPos.width
     const fromCenterY = fromPos.y + fromPos.height / 2
 
-    const toCenterX = toPos.x + toPos.width / 2
+    // End at left middle of target card
+    const toCenterX = toPos.x
     const toCenterY = toPos.y + toPos.height / 2
 
-    // Control point for quadratic curve (offset horizontally for visual depth)
-    const controlX = (fromCenterX + toCenterX) / 2 + 80
-    const controlY = (fromCenterY + toCenterY) / 2
+    // Control point for quadratic curve (offset vertically for visual depth)
+    const controlX = (fromCenterX + toCenterX) / 2
+    const controlY = (fromCenterY + toCenterY) / 2 - 40
 
     return `M ${fromCenterX} ${fromCenterY} Q ${controlX} ${controlY} ${toCenterX} ${toCenterY}`
   }
