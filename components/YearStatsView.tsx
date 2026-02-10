@@ -38,10 +38,14 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
 
   const currentWeek = data.length > 0 ? data[data.length - 1] : null
   const previousWeek = data.length > 1 ? data[data.length - 2] : null
+    const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(data.length - 1)
+
+    const selectedWeek = data.length > 0 ? data[selectedWeekIndex] : null
+    const previousWeek = selectedWeekIndex > 0 ? data[selectedWeekIndex - 1] : null
 
   const delta =
-    currentWeek && previousWeek
-      ? (currentWeek.overall_avg - previousWeek.overall_avg).toFixed(2)
+      selectedWeek && previousWeek
+        ? (selectedWeek.overall_avg - previousWeek.overall_avg).toFixed(2)
       : null
 
   // Transform data for main chart
@@ -55,7 +59,7 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
 
   // Get unique questions from current week
   const questions =
-    currentWeek?.question_stats?.sort((a, b) => a.sort_order - b.sort_order) ||
+    selectedWeek?.question_stats?.sort((a, b) => a.sort_order - b.sort_order) ||
     []
 
   // Get question trend data (last 12 weeks) for each question
@@ -64,17 +68,17 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
     return last12.map((w) => {
       const qStat = w.question_stats?.find(
         (q) => q.question_key === questionKey
-      )
-      return {
-        week: w.week,
-        score: qStat ? Number(qStat.avg_score.toFixed(2)) : null,
-      }
+
+        const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(data.length - 1)
+
+        const selectedWeek = data.length > 0 ? data[selectedWeekIndex] : null
+        const previousWeek = selectedWeekIndex > 0 ? data[selectedWeekIndex - 1] : null
     })
   }
 
   const getQuestionDelta = (questionKey: string) => {
-    if (!currentWeek || !previousWeek) return null
-    const curr = currentWeek.question_stats?.find(
+    if (!selectedWeek || !previousWeek) return null
+    const curr = selectedWeek.question_stats?.find(
       (q) => q.question_key === questionKey
     )
     const prev = previousWeek.question_stats?.find(
@@ -86,14 +90,31 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
 
   return (
     <div>
+            {/* Week Selector */}
+            <div style={{ marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {data.map((week, idx) => (
+                  <button
+                    key={week.week}
+                    onClick={() => setSelectedWeekIndex(idx)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: idx === selectedWeekIndex ? '#3b82f6' : '#e5e7eb',
+                      color: idx === selectedWeekIndex ? '#fff' : '#000',
+                      border: 'none',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      fontWeight: idx === selectedWeekIndex ? '600' : '400',
+                    }}
+                  >
+                    Uke {week.week}
+                  </button>
+                ))}
+              </div>
+            </div>
       {/* DEBUG INFO */}
-      <div style={{ padding: '1rem', backgroundColor: '#fef3c7', borderRadius: 8, marginBottom: '1rem', fontSize: '11px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', overflowX: 'auto' }}>
-        <strong>🐛 DEBUG:</strong>
-        {'\nAll weeks with responses:'}
-        {data.map(w => `\n  Week ${w.week}: ${w.response_count} responses, ${w.question_stats?.length || 0} questions`).join('')}
-      </div>
       {/* Current Week Summary */}
-      {currentWeek && (
+      {selectedWeek && (
         <div
           style={{
             padding: '1.5rem',
@@ -110,7 +131,7 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
               Inneværende uke
             </div>
             <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              Uke {currentWeek.week}
+              Uke {selectedWeek.week}
             </div>
           </div>
           <div>
@@ -118,7 +139,7 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
               Teamhelse (Bayesiansk)
             </div>
             <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {currentWeek.bayesian_adjusted.toFixed(2)}
+              {selectedWeek.bayesian_adjusted.toFixed(2)}
               {delta && (
                 <span
                   style={{
@@ -132,8 +153,8 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
               )}
             </div>
             <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-              Råscore: {currentWeek.overall_avg.toFixed(2)} · Glidende:{' '}
-              {currentWeek.moving_average.toFixed(2)}
+              Råscore: {selectedWeek.overall_avg.toFixed(2)} · Glidende:{' '}
+              {selectedWeek.moving_average.toFixed(2)}
             </div>
           </div>
           <div>
@@ -141,10 +162,10 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
               Svarprosent
             </div>
             <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {currentWeek.response_rate.toFixed(0)}%
+              {selectedWeek.response_rate.toFixed(0)}%
             </div>
             <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-              {currentWeek.response_count} av {currentWeek.member_count}{' '}
+              {selectedWeek.response_count} av {selectedWeek.member_count}{' '}
               medlemmer
             </div>
           </div>
