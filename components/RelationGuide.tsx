@@ -5,7 +5,7 @@ import { Eye, EyeOff, Info, X } from 'lucide-react'
 import { useState } from 'react'
 
 export function RelationGuide() {
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
   const { showRelations, toggleRelations, mounted } = useVisibleRelations()
 
   // Don't render until mounted (client-side) to avoid hydration mismatch
