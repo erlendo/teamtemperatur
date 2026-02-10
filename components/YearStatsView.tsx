@@ -89,10 +89,8 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
       {/* DEBUG INFO */}
       <div style={{ padding: '1rem', backgroundColor: '#fef3c7', borderRadius: 8, marginBottom: '1rem', fontSize: '11px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', overflowX: 'auto' }}>
         <strong>🐛 DEBUG:</strong>
-        {'\nWeeks: ' + data.length}
-        {'\nCurrent week: ' + currentWeek?.week}
-        {'\nquestion_stats: ' + JSON.stringify(currentWeek?.question_stats)}
-        {'\nQuestions: ' + questions.length}
+        {'\nAll weeks with responses:'}
+        {data.map(w => `\n  Week ${w.week}: ${w.response_count} responses, ${w.question_stats?.length || 0} questions`).join('')}
       </div>
       {/* Current Week Summary */}
       {currentWeek && (
