@@ -36,16 +36,20 @@ type WeekData = {
 export function YearStatsView({ data }: { data: WeekData[] }) {
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null)
 
-  const currentWeek = data.length > 0 ? data[data.length - 1] : null
-  const previousWeek = data.length > 1 ? data[data.length - 2] : null
-    const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(data.length - 1)
+  const weeksWithResponses = data.filter((week) => week.response_count > 0)
+  const selectableWeeks = weeksWithResponses.length > 0 ? weeksWithResponses : data
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(
+    Math.max(selectableWeeks.length - 1, 0)
+  )
 
-    const selectedWeek = data.length > 0 ? data[selectedWeekIndex] : null
-    const previousWeek = selectedWeekIndex > 0 ? data[selectedWeekIndex - 1] : null
+  const selectedWeek =
+    selectableWeeks.length > 0 ? selectableWeeks[selectedWeekIndex] : null
+  const previousWeek =
+    selectedWeekIndex > 0 ? selectableWeeks[selectedWeekIndex - 1] : null
 
   const delta =
-      selectedWeek && previousWeek
-        ? (selectedWeek.overall_avg - previousWeek.overall_avg).toFixed(2)
+    selectedWeek && previousWeek
+      ? (selectedWeek.overall_avg - previousWeek.overall_avg).toFixed(2)
       : null
 
   // Transform data for main chart
@@ -57,7 +61,7 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
     svarprosent: Number(w.response_rate.toFixed(1)),
   }))
 
-  // Get unique questions from current week
+  // Get unique questions from selected week
   const questions =
     selectedWeek?.question_stats?.sort((a, b) => a.sort_order - b.sort_order) ||
     []
@@ -68,11 +72,11 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
     return last12.map((w) => {
       const qStat = w.question_stats?.find(
         (q) => q.question_key === questionKey
-
-        const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(data.length - 1)
-
-        const selectedWeek = data.length > 0 ? data[selectedWeekIndex] : null
-        const previousWeek = selectedWeekIndex > 0 ? data[selectedWeekIndex - 1] : null
+      )
+      return {
+        week: w.week,
+        score: qStat ? Number(qStat.avg_score.toFixed(2)) : null,
+      }
     })
   }
 
@@ -90,29 +94,29 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
 
   return (
     <div>
-            {/* Week Selector */}
-            <div style={{ marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {data.map((week, idx) => (
-                  <button
-                    key={week.week}
-                    onClick={() => setSelectedWeekIndex(idx)}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: idx === selectedWeekIndex ? '#3b82f6' : '#e5e7eb',
-                      color: idx === selectedWeekIndex ? '#fff' : '#000',
-                      border: 'none',
-                      borderRadius: 6,
-                      cursor: 'pointer',
-                      fontWeight: idx === selectedWeekIndex ? '600' : '400',
-                    }}
-                  >
-                    Uke {week.week}
-                  </button>
-                ))}
-              </div>
-            </div>
-      {/* DEBUG INFO */}
+      {/* Week Selector */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {selectableWeeks.map((week, idx) => (
+            <button
+              key={week.week}
+              onClick={() => setSelectedWeekIndex(idx)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: idx === selectedWeekIndex ? '#3b82f6' : '#e5e7eb',
+                color: idx === selectedWeekIndex ? '#fff' : '#000',
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontWeight: idx === selectedWeekIndex ? '600' : '400',
+              }}
+            >
+              Uke {week.week}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Current Week Summary */}
       {selectedWeek && (
         <div
