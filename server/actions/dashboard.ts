@@ -750,15 +750,8 @@ export async function createRelation(
       }
     }
 
-    // Ensure source only has one target per relation_type
-    // (but allow multiple sources to target the same item)
-    await supabase
-      .from('team_item_relations')
-      .delete()
-      .eq('source_item_id', sourceItemId)
-      .eq('relation_type', relationType)
-
-    // Create new relation (many-to-one: multiple sources can target same item)
+    // Create new relation (many-to-many: one source can target many items,
+    // and many sources can target same item)
     const { data, error: relationError } = await supabase
       .from('team_item_relations')
       .insert([
