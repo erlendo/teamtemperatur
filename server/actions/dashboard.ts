@@ -750,23 +750,7 @@ export async function createRelation(
       }
     }
 
-    // Auto-replace: Delete any existing relation from source with same type
-    // (ensures source has only one target per relation_type)
-    await supabase
-      .from('team_item_relations')
-      .delete()
-      .eq('source_item_id', sourceItemId)
-      .eq('relation_type', relationType)
-
-    // Auto-replace: Delete any existing relation to target with same type
-    // (ensures target has only one source per relation_type)
-    await supabase
-      .from('team_item_relations')
-      .delete()
-      .eq('target_item_id', targetItemId)
-      .eq('relation_type', relationType)
-
-    // Create new relation
+    // Create new relation (many-to-one: multiple sources can target same item)
     const { data, error: relationError } = await supabase
       .from('team_item_relations')
       .insert([
