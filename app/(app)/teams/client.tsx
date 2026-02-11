@@ -86,7 +86,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
       >
         <div
           style={{
-            maxWidth: '1200px',
+            maxWidth: '1400px',
             margin: '0 auto',
             padding: 'var(--space-lg) var(--space-md)',
           }}
@@ -126,7 +126,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
 
       <main
         style={{
-          maxWidth: '1200px',
+          maxWidth: '1400px',
           margin: '0 auto',
           padding: 'var(--space-3xl) var(--space-md)',
         }}

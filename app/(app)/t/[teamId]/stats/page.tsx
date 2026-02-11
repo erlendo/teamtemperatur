@@ -68,7 +68,7 @@ export default async function StatsPage({
       <main style={{ flex: 1 }}>
         <div
           style={{
-            maxWidth: '1200px',
+            maxWidth: '1400px',
             margin: '0 auto',
             padding: 'var(--space-3xl) var(--space-md)',
           }}
