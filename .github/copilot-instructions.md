@@ -1,257 +1,209 @@
-# Team Temperature App - Copilot Instructions
+# Team Temperature – Copilot Policy (Extreme Velocity Mode)
 
-## Tech Stack
+This is a behavioral control document for GitHub Copilot.
+It defines how Copilot must think when generating code in this repository.
 
-- **Frontend**: Next.js 14 (App Router), React 18, TypeScript
-- **Backend**: Supabase (PostgreSQL + Auth + RLS)
-- **Styling**: Inline styles + Tailwind CSS utilities (gradual migration in progress)
-- **Icons**: lucide-react for consistent UI components
-- **Drag-Drop**: @dnd-kit for task reordering
-- **Deployment**: Vercel
-- **Package Manager**: npm
+Primary objective: Maximum forward velocity without architectural debt.
 
-## Enforced Standards (Auto-checked)
+Copilot must behave like a pragmatic senior engineer optimizing for sustainable speed.
 
-**This workspace has automated enforcement:**
+Environment:
 
-- ✅ ESLint catches errors before save (.eslintrc.js)
-- ✅ Prettier formats on save (.prettierrc)
-- ✅ TypeScript strict mode + noUncheckedIndexedAccess (tsconfig.json)
-- ✅ Pre-commit hooks run lint + format (husky + lint-staged)
-- ⚠️ VSCode settings enforce formatOnSave + organizeImports
+- Single environment only: production on Vercel + Supabase.
+- No local or staging environments.
 
-**When suggesting code:**
+---
 
-1. NO `any` types - use proper TypeScript
-2. NO unused variables (prefix with `_` if intentional)
-3. NO floating promises - always await or handle
-4. Server actions MUST validate input with Zod first (planned)
-5. Array access MUST check `undefined` (noUncheckedIndexedAccess)
-6. Icons MUST use lucide-react library consistently
+# 1. Strategic Goal
 
-## Architecture
+Optimize for:
 
-### Database Schema (Supabase)
+- Fast iteration
+- Low mental overhead
+- Strong TypeScript discipline
+- Clean separation of concerns
+- Secure Supabase usage
+- Minimal rework
+- Long-term maintainability
 
-- `teams` - team metadata, settings
-- `team_memberships` - user roles (owner/admin/member/viewer)
-- `user_profiles` - user metadata (first_name for display)
-- `team_items` - dashboard tasks (ukemål, pipeline, mål, retro)
-- `team_item_members` - who is assigned to each task
-- `team_item_tags` - labels for tasks
-- `questionnaires` - survey templates (multi-version)
-- `questions` - survey questions with scoring rules
-- `submissions` - weekly survey responses
-- `answers` - individual answer values per question
+When uncertain, prefer:
 
-### Key Patterns
+1. Simplicity over cleverness
+2. Explicit over implicit
+3. Service-layer separation over inline DB calls
+4. Small functions over large abstractions
+5. Secure defaults over convenience
 
-1. **Row-Level Security (RLS)**: All data access controlled by Supabase policies
-2. **Server Actions**: Use `'use server'` for mutations with error handling
-3. **Supabase Client**:
-   - Browser: `supabaseBrowser()` from `@/lib/supabase/browser`
-   - Server: `supabaseServer()` from `@/lib/supabase/server`
-4. **Auth**: Magic link OTP via Supabase Auth + email verification
-5. **User Profiles**: Captured at signup, managed in admin panel
-6. **Dashboard Items**: Sortable via drag-drop, editable in modal
+---
 
-## Code Conventions
+# 2. Feature Development Order (Mandatory Flow)
 
-### File Structure
+When building new functionality, always follow this order:
 
-```
-app/
-  (app)/               # Authenticated routes
-    teams/             # Team listing
-    t/[teamId]/        # Team-specific pages
-      /page.tsx        # Dashboard with items + health stats
-      /stats/          # Detailed health statistics
-      /survey/         # Weekly survey submission
-      /admin/          # Admin panel (owner only)
-  (auth)/              # Public auth routes (login, signup)
-lib/
-  supabase/            # Supabase client utilities
-server/
-  actions/             # Server actions (mutations)
-components/
-  *Card.tsx            # Dashboard card components
-  Admin*.tsx           # Admin panel components
-```
+1. Define or extend TypeScript types
+2. Implement service-layer DB logic
+3. Add server action (if mutation)
+4. Connect UI
+5. Add error handling
+6. Add test (if logic is non-trivial)
 
-### Naming & Styling
+Never start with UI-first when backend logic is required.
 
-- Server actions: `createTeam`, `updateItem`, `saveFirName`
-- Components: PascalCase, co-locate with routes when route-specific
-- Colors (Nordic Palette): Blue (#E3F2FD), Yellow (#FFFACD), Green (#E8F5E9)
-- Spacing: Use CSS variables `var(--space-xs)` to `var(--space-3xl)`
-- Font sizes: `12px` for compact, `13px` for body text
+---
 
-### Best Practices
+# 3. Architecture Discipline
 
-1. **Always validate input** before server actions
-2. **Use RLS policies** instead of manual auth checks
-3. **Prefer server components** unless interactivity needed
-4. **Error handling**: Return `{error: string}` from server actions; display in UI
-5. **Loading states**: Use `useTransition()` for mutations + visual feedback
-6. **Type safety**: Explicit types, avoid `any`
-7. **Icons**: Always use lucide-react, size 18px for consistency
+Hard rules:
 
-## Recent Improvements (Feb 2026)
+- No direct Supabase calls inside UI components.
+- All DB logic must live in `lib/supabase/` or `services/`.
+- All mutations must live in `server/actions/`.
+- UI components must remain thin.
+- Prefer server components.
+- Avoid unnecessary client components.
 
-### Dashboard Optimization
+Do not introduce new architectural patterns without necessity.
 
-- ✅ 3-column grid layout (Ukemål | Pipeline | Mål)
-- ✅ Helse card (Health metrics) → full-width Row 2
-- ✅ Retro section → separate Row 3
-- ✅ Compact view mode (title + tags + members, no edit UI)
-- ✅ Edit mode toggle with pencil icon
-- ✅ Nordic nature colors (planned > completed)
-- ✅ HealthCard compacted to match TeamItemCard sizing
+---
 
-### User Profiles & Display Names
+# 4. Supabase & Security Bias
 
-- ✅ `user_profiles` table with `first_name` column (Migration 027)
-- ✅ Signup form captures `first_name` (required field)
-- ✅ Dashboard displays first_name instead of email
-- ✅ Avatar initials from first_name (e.g., "Erlend" → "ER")
-- ✅ Admin panel for team owners to manage user first_names
-- ✅ Inline editing + real-time save in admin interface
+Every query must:
 
-### Task Management Features
+- Explicitly select columns (never `*`).
+- Respect RLS logic.
+- Filter by `team_id` and/or `user_id` when required.
 
-- ✅ Tags display in view mode (blue badges)
-- ✅ Members display in view mode (avatar circles with initials)
-- ✅ Hover on avatar shows member's first_name
-- ✅ Drag-drop reordering (fully functional)
-- ✅ Delete with RLS verification
-- ✅ Edit mode for status (dropdown), members (+ add), tags (input)
-- ✅ Icon consistency: lucide-react for all icons (Pencil, Trash2, AlertCircle)
+Session Handling:
 
-## Current State (Feb 2026)
+- Retrieve session once per request.
+- Do not duplicate session lookups.
+- Do not expose sensitive fields.
 
-### ✅ Completed
+Preferred Query Pattern:
 
-- Database schema + RLS all tiers
-- Auth flow (magic link OTP + email verification)
-- Dashboard with 3-column layout + health stats
-- Task management (create, edit, delete, reorder, tags, members)
-- User profiles (first_name collection + display)
-- Admin panel (user profile management)
-- Compact visual design (Nordic color palette)
-- Weekly survey submission
-- Health statistics page
-- Team creation + membership
+```ts
+export async function fetchTeams() {
+  const { data, error } = await supabaseServer.from('teams').select('id, name')
 
-### 🚧 In Progress
-
-- Zod validation integration
-- Mobile responsive breakpoints
-- Additional admin features (questionnaire CRUD)
-
-### ❌ TODO
-
-- Export/import tasks
-- Advanced filtering + search
-- Recurring tasks or templates
-- Comment/discussion system
-- Custom questionnaire management
-- Team invites via email
-- Bulk user profile import
-
-## Environment Variables
-
-Required in `.env.local` and Vercel:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-publishable-key
-SUPABASE_SERVICE_ROLE_KEY=your-secret-key
+  if (error) throw new Error(error.message)
+  return data
+}
 ```
 
-## Key Components
+---
 
-### TeamItemCard (`components/TeamItemCard.tsx`)
+# 5. Domain Bias – Team Temperature Context
 
-- Displays task with title, status color, tags, assigned members
-- View mode: Read-only, shows all metadata
-- Edit mode: Toggle via pencil icon, edit title/status/members/tags
-- Drag-drop enabled via @dnd-kit
-- Error display inline
+Copilot must understand domain priorities:
 
-### DashboardSection (`components/DashboardSection.tsx`)
+- Teams are permission-scoped via RLS
+- Items belong to teams
+- Members must always be validated
+- Surveys drive health metrics
+- first_name is canonical display identity
 
-- Container for grouped items (Ukemål, Pipeline, Mål, Retro)
-- Handles drag-drop context, reordering, item creation
-- Color-coded by section type
+When implementing features:
 
-### HealthCard (`components/HealthCard.tsx`)
+- Always respect team boundaries
+- Always consider permission checks
+- Always consider health stats impact if data changes
 
-- Displays team health score (1-5 scale)
-- Trend chart (last 6 weeks)
-- Response rate + member count
-- Compact design matching TeamItemCard
+---
 
-### AdminUserProfiles (`components/AdminUserProfiles.tsx`)
+# 6. Frontend Behavioral Rules
 
-- Table of team members with email + first_name
-- Inline editing: click "Rediger" to update first_name
-- Save/Cancel buttons
-- Real-time feedback + error handling
-- Shows count of members without names
+UI must:
 
-## Authentication & Authorization
+- Be small and focused
+- Use Tailwind consistently
+- Use lucide-react icons only
+- Use `useTransition()` for async interactions
 
-### User Signup
+Do not:
 
-1. Enter first_name (required), email, password
-2. `saveUserProfile()` stores first_name in `user_profiles` table
-3. Email verification (if configured)
-4. Auto-redirect to `/teams` on success
+- Mix database logic in UI
+- Introduce heavy global state
+- Over-engineer animations
 
-### Admin Access
+Favor:
 
-1. Check user role in `team_memberships` (owner only)
-2. `/admin` page blocked if not owner (via server-side check)
-3. `adminUpdateUserFirstName()` validates owner role before update
+- Predictable layout
+- Reusable card patterns
+- Composition over inheritance
 
-## Common Tasks
+---
 
-**Update a user's first_name:**
+# 7. Error Handling Standard
 
-1. Go to `/t/[teamId]/admin`
-2. Find user in "Bruker-fornavn" section
-3. Click "Rediger" → type name → click "Lagre"
+All mutations must:
 
-**Add permissions for new feature:**
+- Throw explicit `Error`
+- Return structured responses when needed
+- Avoid silent failures
 
-1. Modify RLS policies in Supabase migration
-2. Test with `is_team_member()` helper in policies
-3. Server actions verify permissions before mutations
+UI must:
 
-**Style a new component:**
+- Display friendly error messages
+- Never expose stack traces
 
-1. Use inline `style={{}}` with CSS variables
-2. Spacing: `var(--space-md)`, `var(--space-lg)`
-3. Colors: Use Nordic palette or `var(--color-primary)`
-4. Fonts: `13px` body, `12px` for compact, `14px`+ for headers
+---
 
-**Add a new task type:**
+# 8. Testing & Verification
 
-1. Update ItemType enum in TeamItemCard.tsx
-2. Add case in `type === 'new-type'` conditions
-3. Create DashboardSection with appropriate color
+Tests required for:
 
-## Migration & Cleanup
+- Service-layer logic
+- Permission logic
+- Data transformations
 
-Last Cleanup: Feb 9, 2026
+Testing Guidelines:
 
-- ✅ Removed all debug/test files (debug-_.sql, test-_.mjs, etc.)
-- ✅ Removed legacy implementations (team-temperature-\*.php/html)
-- ✅ Removed migration guides (already completed)
-- ✅ Cleaned up old test/analyze scripts
-- ✅ Repository is now production-ready
+- Use Vitest
+- Mock Supabase clients
+- Cover success and failure cases
 
-Legacy files were migrated from:
+---
 
-- **Old**: Static HTML + PHP + JSON file storage
-- **New**: Next.js + Supabase + Vercel
+# 9. Refactoring Bias
+
+When asked to improve code:
+
+1. Simplify first
+2. Remove duplication
+3. Improve typing
+4. Improve readability
+5. Optimize only if necessary
+
+Avoid introducing abstraction layers without measurable benefit.
+
+---
+
+# 10. Anti-Patterns (Must Avoid)
+
+Copilot must not:
+
+- Introduce `any`
+- Add large untyped objects
+- Fetch entire tables unnecessarily
+- Introduce new libraries impulsively
+- Create deeply nested components
+- Over-abstract simple logic
+
+---
+
+# 11. Intelligent Default Behavior
+
+If intent is unclear:
+
+- Default to service + server action pattern
+- Default to explicit typing
+- Default to least-complex solution
+- Default to secure RLS-friendly query
+- Default to minimal UI logic
+
+Copilot should act as a high-agency engineer optimizing for sustainable forward progress, not experimentation or novelty.
+
+---
+
+End of policy.

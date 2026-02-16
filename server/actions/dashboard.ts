@@ -16,13 +16,16 @@ export interface TeamItem {
   created_at: string
   updated_at: string
   updated_by: string | null
+  archived_at: string | null
+  archived_by: string | null
   members: Array<{ user_id: string }>
   tags: Array<{ tag_name: string }>
 }
 
 export async function getTeamItems(
   teamId: string,
-  type?: ItemType
+  type?: ItemType,
+  includeArchived = false
 ): Promise<{ items: TeamItem[]; error?: string }> {
   const supabase = supabaseServer()
 
@@ -30,13 +33,19 @@ export async function getTeamItems(
     // Fetch items first
     let itemQuery = supabase
       .from('team_items')
-      .select('*')
+      .select(
+        'id, team_id, type, title, status, sort_order, created_at, updated_at, updated_by, archived_at, archived_by'
+      )
       .eq('team_id', teamId)
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false })
 
     if (type) {
       itemQuery = itemQuery.eq('type', type)
+    }
+
+    if (!includeArchived) {
+      itemQuery = itemQuery.is('archived_at', null)
     }
 
     const { data: items, error: itemsError } = await itemQuery
@@ -158,6 +167,73 @@ export async function updateItem(
   if (item) {
     revalidatePath(`/t/${item.team_id}`)
   }
+  return {}
+}
+
+export async function archiveItem(itemId: string): Promise<{ error?: string }> {
+  const supabase = supabaseServer()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Ikke autentisert' }
+  }
+
+  const { data: item, error: itemError } = await supabase
+    .from('team_items')
+    .select('id, team_id, title, status, archived_at')
+    .eq('id', itemId)
+    .single()
+
+  if (itemError) {
+    return { error: `Kunne ikke finne oppgave: ${itemError.message}` }
+  }
+
+  if (!item) {
+    return { error: 'Oppgave ikke funnet' }
+  }
+
+  if (item.archived_at) {
+    return { error: 'Oppgaven er allerede arkivert' }
+  }
+
+  if (item.status !== 'ferdig') {
+    return { error: 'Bare ferdige oppgaver kan arkiveres' }
+  }
+
+  const { data: membership, error: membershipError } = await supabase
+    .from('team_memberships')
+    .select('role')
+    .eq('team_id', item.team_id)
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (membershipError) {
+    return { error: 'Kunne ikke verifisere tillatelser' }
+  }
+
+  if (!membership || membership.role === 'viewer') {
+    return { error: 'Du har ikke tilgang til å arkivere oppgaver' }
+  }
+
+  const now = new Date().toISOString()
+  const { error: updateError } = await supabase
+    .from('team_items')
+    .update({
+      archived_at: now,
+      archived_by: user.id,
+      updated_at: now,
+      updated_by: user.id,
+    })
+    .eq('id', itemId)
+
+  if (updateError) {
+    return { error: `Kunne ikke arkivere oppgave: ${updateError.message}` }
+  }
+
+  revalidatePath(`/t/${item.team_id}`)
   return {}
 }
 

@@ -2,6 +2,7 @@
 
 import {
   addMemberTag,
+  archiveItem,
   deleteItem,
   deleteRelation,
   getItemRelations,
@@ -11,13 +12,14 @@ import {
 } from '@/server/actions/dashboard'
 import {
   AlertCircle,
+  Archive,
   Link as LinkIcon,
   Loader,
   Pencil,
   Trash2,
   X,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { PersonChip } from './PersonChip'
 import { SystemTagInput } from './SystemTagInput'
 
@@ -48,6 +50,7 @@ export function TeamItemCard({
   const [isStatusChanging, setIsStatusChanging] = useState(false)
   const [isAddingMember, setIsAddingMember] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [isArchiving, startArchiving] = useTransition()
   const [relations, setRelations] = useState<{
     inbound: ItemRelation[]
     outbound: ItemRelation[]
@@ -119,6 +122,32 @@ export function TeamItemCard({
     } finally {
       setIsDeleting(false)
     }
+  }
+
+  const handleArchive = () => {
+    setStatusMessage('Arkiverer...')
+    startArchiving(() => {
+      void (async () => {
+        try {
+          const result = await archiveItem(item.id)
+
+          if (result.error) {
+            setError(result.error)
+            setStatusMessage(null)
+            return
+          }
+
+          setError(null)
+          setStatusMessage('✓ Arkivert')
+          setTimeout(() => setStatusMessage(null), 2000)
+          onUpdate?.()
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Ukjent feil'
+          setError(msg)
+          setStatusMessage(null)
+        }
+      })()
+    })
   }
 
   const handleStatusChange = async (newStatus: ItemStatus) => {
@@ -533,21 +562,24 @@ export function TeamItemCard({
         {userRole !== 'viewer' && (
           <button
             onClick={() => setIsEditMode(!isEditMode)}
-            disabled={isSaving || isDeleting}
+            disabled={isSaving || isDeleting || isArchiving}
             style={{
               background: 'none',
               border: 'none',
-              cursor: isSaving || isDeleting ? 'not-allowed' : 'pointer',
+              cursor:
+                isSaving || isDeleting || isArchiving
+                  ? 'not-allowed'
+                  : 'pointer',
               color: isEditMode
                 ? 'var(--color-primary)'
                 : 'var(--color-neutral-500)',
               padding: 'var(--space-xs)',
               transition: 'all 0.2s ease',
               flexShrink: 0,
-              opacity: isSaving || isDeleting ? 0.5 : 1,
+              opacity: isSaving || isDeleting || isArchiving ? 0.5 : 1,
             }}
             onMouseEnter={(e) => {
-              if (!isSaving && !isDeleting) {
+              if (!isSaving && !isDeleting && !isArchiving) {
                 e.currentTarget.style.color = 'var(--color-primary)'
                 e.currentTarget.style.transform = 'scale(1.1)'
               }
@@ -571,17 +603,18 @@ export function TeamItemCard({
           </button>
         )}
 
-        {/* Delete button (trash) - only for non-viewers */}
-        {userRole !== 'viewer' && (
+        {/* Archive button - only for non-viewers and completed items */}
+        {userRole !== 'viewer' && item.status === 'ferdig' && (
           <button
-            onClick={() => {
-              void handleDelete()
-            }}
-            disabled={isDeleting || isSaving}
+            onClick={handleArchive}
+            disabled={isDeleting || isSaving || isArchiving}
             style={{
               background: 'none',
               border: 'none',
-              cursor: isDeleting || isSaving ? 'not-allowed' : 'pointer',
+              cursor:
+                isDeleting || isSaving || isArchiving
+                  ? 'not-allowed'
+                  : 'pointer',
               color: 'var(--color-neutral-500)',
               padding: 'var(--space-xs)',
               transition: 'all 0.2s ease',
@@ -589,10 +622,56 @@ export function TeamItemCard({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              opacity: isDeleting || isSaving ? 0.5 : 1,
+              opacity: isDeleting || isSaving || isArchiving ? 0.5 : 1,
             }}
             onMouseEnter={(e) => {
-              if (!isDeleting && !isSaving) {
+              if (!isDeleting && !isSaving && !isArchiving) {
+                e.currentTarget.style.color = 'var(--color-primary)'
+                e.currentTarget.style.transform = 'scale(1.1)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--color-neutral-500)'
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+            title="Arkiver oppgave"
+          >
+            {isArchiving ? (
+              <Loader
+                size={18}
+                style={{ animation: 'spin 1s linear infinite' }}
+              />
+            ) : (
+              <Archive size={18} />
+            )}
+          </button>
+        )}
+
+        {/* Delete button (trash) - only for non-viewers */}
+        {userRole !== 'viewer' && (
+          <button
+            onClick={() => {
+              void handleDelete()
+            }}
+            disabled={isDeleting || isSaving || isArchiving}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor:
+                isDeleting || isSaving || isArchiving
+                  ? 'not-allowed'
+                  : 'pointer',
+              color: 'var(--color-neutral-500)',
+              padding: 'var(--space-xs)',
+              transition: 'all 0.2s ease',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: isDeleting || isSaving || isArchiving ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (!isDeleting && !isSaving && !isArchiving) {
                 e.currentTarget.style.color = 'var(--color-error, #ef4444)'
                 e.currentTarget.style.transform = 'scale(1.1)'
               }
