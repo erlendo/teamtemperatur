@@ -341,8 +341,14 @@ export function TeamItemCard({
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleSaveTitle}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') void handleSaveTitle()
+                // Stop event propagation to prevent drag-and-drop handlers from eating space
+                e.stopPropagation()
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  void handleSaveTitle()
+                }
                 if (e.key === 'Escape') {
+                  e.preventDefault()
                   setTitle(item.title)
                   setIsEditingTitle(false)
                 }

@@ -297,8 +297,14 @@ function GridSection({
               value={newItemTitle}
               onChange={(e) => setNewItemTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') void handleAddItem()
+                // Stop event propagation to prevent drag-and-drop handlers from eating space
+                e.stopPropagation()
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  void handleAddItem()
+                }
                 if (e.key === 'Escape') {
+                  e.preventDefault()
                   setIsAdding(false)
                   setNewItemTitle('')
                   setErrorMsg(null)
