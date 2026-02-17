@@ -27,7 +27,11 @@ interface TeamItemCardProps {
   item: TeamItem
   teamMembers: Array<{ id: string; firstName: string }>
   userRole: string
-  onUpdate?: () => void
+  relations?: {
+    inbound: ItemRelation[]
+    outbound: ItemRelation[]
+  }
+  onRefetch?: () => Promise<void>
   onRelationDelete?: (relationId: string) => void
 }
 
@@ -37,7 +41,8 @@ export function TeamItemCard({
   item,
   teamMembers,
   userRole,
-  onUpdate,
+  relations: initialRelations,
+  onRefetch,
   onRelationDelete,
 }: TeamItemCardProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -54,24 +59,14 @@ export function TeamItemCard({
   const [relations, setRelations] = useState<{
     inbound: ItemRelation[]
     outbound: ItemRelation[]
-  }>({ inbound: [], outbound: [] })
-  const [_isLoadingRelations, setIsLoadingRelations] = useState(false)
+  }>(initialRelations || { inbound: [], outbound: [] })
 
-  // Fetch relations for this item
+  // Update relations when prop changes
   useEffect(() => {
-    const fetchRelations = async () => {
-      setIsLoadingRelations(true)
-      const result = await getItemRelations(item.id, item.team_id)
-      if (!result.error) {
-        setRelations({
-          inbound: result.inbound,
-          outbound: result.outbound,
-        })
-      }
-      setIsLoadingRelations(false)
+    if (initialRelations) {
+      setRelations(initialRelations)
     }
-    void fetchRelations()
-  }, [item])
+  }, [initialRelations])
 
   const handleSaveTitle = async () => {
     if (title.trim() && title !== item.title) {
@@ -87,7 +82,7 @@ export function TeamItemCard({
         setError(null)
         setStatusMessage('✓ Lagret')
         setTimeout(() => setStatusMessage(null), 2000)
-        onUpdate?.()
+        await onRefetch?.()
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Ukjent feil'
         setError(msg)
@@ -114,7 +109,7 @@ export function TeamItemCard({
       setError(null)
       setStatusMessage('✓ Slettet')
       setTimeout(() => setStatusMessage(null), 2000)
-      onUpdate?.()
+      await onRefetch?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
       setError(msg)
@@ -140,7 +135,7 @@ export function TeamItemCard({
           setError(null)
           setStatusMessage('✓ Arkivert')
           setTimeout(() => setStatusMessage(null), 2000)
-          onUpdate?.()
+          await onRefetch?.()
         } catch (err) {
           const msg = err instanceof Error ? err.message : 'Ukjent feil'
           setError(msg)
@@ -163,7 +158,7 @@ export function TeamItemCard({
       setError(null)
       setStatusMessage('✓ Status oppdatert')
       setTimeout(() => setStatusMessage(null), 2000)
-      onUpdate?.()
+      await onRefetch?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
       setError(msg)
@@ -187,7 +182,7 @@ export function TeamItemCard({
       setStatusMessage('✓ Medlem lagt til')
       setTimeout(() => setStatusMessage(null), 2000)
       setShowMemberDropdown(false)
-      onUpdate?.()
+      await onRefetch?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
       setError(msg)
@@ -197,9 +192,9 @@ export function TeamItemCard({
     }
   }
 
-  const handleTagUpdate = () => {
+  const handleTagUpdate = async () => {
     // revalidatePath is already called on the server side, no need for router.refresh
-    onUpdate?.()
+    await onRefetch?.()
   }
 
   const handleDeleteRelation = async (relationId: string) => {
@@ -229,7 +224,7 @@ export function TeamItemCard({
       }
 
       // Trigger router refresh to ensure consistency
-      onUpdate?.()
+      await onRefetch?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
       alert(`Feil ved sletting av relasjon: ${msg}`)

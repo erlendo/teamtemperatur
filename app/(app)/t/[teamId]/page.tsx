@@ -1,8 +1,7 @@
 import { AppHeader } from '@/components/AppHeader'
-import { DashboardSection } from '@/components/DashboardSection'
 import { HealthCard } from '@/components/HealthCard'
 import { supabaseServer } from '@/lib/supabase/server'
-import { getTeamItems } from '@/server/actions/dashboard'
+import { getAllTeamRelations, getTeamItems } from '@/server/actions/dashboard'
 import { getYearStats } from '@/server/actions/stats'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -129,6 +128,9 @@ export default async function TeamHome({
   const målItems = items.filter((i) => i.type === 'mål')
   const retroItems = items.filter((i) => i.type === 'retro')
 
+  // Fetch all relations in one batch query
+  const { relations: allRelations } = await getAllTeamRelations(teamId)
+
   // Fetch health stats
   const weekInfo = getISOWeekInfo()
   const currentWeek = weekInfo.week
@@ -169,6 +171,8 @@ export default async function TeamHome({
             ukemålItems={ukemålItems}
             pipelineItems={pipelineItems}
             målItems={målItems}
+            retroItems={retroItems}
+            allRelations={allRelations}
             teamId={teamId}
             teamMembers={teamMembers}
             userRole={userRole}
@@ -213,18 +217,6 @@ export default async function TeamHome({
                 </p>
               )}
             </div>
-          </div>
-
-          {/* Row 3: Retro */}
-          <div style={{ marginBottom: 'var(--space-2xl)' }}>
-            <DashboardSection
-              title="Retro-forbedringer"
-              type="retro"
-              items={retroItems}
-              teamId={teamId}
-              teamMembers={teamMembers}
-              userRole={userRole}
-            />
           </div>
 
           {/* Back Link */}

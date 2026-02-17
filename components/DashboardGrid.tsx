@@ -37,10 +37,14 @@ interface DashboardGridProps {
   ukemålItems: TeamItem[]
   pipelineItems: TeamItem[]
   målItems: TeamItem[]
+  allRelations: ItemRelation[]
   teamId: string
   teamMembers: Array<{ id: string; firstName: string }>
   userRole: string
-  onUpdate?: () => void
+  onOptimisticAdd?: (item: TeamItem) => void
+  onOptimisticRemove?: (itemId: string) => void
+  onOptimisticReplace?: (tempId: string, realId: string) => void
+  onRefetch?: () => Promise<void>
 }
 
 const NORDIC_COLORS: Record<ItemType, { accent: string; light: string }> = {
@@ -54,14 +58,16 @@ function SortableItemWrapper(
   {
     item,
     teamMembers,
-    onUpdate,
+    allRelations,
+    onRefetch,
     userRole,
     onHover,
     onRelationDelete,
   }: {
     item: TeamItem
     teamMembers: Array<{ id: string; firstName: string }>
-    onUpdate: () => void
+    allRelations: ItemRelation[]
+    onRefetch?: () => Promise<void>
     userRole: string
     onHover?: (itemId: string | null) => void
     onRelationDelete?: (relationId: string) => void
@@ -83,6 +89,12 @@ function SortableItemWrapper(
     opacity: isDragging ? 0.5 : 1,
   }
 
+  // Filter relations for this specific item
+  const itemRelations = {
+    inbound: allRelations.filter((r) => r.target_item_id === item.id),
+    outbound: allRelations.filter((r) => r.source_item_id === item.id),
+  }
+
   return (
     <div
       ref={setNodeRef}
@@ -96,7 +108,8 @@ function SortableItemWrapper(
       <TeamItemCard
         item={item}
         teamMembers={teamMembers}
-        onUpdate={onUpdate}
+        relations={itemRelations}
+        onRefetch={onRefetch}
         userRole={userRole}
         onRelationDelete={onRelationDelete}
       />
@@ -110,10 +123,14 @@ function GridSection({
   title,
   type,
   items,
+  allRelations,
   teamId,
   teamMembers,
   userRole,
-  onUpdate,
+  onOptimisticAdd,
+  onOptimisticRemove,
+  onOptimisticReplace,
+  onRefetch,
   onHover,
   onRelationDelete,
   isValidDropZone,
@@ -121,10 +138,14 @@ function GridSection({
   title: string
   type: ItemType
   items: TeamItem[]
+  allRelations: ItemRelation[]
   teamId: string
   teamMembers: Array<{ id: string; firstName: string }>
   userRole: string
-  onUpdate?: () => void
+  onOptimisticAdd?: (item: TeamItem) => void
+  onOptimisticRemove?: (itemId: string) => void
+  onOptimisticReplace?: (tempId: string, realId: string) => void
+  onRefetch?: () => Promise<void>
   onHover?: (itemId: string | null) => void
   onRelationDelete?: (relationId: string) => void
   isValidDropZone?: boolean
@@ -136,19 +157,55 @@ function GridSection({
 
   const handleAddItem = async () => {
     if (newItemTitle.trim()) {
+      // Create optimistic item with temp ID
+      const tempId = `temp-${Date.now()}-${Math.random()}`
+      const optimisticItem: TeamItem = {
+        id: tempId,
+        team_id: teamId,
+        type: type,
+        title: newItemTitle.trim(),
+        status: 'planlagt',
+        sort_order: items.length,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        updated_by: null,
+        archived_at: null,
+        archived_by: null,
+        members: [],
+        tags: [],
+      }
+
+      // Immediately add to UI (optimistic)
+      onOptimisticAdd?.(optimisticItem)
+
+      // Reset form
+      setNewItemTitle('')
+      setIsAdding(false)
+      setErrorMsg(null)
+
+      // Sync with server in background
       try {
-        const result = await createItem(teamId, type, newItemTitle.trim())
+        const result = await createItem(teamId, type, optimisticItem.title)
         if (result.error) {
+          // Remove optimistic item on error
+          onOptimisticRemove?.(tempId)
           setErrorMsg(result.error)
+          setIsAdding(true) // Re-open form
+          setNewItemTitle(optimisticItem.title) // Restore title
           return
         }
-        setNewItemTitle('')
-        setIsAdding(false)
-        setErrorMsg(null)
-        onUpdate?.()
+
+        // Replace temp ID with real ID
+        if (result.itemId) {
+          onOptimisticReplace?.(tempId, result.itemId)
+        }
       } catch (err) {
+        // Remove optimistic item on error
+        onOptimisticRemove?.(tempId)
         const msg = err instanceof Error ? err.message : 'Unknown error'
         setErrorMsg(msg)
+        setIsAdding(true) // Re-open form
+        setNewItemTitle(optimisticItem.title) // Restore title
       }
     }
   }
@@ -321,8 +378,9 @@ function GridSection({
                 key={item.id}
                 item={item}
                 teamMembers={teamMembers}
+                allRelations={allRelations}
                 userRole={userRole}
-                onUpdate={() => onUpdate?.()}
+                onRefetch={onRefetch}
                 onHover={onHover}
                 onRelationDelete={onRelationDelete}
               />
@@ -338,10 +396,14 @@ export function DashboardGrid({
   ukemålItems,
   pipelineItems,
   målItems,
+  allRelations: initialAllRelations,
   teamId,
   teamMembers,
   userRole,
-  onUpdate,
+  onOptimisticAdd,
+  onOptimisticRemove,
+  onOptimisticReplace,
+  onRefetch,
 }: DashboardGridProps) {
   const { showRelations } = useVisibleRelations()
   const sensors = useSensors(
@@ -362,7 +424,9 @@ export function DashboardGrid({
       { id: string; x: number; y: number; width: number; height: number }
     >()
   )
-  const [allRelations, setAllRelations] = useState<ItemRelation[]>([])
+  const [allRelations, setAllRelations] = useState<ItemRelation[]>(
+    initialAllRelations
+  )
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(
     null
   )
@@ -372,22 +436,15 @@ export function DashboardGrid({
   const allItems = useRef([...ukemålItems, ...pipelineItems, ...målItems])
   allItems.current = [...ukemålItems, ...pipelineItems, ...målItems]
 
-  // Fetch all relations for the team (batch query)
+  // Update relations when prop changes
   useEffect(() => {
-    const fetchAllRelations = async () => {
-      const result = await getAllTeamRelations(teamId)
-      if (!result.error) {
-        setAllRelations(result.relations)
-      }
-    }
-
-    void fetchAllRelations()
-  }, [teamId])
+    setAllRelations(initialAllRelations)
+  }, [initialAllRelations])
 
   // Optimistic delete handler - removes relation from state immediately
-  const handleRelationDelete = (relationId: string) => {
+  const handleRelationDelete = async (relationId: string) => {
     setAllRelations((prev) => prev.filter((r) => r.id !== relationId))
-    onUpdate?.()
+    await onRefetch?.()
   }
 
   // Update card positions from DOM query selector
@@ -501,7 +558,7 @@ export function DashboardGrid({
           console.error('Failed to create relation:', result.error)
           alert(`Feil: ${result.error}`)
         } else {
-          onUpdate?.()
+          await onRefetch?.()
         }
       }
       return
@@ -531,7 +588,7 @@ export function DashboardGrid({
         }
       }
 
-      onUpdate?.()
+      await onRefetch?.()
     }
   }
 
@@ -594,10 +651,14 @@ export function DashboardGrid({
           title="Ukemål denne uka"
           type="ukemål"
           items={ukemålItems}
+          allRelations={allRelations}
           teamId={teamId}
           teamMembers={teamMembers}
           userRole={userRole}
-          onUpdate={onUpdate}
+          onOptimisticAdd={onOptimisticAdd}
+          onOptimisticRemove={onOptimisticRemove}
+          onOptimisticReplace={onOptimisticReplace}
+          onRefetch={onRefetch}
           onHover={setHighlightedItemId}
           onRelationDelete={handleRelationDelete}
           isValidDropZone={isValidDropZone('ukemål')}
@@ -606,10 +667,14 @@ export function DashboardGrid({
           title="Pipeline"
           type="pipeline"
           items={pipelineItems}
+          allRelations={allRelations}
           teamId={teamId}
           teamMembers={teamMembers}
           userRole={userRole}
-          onUpdate={onUpdate}
+          onOptimisticAdd={onOptimisticAdd}
+          onOptimisticRemove={onOptimisticRemove}
+          onOptimisticReplace={onOptimisticReplace}
+          onRefetch={onRefetch}
           onHover={setHighlightedItemId}
           onRelationDelete={handleRelationDelete}
           isValidDropZone={isValidDropZone('pipeline')}
@@ -618,10 +683,14 @@ export function DashboardGrid({
           title={`Mål (T${Math.ceil((new Date().getMonth() + 1) / 4)} ${new Date().getFullYear()})`}
           type="mål"
           items={målItems}
+          allRelations={allRelations}
           teamId={teamId}
           teamMembers={teamMembers}
           userRole={userRole}
-          onUpdate={onUpdate}
+          onOptimisticAdd={onOptimisticAdd}
+          onOptimisticRemove={onOptimisticRemove}
+          onOptimisticReplace={onOptimisticReplace}
+          onRefetch={onRefetch}
           onHover={setHighlightedItemId}
           onRelationDelete={handleRelationDelete}
           isValidDropZone={isValidDropZone('mål')}

@@ -3,6 +3,7 @@
 import {
   createItem,
   reorderItem,
+  type ItemRelation,
   type TeamItem,
 } from '@/server/actions/dashboard'
 import {
@@ -39,12 +40,14 @@ const NORDIC_COLORS: Record<ItemType, { accent: string; light: string }> = {
 function SortableItemWrapper({
   item,
   teamMembers,
-  onUpdate,
+  allRelations,
+  onRefetch,
   userRole,
 }: {
   item: TeamItem
   teamMembers: Array<{ id: string; firstName: string }>
-  onUpdate: () => void
+  allRelations: ItemRelation[]
+  onRefetch?: () => Promise<void>
   userRole: string
 }) {
   const {
@@ -62,12 +65,19 @@ function SortableItemWrapper({
     opacity: isDragging ? 0.5 : 1,
   }
 
+  // Filter relations for this specific item
+  const itemRelations = {
+    inbound: allRelations.filter((r) => r.target_item_id === item.id),
+    outbound: allRelations.filter((r) => r.source_item_id === item.id),
+  }
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <TeamItemCard
         item={item}
         teamMembers={teamMembers}
-        onUpdate={onUpdate}
+        relations={itemRelations}
+        onRefetch={onRefetch}
         userRole={userRole}
       />
     </div>
@@ -78,20 +88,28 @@ interface DashboardSectionProps {
   title: string
   type: ItemType
   items: TeamItem[]
+  allRelations?: ItemRelation[]
   teamId: string
   teamMembers: Array<{ id: string; firstName: string }>
   userRole: string
-  onUpdate?: () => void
+  onOptimisticAdd?: (item: TeamItem) => void
+  onOptimisticRemove?: (itemId: string) => void
+  onOptimisticReplace?: (tempId: string, realId: string) => void
+  onRefetch?: () => Promise<void>
 }
 
 export function DashboardSection({
   title,
   type,
   items,
+  allRelations = [],
   teamId,
   teamMembers,
   userRole,
-  onUpdate,
+  onOptimisticAdd,
+  onOptimisticRemove,
+  onOptimisticReplace,
+  onRefetch,
 }: DashboardSectionProps) {
   const colors = NORDIC_COLORS[type]
   const [isAdding, setIsAdding] = useState(false)
@@ -121,19 +139,55 @@ export function DashboardSection({
 
   const handleAddItem = async () => {
     if (newItemTitle.trim()) {
+      // Create optimistic item with temp ID
+      const tempId = `temp-${Date.now()}-${Math.random()}`
+      const optimisticItem: TeamItem = {
+        id: tempId,
+        team_id: teamId,
+        type: type,
+        title: newItemTitle.trim(),
+        status: 'planlagt',
+        sort_order: items.length,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        updated_by: null,
+        archived_at: null,
+        archived_by: null,
+        members: [],
+        tags: [],
+      }
+
+      // Immediately add to UI (optimistic)
+      onOptimisticAdd?.(optimisticItem)
+
+      // Reset form
+      setNewItemTitle('')
+      setIsAdding(false)
+      setErrorMsg(null)
+
+      // Sync with server in background
       try {
-        const result = await createItem(teamId, type, newItemTitle.trim())
+        const result = await createItem(teamId, type, optimisticItem.title)
         if (result.error) {
+          // Remove optimistic item on error
+          onOptimisticRemove?.(tempId)
           setErrorMsg(result.error)
+          setIsAdding(true) // Re-open form
+          setNewItemTitle(optimisticItem.title) // Restore title
           return
         }
-        setNewItemTitle('')
-        setIsAdding(false)
-        setErrorMsg(null)
-        onUpdate?.()
+
+        // Replace temp ID with real ID
+        if (result.itemId) {
+          onOptimisticReplace?.(tempId, result.itemId)
+        }
       } catch (err) {
+        // Remove optimistic item on error
+        onOptimisticRemove?.(tempId)
         const msg = err instanceof Error ? err.message : 'Unknown error'
         setErrorMsg(msg)
+        setIsAdding(true) // Re-open form
+        setNewItemTitle(optimisticItem.title) // Restore title
       }
     }
   }
@@ -157,13 +211,13 @@ export function DashboardSection({
           }
         }
 
-        onUpdate?.()
+        await onRefetch?.()
       }
     }
   }
 
-  const handleUpdate = () => {
-    onUpdate?.()
+  const handleUpdate = async () => {
+    await onRefetch?.()
   }
 
   return (
@@ -331,8 +385,9 @@ export function DashboardSection({
                   key={item.id}
                   item={item}
                   teamMembers={teamMembers}
+                  allRelations={allRelations}
                   userRole={userRole}
-                  onUpdate={handleUpdate}
+                  onRefetch={onRefetch}
                 />
               ))
             )}
