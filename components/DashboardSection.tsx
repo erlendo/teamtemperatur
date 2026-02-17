@@ -216,10 +216,6 @@ export function DashboardSection({
     }
   }
 
-  const handleUpdate = async () => {
-    await onRefetch?.()
-  }
-
   return (
     <div
       style={{
