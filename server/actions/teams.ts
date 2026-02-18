@@ -330,3 +330,70 @@ export async function deleteUserSubmissions(teamId: string, userId: string) {
 
   return { success: true, count }
 }
+
+export async function updateMemberIncludeInStats(
+  teamId: string,
+  userId: string,
+  includeInStats: boolean
+) {
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !u.user) {
+    return { error: 'Ikke autentisert' }
+  }
+
+  // Verify caller is team owner or admin
+  const { data: callerRole, error: roleError } = await supabase.rpc(
+    'team_role',
+    { p_team_id: teamId }
+  )
+
+  if (roleError || !['owner', 'admin'].includes(callerRole)) {
+    console.error('[updateMemberIncludeInStats] Not authorized:', {
+      roleError,
+      callerRole,
+    })
+    return { error: 'Du har ikke tillatelse til å endre denne innstillingen' }
+  }
+
+  // Get the member's role to ensure they're external
+  const { data: membership } = await supabase
+    .from('team_memberships')
+    .select('role')
+    .eq('team_id', teamId)
+    .eq('user_id', userId)
+    .single()
+
+  if (!membership) {
+    return { error: 'Medlem ikke funnet' }
+  }
+
+  // Only allow changing include_in_stats for external role
+  if (membership.role !== 'external') {
+    return {
+      error:
+        'Kun eksterne brukere kan ha denne innstillingen endret. Andre roller er alltid inkludert i statistikk.',
+    }
+  }
+
+  console.log('[updateMemberIncludeInStats] Updating:', {
+    teamId,
+    userId,
+    includeInStats,
+  })
+
+  const { error: updateError } = await supabase
+    .from('team_memberships')
+    .update({ include_in_stats: includeInStats })
+    .eq('team_id', teamId)
+    .eq('user_id', userId)
+
+  if (updateError) {
+    console.error('[updateMemberIncludeInStats] Error:', updateError)
+    return { error: 'Kunne ikke oppdatere innstilling' }
+  }
+
+  console.log('[updateMemberIncludeInStats] Success!')
+  return { success: true }
+}

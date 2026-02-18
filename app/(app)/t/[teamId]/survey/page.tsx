@@ -29,7 +29,7 @@ export default async function SurveyPage({
 
   const { data: membership } = await supabase
     .from('team_memberships')
-    .select('role')
+    .select('role, include_in_stats')
     .eq('team_id', teamId)
     .eq('user_id', authUser.user.id)
     .eq('status', 'active')
@@ -45,6 +45,66 @@ export default async function SurveyPage({
     .maybeSingle()
 
   const teamName = team?.name ?? undefined
+
+  // Check if user is allowed to participate in health surveys
+  const canParticipateInSurvey = membership?.include_in_stats === true
+
+  if (!canParticipateInSurvey) {
+    return (
+      <>
+        <AppHeader
+          teamId={teamId}
+          teamName={teamName}
+          isTeamAdmin={isTeamAdmin}
+        />
+        <main style={{ flex: 1 }}>
+          <div
+            style={{
+              maxWidth: '800px',
+              margin: '0 auto',
+              padding: 'var(--space-xl) var(--space-md)',
+            }}
+          >
+            <h1 style={{ color: 'var(--color-neutral-700)' }}>
+              📋 Helse-undersøkelse
+            </h1>
+            <div
+              style={{
+                backgroundColor: 'var(--color-neutral-100)',
+                padding: 'var(--space-lg)',
+                borderRadius: 'var(--radius-lg)',
+                marginTop: 'var(--space-xl)',
+              }}
+            >
+              <p style={{ margin: 0, fontSize: 'var(--font-size-base)' }}>
+                Du er registrert som ekstern samarbeidspartner i dette teamet.
+                Eksterne brukere deltar ikke i helse-undersøkelsene med mindre
+                dette er aktivert av en team administrator.
+              </p>
+              <p
+                style={{
+                  margin: 'var(--space-md) 0 0 0',
+                  fontSize: 'var(--font-size-sm)',
+                  color: 'var(--color-neutral-600)',
+                }}
+              >
+                Ta kontakt med team owner eller admin hvis du skal delta i
+                helse-målingene.
+              </p>
+            </div>
+            <div style={{ marginTop: 'var(--space-xl)' }}>
+              <a
+                href={`/t/${teamId}`}
+                style={{ color: 'var(--color-primary)', fontWeight: '500' }}
+              >
+                ← Tilbake til team
+              </a>
+            </div>
+          </div>
+        </main>
+      </>
+    )
+  }
 
   const { questionnaire, questions, error } =
     await loadActiveQuestionnaire(teamId)

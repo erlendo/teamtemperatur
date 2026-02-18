@@ -12,6 +12,8 @@ interface TeamMember {
   user_id: string
   email: string
   first_name?: string
+  role: string
+  include_in_stats: boolean
 }
 
 export default async function AdminPage({
@@ -58,7 +60,7 @@ export default async function AdminPage({
     // Fetch team members with their profiles
     const { data: members } = await supabase
       .from('team_memberships')
-      .select('user_id')
+      .select('user_id, role, include_in_stats')
       .eq('team_id', teamId)
       .eq('status', 'active')
 
@@ -83,6 +85,8 @@ export default async function AdminPage({
         user_id: m.user_id,
         email: usersMap.get(m.user_id) || m.user_id,
         first_name: profileMap.get(m.user_id),
+        role: m.role,
+        include_in_stats: m.include_in_stats,
       }))
     }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { adminUpdateUserFirstName } from '@/server/actions/auth'
+import { updateMemberIncludeInStats } from '@/server/actions/teams'
 import { AlertCircle, Check } from 'lucide-react'
 import { useState } from 'react'
 
@@ -8,6 +9,8 @@ interface TeamMember {
   user_id: string
   email: string
   first_name?: string
+  role: string
+  include_in_stats: boolean
 }
 
 interface AdminUserProfilesProps {
@@ -76,6 +79,42 @@ export function AdminUserProfiles({
       setMessage({ type: 'error', text: errorMsg })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleToggleIncludeInStats = async (
+    userId: string,
+    currentValue: boolean
+  ) => {
+    const newValue = !currentValue
+
+    try {
+      const result = await updateMemberIncludeInStats(teamId, userId, newValue)
+
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error })
+        setTimeout(() => setMessage(null), 5000)
+        return
+      }
+
+      // Update local state
+      setMembers(
+        members.map((m) =>
+          m.user_id === userId ? { ...m, include_in_stats: newValue } : m
+        )
+      )
+
+      setMessage({
+        type: 'success',
+        text: newValue
+          ? 'Bruker inkludert i statistikk ✓'
+          : 'Bruker ekskludert fra statistikk',
+      })
+      setTimeout(() => setMessage(null), 3000)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Ukjent feil'
+      setMessage({ type: 'error', text: errorMsg })
+      setTimeout(() => setMessage(null), 5000)
     }
   }
 
@@ -166,6 +205,26 @@ export function AdminUserProfiles({
                   borderBottom: '1px solid var(--color-neutral-200)',
                 }}
               >
+                Rolle
+              </th>
+              <th
+                style={{
+                  padding: '1rem',
+                  textAlign: 'left',
+                  fontWeight: '600',
+                  borderBottom: '1px solid var(--color-neutral-200)',
+                }}
+              >
+                Inkludert i statistikk
+              </th>
+              <th
+                style={{
+                  padding: '1rem',
+                  textAlign: 'left',
+                  fontWeight: '600',
+                  borderBottom: '1px solid var(--color-neutral-200)',
+                }}
+              >
                 Handlinger
               </th>
             </tr>
@@ -217,6 +276,92 @@ export function AdminUserProfiles({
                       }}
                     >
                       {member.first_name || '(ingen)'}
+                    </span>
+                  )}
+                </td>
+                <td
+                  style={{
+                    padding: '1rem',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  <span
+                    style={{
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '12px',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                      backgroundColor:
+                        member.role === 'external'
+                          ? 'rgba(168, 85, 247, 0.1)'
+                          : member.role === 'owner'
+                            ? 'rgba(239, 68, 68, 0.1)'
+                            : member.role === 'admin'
+                              ? 'rgba(59, 130, 246, 0.1)'
+                              : 'rgba(34, 197, 94, 0.1)',
+                      color:
+                        member.role === 'external'
+                          ? '#7c3aed'
+                          : member.role === 'owner'
+                            ? '#dc2626'
+                            : member.role === 'admin'
+                              ? '#2563eb'
+                              : '#16a34a',
+                    }}
+                  >
+                    {member.role === 'external'
+                      ? 'Ekstern'
+                      : member.role === 'owner'
+                        ? 'Eier'
+                        : member.role === 'admin'
+                          ? 'Admin'
+                          : member.role === 'member'
+                            ? 'Medlem'
+                            : 'Viewer'}
+                  </span>
+                </td>
+                <td
+                  style={{
+                    padding: '1rem',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  {member.role === 'external' ? (
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={member.include_in_stats}
+                        onChange={() =>
+                          handleToggleIncludeInStats(
+                            member.user_id,
+                            member.include_in_stats
+                          )
+                        }
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          cursor: 'pointer',
+                        }}
+                      />
+                      <span style={{ color: 'var(--color-neutral-700)' }}>
+                        {member.include_in_stats ? 'Ja' : 'Nei'}
+                      </span>
+                    </label>
+                  ) : (
+                    <span
+                      style={{
+                        color: 'var(--color-neutral-500)',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Ja (alltid)
                     </span>
                   )}
                 </td>
