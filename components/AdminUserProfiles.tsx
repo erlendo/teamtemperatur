@@ -1,7 +1,10 @@
 'use client'
 
 import { adminUpdateUserFirstName } from '@/server/actions/auth'
-import { updateMemberIncludeInStats } from '@/server/actions/teams'
+import {
+  updateMemberIncludeInStats,
+  updateMemberRole,
+} from '@/server/actions/teams'
 import { AlertCircle, Check } from 'lucide-react'
 import { useState } from 'react'
 
@@ -109,6 +112,43 @@ export function AdminUserProfiles({
         text: newValue
           ? 'Bruker inkludert i statistikk ✓'
           : 'Bruker ekskludert fra statistikk',
+      })
+      setTimeout(() => setMessage(null), 3000)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Ukjent feil'
+      setMessage({ type: 'error', text: errorMsg })
+      setTimeout(() => setMessage(null), 5000)
+    }
+  }
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    try {
+      const result = await updateMemberRole(teamId, userId, newRole)
+
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error })
+        setTimeout(() => setMessage(null), 5000)
+        return
+      }
+
+      // Update local state
+      setMembers(
+        members.map((m) => (m.user_id === userId ? { ...m, role: newRole } : m))
+      )
+
+      setMessage({
+        type: 'success',
+        text: `Rolle oppdatert til ${
+          newRole === 'external'
+            ? 'Ekstern'
+            : newRole === 'owner'
+              ? 'Eier'
+              : newRole === 'admin'
+                ? 'Admin'
+                : newRole === 'member'
+                  ? 'Medlem'
+                  : 'Viewer'
+        } ✓`,
       })
       setTimeout(() => setMessage(null), 3000)
     } catch (err) {
@@ -285,12 +325,17 @@ export function AdminUserProfiles({
                     fontSize: '0.875rem',
                   }}
                 >
-                  <span
+                  <select
+                    value={member.role}
+                    onChange={(e) =>
+                      handleRoleChange(member.user_id, e.target.value)
+                    }
                     style={{
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '12px',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '6px',
                       fontSize: '0.75rem',
                       fontWeight: '500',
+                      border: '1px solid var(--color-neutral-300)',
                       backgroundColor:
                         member.role === 'external'
                           ? 'rgba(168, 85, 247, 0.1)'
@@ -307,18 +352,15 @@ export function AdminUserProfiles({
                             : member.role === 'admin'
                               ? '#2563eb'
                               : '#16a34a',
+                      cursor: 'pointer',
                     }}
                   >
-                    {member.role === 'external'
-                      ? 'Ekstern'
-                      : member.role === 'owner'
-                        ? 'Eier'
-                        : member.role === 'admin'
-                          ? 'Admin'
-                          : member.role === 'member'
-                            ? 'Medlem'
-                            : 'Viewer'}
-                  </span>
+                    <option value="owner">Eier</option>
+                    <option value="admin">Admin</option>
+                    <option value="member">Medlem</option>
+                    <option value="viewer">Viewer</option>
+                    <option value="external">Ekstern</option>
+                  </select>
                 </td>
                 <td
                   style={{

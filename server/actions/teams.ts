@@ -397,3 +397,61 @@ export async function updateMemberIncludeInStats(
   console.log('[updateMemberIncludeInStats] Success!')
   return { success: true }
 }
+
+export async function updateMemberRole(
+  teamId: string,
+  userId: string,
+  newRole: string
+) {
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !u.user) {
+    return { error: 'Ikke autentisert' }
+  }
+
+  // Verify caller is team owner (only owners can change roles)
+  const { data: callerRole, error: roleError } = await supabase.rpc(
+    'team_role',
+    { p_team_id: teamId }
+  )
+
+  if (roleError || callerRole !== 'owner') {
+    console.error('[updateMemberRole] Not owner:', {
+      roleError,
+      callerRole,
+    })
+    return { error: 'Kun team owner kan endre roller' }
+  }
+
+  // Validate role
+  const validRoles = ['owner', 'admin', 'member', 'viewer', 'external']
+  if (!validRoles.includes(newRole)) {
+    return { error: 'Ugyldig rolle' }
+  }
+
+  // Prevent owner from changing their own role
+  if (userId === u.user.id && newRole !== 'owner') {
+    return { error: 'Du kan ikke endre din egen rolle som owner' }
+  }
+
+  console.log('[updateMemberRole] Updating:', {
+    teamId,
+    userId,
+    newRole,
+  })
+
+  const { error: updateError } = await supabase
+    .from('team_memberships')
+    .update({ role: newRole })
+    .eq('team_id', teamId)
+    .eq('user_id', userId)
+
+  if (updateError) {
+    console.error('[updateMemberRole] Error:', updateError)
+    return { error: 'Kunne ikke oppdatere rolle' }
+  }
+
+  console.log('[updateMemberRole] Success!')
+  return { success: true }
+}
