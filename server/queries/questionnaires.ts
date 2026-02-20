@@ -2,25 +2,27 @@ import { supabaseServer } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export async function loadActiveQuestionnaire(teamId: string) {
+  const supabase = supabaseServer()
+
+  const { data: authUser, error: authError } = await supabase.auth.getUser()
+  if (authError || !authUser.user) {
+    redirect('/login')
+  }
+
+  const { data: membership, error: membershipError } = await supabase
+    .from('tt_team_memberships')
+    .select('team_id')
+    .eq('team_id', teamId)
+    .eq('user_id', authUser.user.id)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (membershipError) {
+    return { questionnaire: null, questions: [], error: membershipError.message }
+  }
+  if (!membership) redirect('/teams')
+
   try {
-    const supabase = supabaseServer()
-
-    const { data: authUser, error: authError } = await supabase.auth.getUser()
-    if (authError || !authUser.user) {
-      redirect('/login')
-    }
-
-    const { data: membership, error: membershipError } = await supabase
-      .from('tt_team_memberships')
-      .select('team_id')
-      .eq('team_id', teamId)
-      .eq('user_id', authUser.user.id)
-      .eq('status', 'active')
-      .maybeSingle()
-
-    if (membershipError) throw membershipError
-    if (!membership) redirect('/teams')
-
     const fetchActiveQuestionnaire = async () =>
       supabase
         .from('tt_questionnaires')

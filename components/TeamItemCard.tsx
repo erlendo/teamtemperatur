@@ -45,6 +45,7 @@ export function TeamItemCard({
   onRefetch,
   onRelationDelete,
 }: TeamItemCardProps) {
+  const canEdit = userRole !== 'viewer' && userRole !== 'external'
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [title, setTitle] = useState(item.title)
@@ -486,7 +487,7 @@ export function TeamItemCard({
                     >
                       <LinkIcon size={10} />
                       <span>→</span>
-                      {userRole !== 'viewer' && (
+                      {canEdit && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
@@ -530,7 +531,7 @@ export function TeamItemCard({
                     >
                       <LinkIcon size={10} />
                       <span>←</span>
-                      {userRole !== 'viewer' && (
+                      {canEdit && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
@@ -560,7 +561,7 @@ export function TeamItemCard({
         </div>
 
         {/* Edit button (pencil) - only for non-viewers */}
-        {userRole !== 'viewer' && (
+        {canEdit && (
           <button
             onClick={() => setIsEditMode(!isEditMode)}
             disabled={isSaving || isDeleting || isArchiving}
@@ -605,7 +606,7 @@ export function TeamItemCard({
         )}
 
         {/* Archive button - only for non-viewers and completed items */}
-        {userRole !== 'viewer' && item.status === 'ferdig' && (
+        {canEdit && item.status === 'ferdig' && (
           <button
             onClick={handleArchive}
             disabled={isDeleting || isSaving || isArchiving}
@@ -649,7 +650,7 @@ export function TeamItemCard({
         )}
 
         {/* Delete button (trash) - only for non-viewers */}
-        {userRole !== 'viewer' && (
+        {canEdit && (
           <button
             onClick={() => {
               void handleDelete()

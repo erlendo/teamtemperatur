@@ -137,13 +137,13 @@ BEGIN
       ) AS question_stats
     FROM answers_agg aa
     JOIN public.questions q ON q.id = aa.question_id
-    WHERE q.type = 'scale'  -- Only include scale questions in stats
+    WHERE q.type IN ('scale_1_5', 'scale')  -- Include both scale question types
     GROUP BY aa.week
   ),
   weekly_responses AS (
     SELECT
       s.week,
-      COUNT(DISTINCT s.user_id)::int AS response_count
+      COUNT(DISTINCT s.submitted_by)::int AS response_count
     FROM public.submissions s
     WHERE s.team_id = p_team_id
       AND s.week BETWEEN v_start_week AND v_current_week

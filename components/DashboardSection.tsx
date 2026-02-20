@@ -112,6 +112,7 @@ export function DashboardSection({
   onRefetch,
 }: DashboardSectionProps) {
   const colors = NORDIC_COLORS[type]
+  const canEdit = userRole !== 'viewer' && userRole !== 'external'
   const [isAdding, setIsAdding] = useState(false)
   const [newItemTitle, setNewItemTitle] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -244,7 +245,7 @@ export function DashboardSection({
           {title}
         </h2>
 
-        {!isAdding && (
+        {!isAdding && canEdit && (
           <button
             onClick={() => setIsAdding(true)}
             style={{

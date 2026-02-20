@@ -23,15 +23,15 @@ export default async function AdminPage({
 }) {
   const { teamId } = await params
 
+  const result = await getUsersWithSubmissions(teamId)
+
+  if (result.error) {
+    // Not authorized or other error
+    console.error('[AdminPage] Error:', result.error)
+    redirect(`/t/${teamId}`)
+  }
+
   try {
-    const result = await getUsersWithSubmissions(teamId)
-
-    if (result.error) {
-      // Not authorized or other error
-      console.error('[AdminPage] Error:', result.error)
-      redirect(`/t/${teamId}`)
-    }
-
     const supabase = supabaseServer()
     const { data: authUser, error: authError } = await supabase.auth.getUser()
     if (authError || !authUser.user) {

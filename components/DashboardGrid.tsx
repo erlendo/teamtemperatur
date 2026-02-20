@@ -521,6 +521,9 @@ export function DashboardGrid({
 
     // Check if this is a cross-column drag
     if (activeItem.type !== overItem.type) {
+      // Only owner/admin/member can create relations
+      if (userRole === 'viewer' || userRole === 'external') return
+
       // Validate relation type based on source and target types
       let relationType: 'next_step' | 'part_of' | null = null
 
