@@ -2,14 +2,7 @@
 
 import { deleteDraft, saveDraft } from '@/server/actions/drafts'
 import { submitSurvey } from '@/server/actions/submissions'
-import {
-  AlertCircle,
-  Check,
-  CheckCircle,
-  Loader,
-  Send,
-  Target,
-} from 'lucide-react'
+import { AlertCircle, CheckCircle, Loader, Send } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState, useTransition } from 'react'
 
@@ -31,6 +24,14 @@ type DraftData = {
   }>
 }
 
+const SCALE_OPTIONS = [
+  { val: 1, emoji: '😞', label: 'Lav' },
+  { val: 2, emoji: '😕', label: '' },
+  { val: 3, emoji: '😐', label: 'Middels' },
+  { val: 4, emoji: '🙂', label: '' },
+  { val: 5, emoji: '😄', label: 'Høy' },
+]
+
 export function SurveyForm({
   teamId,
   questionnaireId,
@@ -50,45 +51,28 @@ export function SurveyForm({
   const [draftStatus, setDraftStatus] = useState<
     'saved' | 'saving' | 'idle' | 'error'
   >('idle')
-
-  // Track selected answers locally for UI updates
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<string, number | boolean | string | null>
   >(() => {
     const initial: Record<string, number | boolean | string | null> = {}
     initialDraft?.answers.forEach((a) => {
-      if (a.value_num !== undefined) initial[a.question_id] = a.value_num
-      else if (a.value_bool !== undefined) initial[a.question_id] = a.value_bool
-      else if (a.value_text !== undefined) initial[a.question_id] = a.value_text
+      if (a.value_num !== undefined && a.value_num !== null)
+        initial[a.question_id] = a.value_num
+      else if (a.value_bool !== undefined && a.value_bool !== null)
+        initial[a.question_id] = a.value_bool
+      else if (a.value_text !== undefined && a.value_text !== null)
+        initial[a.question_id] = a.value_text
     })
     return initial
   })
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: 'var(--space-md)',
-    border: '1px solid var(--color-neutral-300)',
-    borderRadius: 'var(--border-radius-md)',
-    backgroundColor: 'white',
-    fontSize: 'var(--font-size-base)',
-    color: 'var(--color-neutral-900)',
-    transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-    boxShadow: 'var(--shadow-sm)',
-  }
+
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const debouncedSave = useCallback(
     (formData: FormData) => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
       setDraftStatus('saving')
-
       saveTimeoutRef.current = setTimeout(async () => {
-        const weekVal = Number(formData.get('week'))
-        const name = String(formData.get('name') || '').trim()
-        const isAnonymous = formData.get('anon') === 'on'
-
         const answers = questions.map((q) => {
           const raw = formData.get(`q_${q.id}`)
           if (q.type === 'scale_1_5')
@@ -97,41 +81,30 @@ export function SurveyForm({
             return { question_id: q.id, value_bool: raw === 'ja' }
           return { question_id: q.id, value_text: raw ? String(raw) : '' }
         })
-
         const result = await saveDraft({
           teamId,
           questionnaireId,
-          week: weekVal,
-          displayName: name || undefined,
-          isAnonymous,
+          week: currentWeek,
+          isAnonymous: false,
           answers,
         })
-
         if (result.success) {
           setDraftStatus('saved')
           setTimeout(() => setDraftStatus('idle'), 2000)
         } else {
-          console.error('[SurveyForm] Draft save failed:', result.error)
           setDraftStatus('error')
-          setClientError(result.error || 'Kunne ikke lagre utkast')
         }
       }, 500)
     },
-    [teamId, questionnaireId, questions]
+    [teamId, questionnaireId, questions, currentWeek]
   )
 
   const handleChange = (e: React.FormEvent<HTMLFormElement>) => {
-    const formData = new FormData(e.currentTarget)
-    debouncedSave(formData)
+    debouncedSave(new FormData(e.currentTarget))
   }
 
   const handleSubmit = async (formData: FormData) => {
     setClientError(null)
-
-    const weekVal = Number(formData.get('week'))
-    const name = String(formData.get('name') || '').trim()
-    const isAnonymous = formData.get('anon') === 'on'
-
     const answers = questions.map((q) => {
       const raw = formData.get(`q_${q.id}`)
       if (q.type === 'scale_1_5')
@@ -147,20 +120,22 @@ export function SurveyForm({
       const result = await submitSurvey({
         teamId,
         questionnaireId,
-        week: weekVal,
-        displayName: name || undefined,
-        isAnonymous,
+        week: currentWeek,
+        isAnonymous: false,
         answers,
       })
-
       if ('error' in result) {
         setClientError(result.error || 'En ukjent feil oppstod')
       } else {
-        await deleteDraft(teamId, weekVal)
-        router.push(`/t/${teamId}/survey?submitted=true&week=${weekVal}`)
+        await deleteDraft(teamId, currentWeek)
+        router.push(`/t/${teamId}/survey?submitted=true&week=${currentWeek}`)
       }
     })
   }
+
+  const answeredCount = questions.filter(
+    (q) => selectedAnswers[q.id] !== undefined && selectedAnswers[q.id] !== null
+  ).length
 
   return (
     <>
@@ -168,358 +143,216 @@ export function SurveyForm({
         id="survey-form"
         action={handleSubmit}
         onChange={handleChange}
-        style={{
-          display: 'grid',
-          gap: 'var(--space-3xl)',
-          paddingBottom: '120px',
-        }}
+        style={{ display: 'flex', flexDirection: 'column', gap: '0' }}
       >
-        {/* Draft Status */}
+        {/* Draft status */}
         {draftStatus !== 'idle' && (
           <div
             role="status"
             aria-live="polite"
             style={{
-              padding: 'var(--space-md) var(--space-lg)',
-              borderRadius: 'var(--border-radius-md)',
-              fontSize: 'var(--font-size-base)',
-              fontWeight: '600',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '13px',
               display: 'flex',
               alignItems: 'center',
-              gap: 'var(--space-md)',
-              backgroundColor:
-                draftStatus === 'saved'
-                  ? 'var(--color-success-light)'
-                  : draftStatus === 'error'
-                    ? 'var(--color-error-light)'
-                    : '#f0f4ff',
+              gap: '6px',
+              marginBottom: '16px',
               color:
                 draftStatus === 'saved'
                   ? 'var(--color-success-dark)'
                   : draftStatus === 'error'
                     ? 'var(--color-error-dark)'
-                    : 'var(--color-primary-dark)',
-              borderLeft: '4px solid',
-              borderLeftColor:
-                draftStatus === 'saved'
-                  ? 'var(--color-success)'
-                  : draftStatus === 'error'
-                    ? 'var(--color-error)'
-                    : 'var(--color-primary)',
+                    : 'var(--color-neutral-600)',
             }}
           >
             {draftStatus === 'saving' && (
               <>
-                <Loader size={16} className="animate-spin" />
-                Lagrer utkast…
+                <Loader size={13} className="animate-spin" />
+                Lagrer…
               </>
             )}
             {draftStatus === 'saved' && (
               <>
-                <CheckCircle size={16} />
-                Lagret som utkast
+                <CheckCircle size={13} />
+                Lagret
               </>
             )}
             {draftStatus === 'error' && (
               <>
-                <AlertCircle size={16} />
-                {clientError && clientError.includes('relation')
-                  ? 'Autosave er midlertidig utilgjengelig'
-                  : 'Kunne ikke lagre utkast'}
+                <AlertCircle size={13} />
+                Kunne ikke lagre utkast
               </>
             )}
           </div>
         )}
 
-        {clientError && <div className="alert alert-error">{clientError}</div>}
-
-        {/* Metadata */}
-        <fieldset
-          style={{
-            border: 'none',
-            padding: 0,
-            margin: 0,
-            display: 'grid',
-            gap: 'var(--space-2xl)',
-          }}
-        >
-          <legend
+        {clientError && (
+          <div
             style={{
-              fontSize: 'var(--font-size-xl)',
-              fontWeight: '800',
-              marginBottom: 'var(--space-lg)',
-              color: 'var(--color-neutral-900)',
+              padding: '10px 14px',
+              backgroundColor: 'rgba(239,68,68,0.08)',
+              color: 'var(--color-error-dark, #b91c1c)',
+              borderRadius: '8px',
+              fontSize: '14px',
+              marginBottom: '16px',
             }}
           >
-            📋 Dine opplysninger
-          </legend>
-
-          <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
-            <label
-              style={{
-                display: 'block',
-                fontWeight: '600',
-                marginBottom: 'var(--space-sm)',
-                color: 'var(--color-neutral-700)',
-              }}
-            >
-              Uke (1-53)
-            </label>
-            <input
-              name="week"
-              defaultValue={currentWeek}
-              type="number"
-              min={1}
-              max={53}
-              style={{ ...inputStyle, maxWidth: '140px' }}
-              disabled={isPending}
-            />
+            {clientError}
           </div>
-
-          <div>
-            <label
-              style={{
-                display: 'block',
-                fontWeight: '700',
-                marginBottom: 'var(--space-md)',
-                color: 'var(--color-neutral-800)',
-                fontSize: 'var(--font-size-base)',
-              }}
-            >
-              Navn (valgfritt)
-              <small
-                style={{
-                  display: 'block',
-                  color: 'var(--color-neutral-600)',
-                  fontSize: 'var(--font-size-base)',
-                  fontWeight: '400',
-                  marginTop: 'var(--space-sm)',
-                  lineHeight: 'var(--line-height-relaxed)',
-                }}
-              >
-                Synlig for teamadmin. Huk av «Anonym» for å skjule i statistikk.
-              </small>
-            </label>
-            <input
-              name="name"
-              defaultValue={initialDraft?.displayName || ''}
-              type="text"
-              disabled={isPending}
-              style={inputStyle}
-            />
-          </div>
-
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-md)',
-              cursor: 'pointer',
-              fontWeight: '600',
-              color: 'var(--color-neutral-800)',
-              fontSize: 'var(--font-size-base)',
-            }}
-          >
-            <input
-              name="anon"
-              type="checkbox"
-              defaultChecked={initialDraft?.isAnonymous || false}
-              disabled={isPending}
-              style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-            />
-            <Check size={18} />
-            Anonym
-          </label>
-        </fieldset>
+        )}
 
         {/* Questions */}
-        <fieldset
-          style={{
-            border: 'none',
-            padding: 0,
-            margin: 0,
-            display: 'grid',
-            gap: 'var(--space-3xl)',
-          }}
-        >
-          <legend
-            style={{
-              fontSize: 'var(--font-size-2xl)',
-              fontWeight: '800',
-              marginBottom: 'var(--space-xl)',
-              color: 'var(--color-neutral-900)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-md)',
-            }}
-          >
-            <Target size={28} />
-            Spørsmål
-          </legend>
-
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {questions.map((q, index) => {
             const draftAnswer = initialDraft?.answers.find(
               (a) => a.question_id === q.id
             )
+            const isAnswered =
+              selectedAnswers[q.id] !== undefined &&
+              selectedAnswers[q.id] !== null
 
             return (
-              <fieldset
+              <div
                 key={q.id}
                 style={{
-                  border: '2px solid var(--color-neutral-300)',
-                  borderRadius: 'var(--border-radius-lg)',
-                  padding: 'var(--space-2xl)',
-                  backgroundColor: 'white',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  ;(e.currentTarget as HTMLFieldSetElement).style.boxShadow =
-                    'var(--shadow-lg)'
-                  ;(e.currentTarget as HTMLFieldSetElement).style.borderColor =
-                    'var(--color-primary)'
-                }}
-                onMouseLeave={(e) => {
-                  ;(e.currentTarget as HTMLFieldSetElement).style.boxShadow =
-                    'none'
-                  ;(e.currentTarget as HTMLFieldSetElement).style.borderColor =
-                    'var(--color-neutral-300)'
+                  padding: '20px 0',
+                  borderBottom:
+                    index < questions.length - 1
+                      ? '1px solid var(--color-neutral-200)'
+                      : 'none',
                 }}
               >
-                <legend
+                {/* Question label */}
+                <div
                   style={{
-                    fontSize: 'var(--font-size-lg)',
-                    fontWeight: '700',
-                    marginBottom: 'var(--space-lg)',
-                    color: 'var(--color-neutral-900)',
                     display: 'flex',
                     alignItems: 'baseline',
-                    gap: 'var(--space-md)',
-                    lineHeight: 'var(--line-height-relaxed)',
+                    gap: '8px',
+                    marginBottom: '14px',
                   }}
                 >
                   <span
                     style={{
-                      color: 'var(--color-primary)',
-                      fontWeight: '800',
-                      minWidth: '40px',
-                      fontSize: 'var(--font-size-lg)',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      color: isAnswered
+                        ? 'var(--color-primary)'
+                        : 'var(--color-neutral-400)',
+                      minWidth: '20px',
                     }}
                   >
                     {index + 1}.
                   </span>
-                  {q.label}
-                  {q.required && (
-                    <span
-                      style={{ color: 'var(--color-error)', fontWeight: '800' }}
-                    >
-                      *
-                    </span>
-                  )}
-                </legend>
+                  <span
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      color: 'var(--color-neutral-900)',
+                      lineHeight: '1.4',
+                    }}
+                  >
+                    {q.label}
+                    {q.required && (
+                      <span style={{ color: 'var(--color-error)', marginLeft: '3px' }}>
+                        *
+                      </span>
+                    )}
+                  </span>
+                </div>
 
+                {/* Scale 1-5 */}
                 {q.type === 'scale_1_5' && (
                   <div
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns:
-                        'repeat(auto-fit, minmax(100px, 1fr))',
-                      gap: 'var(--space-md)',
+                      display: 'flex',
+                      gap: '8px',
+                      paddingLeft: '28px',
                     }}
                   >
-                    {[
-                      { val: 1, emoji: '😞', label: 'Lav' },
-                      { val: 2, emoji: '😕', label: 'Delvis lav' },
-                      { val: 3, emoji: '😐', label: 'Middels' },
-                      { val: 4, emoji: '🙂', label: 'Bra' },
-                      { val: 5, emoji: '😄', label: 'Høy' },
-                    ].map(({ val, emoji, label }) => (
-                      <label
-                        key={val}
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: 'var(--space-lg)',
-                          borderRadius: 'var(--border-radius-lg)',
-                          border:
-                            selectedAnswers[q.id] === val
-                              ? '3px solid var(--color-primary)'
+                    {SCALE_OPTIONS.map(({ val, emoji, label }) => {
+                      const selected = selectedAnswers[q.id] === val
+                      return (
+                        <label
+                          key={val}
+                          title={label || String(val)}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '10px 4px',
+                            borderRadius: '10px',
+                            border: selected
+                              ? '2px solid var(--color-primary)'
                               : '2px solid var(--color-neutral-200)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          backgroundColor:
-                            selectedAnswers[q.id] === val
-                              ? 'var(--color-primary-light)'
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            backgroundColor: selected
+                              ? 'var(--color-primary-light, #e8f5f0)'
                               : 'white',
-                          boxShadow:
-                            selectedAnswers[q.id] === val
-                              ? 'var(--shadow-lg)'
-                              : 'none',
-                          gap: 'var(--space-sm)',
-                        }}
-                        onMouseEnter={(e) => {
-                          const el = e.currentTarget as HTMLLabelElement
-                          if (selectedAnswers[q.id] !== val) {
-                            el.style.borderColor = 'var(--color-primary)'
-                            el.style.backgroundColor = 'var(--color-neutral-50)'
-                            el.style.transform = 'scale(1.05)'
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          const el = e.currentTarget as HTMLLabelElement
-                          if (selectedAnswers[q.id] !== val) {
-                            el.style.borderColor = 'var(--color-neutral-200)'
-                            el.style.backgroundColor = 'white'
-                            el.style.transform = 'scale(1)'
-                          }
-                        }}
-                        onClick={() =>
-                          setSelectedAnswers((prev) => ({
-                            ...prev,
-                            [q.id]: val,
-                          }))
-                        }
-                      >
-                        <input
-                          name={`q_${q.id}`}
-                          value={val}
-                          type="radio"
-                          required={q.required}
-                          disabled={isPending}
-                          defaultChecked={draftAnswer?.value_num === val}
-                          style={{
-                            display: 'none',
                           }}
-                        />
-                        <span
-                          style={{
-                            fontSize: '48px',
-                            lineHeight: '1',
-                            display: 'block',
+                          onMouseEnter={(e) => {
+                            if (!selected) {
+                              e.currentTarget.style.borderColor =
+                                'var(--color-primary)'
+                              e.currentTarget.style.backgroundColor =
+                                'var(--color-neutral-50)'
+                            }
                           }}
+                          onMouseLeave={(e) => {
+                            if (!selected) {
+                              e.currentTarget.style.borderColor =
+                                'var(--color-neutral-200)'
+                              e.currentTarget.style.backgroundColor = 'white'
+                            }
+                          }}
+                          onClick={() =>
+                            setSelectedAnswers((prev) => ({
+                              ...prev,
+                              [q.id]: val,
+                            }))
+                          }
                         >
-                          {emoji}
-                        </span>
-                        <span
-                          style={{
-                            fontWeight: '700',
-                            fontSize: 'var(--font-size-sm)',
-                            color:
-                              selectedAnswers[q.id] === val
+                          <input
+                            name={`q_${q.id}`}
+                            value={val}
+                            type="radio"
+                            required={q.required}
+                            disabled={isPending}
+                            defaultChecked={draftAnswer?.value_num === val}
+                            style={{ display: 'none' }}
+                          />
+                          <span style={{ fontSize: '24px', lineHeight: '1' }}>
+                            {emoji}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              color: selected
                                 ? 'var(--color-primary)'
-                                : 'var(--color-neutral-700)',
-                          }}
-                        >
-                          {label}
-                        </span>
-                      </label>
-                    ))}
+                                : 'var(--color-neutral-500)',
+                            }}
+                          >
+                            {val}
+                          </span>
+                        </label>
+                      )
+                    })}
                   </div>
                 )}
 
+                {/* Yes/No */}
                 {q.type === 'yes_no' && (
-                  <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '8px',
+                      paddingLeft: '28px',
+                    }}
+                  >
                     {[
                       { val: 'ja', label: 'Ja' },
                       { val: 'nei', label: 'Nei' },
@@ -530,46 +363,21 @@ export function SurveyForm({
                         <label
                           key={opt.val}
                           style={{
-                            flex: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: 'var(--space-md)',
-                            borderRadius: 'var(--border-radius-md)',
-                            border: '2px solid var(--color-neutral-200)',
+                            padding: '8px 24px',
+                            borderRadius: '8px',
+                            border: isSelected
+                              ? '2px solid var(--color-primary)'
+                              : '2px solid var(--color-neutral-200)',
                             cursor: 'pointer',
-                            transition: 'all 0.2s ease',
                             backgroundColor: isSelected
-                              ? 'var(--color-primary-light)'
+                              ? 'var(--color-primary-light, #e8f5f0)'
                               : 'white',
-                            borderColor: isSelected
-                              ? 'var(--color-primary)'
-                              : 'var(--color-neutral-200)',
                             color: isSelected
                               ? 'var(--color-primary)'
-                              : 'var(--color-neutral-900)',
+                              : 'var(--color-neutral-700)',
                             fontWeight: isSelected ? '600' : '500',
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isSelected) {
-                              ;(
-                                e.currentTarget as HTMLLabelElement
-                              ).style.borderColor = 'var(--color-primary)'
-                              ;(
-                                e.currentTarget as HTMLLabelElement
-                              ).style.backgroundColor =
-                                'var(--color-neutral-50)'
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isSelected) {
-                              ;(
-                                e.currentTarget as HTMLLabelElement
-                              ).style.borderColor = 'var(--color-neutral-200)'
-                              ;(
-                                e.currentTarget as HTMLLabelElement
-                              ).style.backgroundColor = 'white'
-                            }
+                            fontSize: '14px',
+                            transition: 'all 0.15s ease',
                           }}
                           onClick={() =>
                             setSelectedAnswers((prev) => ({
@@ -589,9 +397,7 @@ export function SurveyForm({
                                 ? draftAnswer?.value_bool === true
                                 : draftAnswer?.value_bool === false
                             }
-                            style={{
-                              display: 'none',
-                            }}
+                            style={{ display: 'none' }}
                           />
                           {opt.label}
                         </label>
@@ -600,77 +406,83 @@ export function SurveyForm({
                   </div>
                 )}
 
+                {/* Text */}
                 {q.type === 'text' && (
                   <textarea
                     name={`q_${q.id}`}
                     defaultValue={draftAnswer?.value_text || ''}
                     style={{
                       width: '100%',
-                      padding: 'var(--space-md)',
-                      minHeight: '100px',
+                      padding: '10px 12px',
+                      minHeight: '80px',
                       resize: 'vertical',
+                      border: '1px solid var(--color-neutral-300)',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      marginLeft: '28px',
+                      boxSizing: 'border-box',
                     }}
                     disabled={isPending}
                   />
                 )}
-              </fieldset>
+              </div>
             )
           })}
-        </fieldset>
+        </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={isPending}
+        {/* Progress + Submit */}
+        <div
           style={{
-            padding: 'var(--space-md) var(--space-xl)',
-            backgroundColor: isPending
-              ? 'var(--color-neutral-300)'
-              : 'var(--color-primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: 'var(--border-radius-md)',
-            fontSize: 'var(--font-size-base)',
-            fontWeight: '700',
-            cursor: isPending ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s ease',
-            alignSelf: 'flex-start',
-            marginTop: 'var(--space-lg)',
+            marginTop: '28px',
             display: 'flex',
             alignItems: 'center',
-            gap: 'var(--space-sm)',
-          }}
-          onMouseEnter={(e) => {
-            if (!isPending) {
-              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                'var(--color-primary-dark)'
-              ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
-                'var(--shadow-lg)'
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isPending) {
-              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                'var(--color-primary)'
-              ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'
-            }
+            gap: '16px',
+            flexWrap: 'wrap',
           }}
         >
-          {isPending ? (
-            <>
-              <Loader size={16} className="animate-spin" />
-              Sender inn...
-            </>
-          ) : (
-            <>
-              <Send size={16} />
-              Send inn
-            </>
-          )}
-        </button>
+          <button
+            type="submit"
+            disabled={isPending}
+            style={{
+              padding: '12px 28px',
+              backgroundColor: isPending
+                ? 'var(--color-neutral-300)'
+                : 'var(--color-primary)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '15px',
+              fontWeight: '700',
+              cursor: isPending ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            {isPending ? (
+              <>
+                <Loader size={15} className="animate-spin" />
+                Sender inn...
+              </>
+            ) : (
+              <>
+                <Send size={15} />
+                Send inn
+              </>
+            )}
+          </button>
+          <span
+            style={{
+              fontSize: '13px',
+              color: 'var(--color-neutral-500)',
+            }}
+          >
+            {answeredCount} av {questions.length} besvart
+          </span>
+        </div>
       </form>
 
-      {/* Mobile Sticky Bar */}
+      {/* Mobile sticky bar */}
       <div
         style={{
           position: 'fixed',
@@ -679,11 +491,11 @@ export function SurveyForm({
           right: 0,
           backgroundColor: 'white',
           borderTop: '1px solid var(--color-neutral-200)',
-          boxShadow: 'var(--shadow-lg)',
-          padding: 'var(--space-md)',
-          paddingBottom: 'max(var(--space-md), env(safe-area-inset-bottom))',
+          padding: '12px 16px',
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
           display: 'none',
-          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '12px',
         }}
         className="mobile-sticky-bar"
       >
@@ -692,36 +504,39 @@ export function SurveyForm({
           form="survey-form"
           disabled={isPending}
           style={{
-            width: '100%',
-            maxWidth: '400px',
-            padding: 'var(--space-md) var(--space-xl)',
+            flex: 1,
+            maxWidth: '320px',
+            padding: '12px',
             backgroundColor: isPending
               ? 'var(--color-neutral-300)'
               : 'var(--color-primary)',
             color: 'white',
             border: 'none',
-            borderRadius: 'var(--border-radius-md)',
-            fontSize: 'var(--font-size-base)',
+            borderRadius: '8px',
+            fontSize: '15px',
             fontWeight: '700',
             cursor: isPending ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 'var(--space-sm)',
+            gap: '8px',
           }}
         >
           {isPending ? (
             <>
-              <Loader size={16} className="animate-spin" />
+              <Loader size={15} className="animate-spin" />
               Sender inn...
             </>
           ) : (
             <>
-              <Send size={16} />
+              <Send size={15} />
               Send inn
             </>
           )}
         </button>
+        <span style={{ fontSize: '12px', color: 'var(--color-neutral-500)' }}>
+          {answeredCount}/{questions.length}
+        </span>
         <style jsx>{`
           @media (max-width: 768px) {
             .mobile-sticky-bar {
