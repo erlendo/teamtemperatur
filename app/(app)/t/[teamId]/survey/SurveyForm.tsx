@@ -37,12 +37,14 @@ export function SurveyForm({
   questionnaireId,
   questions,
   currentWeek,
+  maxWeek,
   initialDraft,
 }: {
   teamId: string
   questionnaireId: string
   questions: Question[]
   currentWeek: number
+  maxWeek: number
   initialDraft?: DraftData | null
 }) {
   const router = useRouter()
@@ -201,6 +203,39 @@ export function SurveyForm({
             {clientError}
           </div>
         )}
+
+        {/* Week selector */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '20px',
+            fontSize: '13px',
+            color: 'var(--color-neutral-600)',
+          }}
+        >
+          {currentWeek > maxWeek - 4 && currentWeek > 1 && (
+            <a
+              href={`/t/${teamId}/survey?week=${currentWeek - 1}`}
+              style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+            >
+              ← Forrige uke
+            </a>
+          )}
+          <span>
+            Uke {currentWeek}
+            {currentWeek === maxWeek ? ' (denne uken)' : ''}
+          </span>
+          {currentWeek < maxWeek && (
+            <a
+              href={`/t/${teamId}/survey?week=${currentWeek + 1}`}
+              style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+            >
+              Neste uke →
+            </a>
+          )}
+        </div>
 
         {/* Questions */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>

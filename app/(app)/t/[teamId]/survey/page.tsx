@@ -108,9 +108,15 @@ export default async function SurveyPage({
 
   const { questionnaire, questions, error } =
     await loadActiveQuestionnaire(teamId)
-  const week = currentWeekNumberSimple()
-
+  const currentWeek = currentWeekNumberSimple()
   const sp = await searchParams
+  const requestedWeek = sp?.week ? parseInt(sp.week, 10) : null
+  // Allow submitting up to 4 weeks back, but not future weeks
+  const week =
+    requestedWeek && requestedWeek >= currentWeek - 4 && requestedWeek <= currentWeek
+      ? requestedWeek
+      : currentWeek
+
   const errorMsg = sp?.error
   const submittedWeek = sp?.submitted ? sp.week : undefined
 
@@ -196,6 +202,7 @@ export default async function SurveyPage({
             questionnaireId={questionnaire.id}
             questions={questions}
             currentWeek={week}
+            maxWeek={currentWeek}
             initialDraft={draft}
           />
         </div>
