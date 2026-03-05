@@ -1,4 +1,4 @@
-import { SparklesIcon } from '@heroicons/react/24/outline';
+import { Sparkles } from 'lucide-react';
 
 interface AISummaryProps {
   summary: string;
@@ -13,7 +13,7 @@ export function AISummary({ summary }: AISummaryProps) {
     <div className="mb-6 rounded-lg border border-purple-200 bg-purple-50 p-4">
       <div className="flex items-start">
         <div className="flex-shrink-0">
-          <SparklesIcon className="h-5 w-5 text-purple-600" aria-hidden="true" />
+          <Sparkles className="h-5 w-5 text-purple-600" aria-hidden="true" />
         </div>
         <div className="ml-3 flex-1">
           <h3 className="text-sm font-medium text-purple-800">
