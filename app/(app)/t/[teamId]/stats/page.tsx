@@ -110,13 +110,25 @@ export default async function Page({ params, searchParams }: PageProps) {
         teamName={team.name}
         isTeamAdmin={isTeamAdmin}
       />
-      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8 overflow-x-hidden">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold leading-tight tracking-tight text-gray-900">
-            Statistikk for {team.name}
+      <main style={{ flex: 1, backgroundColor: 'var(--color-neutral-50)' }}>
+        <div
+          style={{
+            maxWidth: '1400px',
+            margin: '0 auto',
+            padding: 'var(--space-3xl) var(--space-xl)',
+          }}
+        >
+          <h1
+            style={{
+              margin: '0 0 var(--space-3xl) 0',
+              fontSize: 'var(--font-size-4xl)',
+              fontWeight: '900',
+              color: 'var(--color-neutral-900)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Statistikk – År {year}
           </h1>
-          <p className="mt-1 text-sm text-gray-500">År: {year}</p>
-        </div>
 
         <AISummary summary={weeklySummary} />
 
@@ -125,7 +137,8 @@ export default async function Page({ params, searchParams }: PageProps) {
           teamId={team.id}
           selectedWeekNumber={selectedWeek?.week}
         />
-      </div>
+        </div>
+      </main>
     </>
   )
 }
