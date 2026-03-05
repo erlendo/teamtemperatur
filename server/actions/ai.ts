@@ -34,11 +34,14 @@ export async function getOrGenerateWeeklySummary(
   data: WeeklySummaryData
 ): Promise<string> {
   const supabase = supabaseServer()
+  const model = 'gpt-4o-mini'
+  const promptVersion = 'bayesian-primary-v1'
+  const modelUsed = `${model}:${promptVersion}`
 
   // 1. Sjekk for eksisterende sammendrag
   const { data: existingSummary, error: selectError } = await supabase
     .from('ai_weekly_summaries')
-    .select('summary')
+    .select('summary, model_used')
     .eq('team_id', teamId)
     .eq('year', year)
     .eq('week_number', weekNumber)
@@ -50,8 +53,23 @@ export async function getOrGenerateWeeklySummary(
     return '' // Returnerer tomt hvis det er en feil
   }
 
-  if (existingSummary?.summary?.trim()) {
+  if (
+    existingSummary?.summary?.trim() &&
+    existingSummary.model_used === modelUsed
+  ) {
     return existingSummary.summary
+  }
+
+  if (
+    existingSummary?.summary?.trim() &&
+    existingSummary.model_used !== modelUsed
+  ) {
+    console.log(
+      '[AI Summary] Regenerating summary due to model/prompt version change:',
+      existingSummary.model_used,
+      '->',
+      modelUsed
+    )
   }
 
   // 2. Hvis ingen oppsummering finnes, generer en ny
@@ -75,7 +93,6 @@ export async function getOrGenerateWeeklySummary(
     'week:',
     weekNumber
   )
-  const model = 'gpt-4o-mini'
   const newSummary = await generateSummary(data, model)
   console.log('[AI Summary] Generated summary length:', newSummary?.length || 0)
 
@@ -87,13 +104,18 @@ export async function getOrGenerateWeeklySummary(
   console.log('[AI Summary] Attempting to save summary to database...')
   const { error: insertError } = await supabase
     .from('ai_weekly_summaries')
-    .insert({
-      team_id: teamId,
-      year,
-      week_number: weekNumber,
-      summary: newSummary,
-      model_used: model,
-    })
+    .upsert(
+      {
+        team_id: teamId,
+        year,
+        week_number: weekNumber,
+        summary: newSummary,
+        model_used: modelUsed,
+      },
+      {
+        onConflict: 'team_id,year,week_number',
+      }
+    )
 
   if (insertError) {
     console.error('[AI Summary] Error saving new summary:', insertError)
@@ -124,13 +146,15 @@ async function generateSummary(
 Her er ukens 'Team Temperature'-resultater for et team.
 Tallene går fra 1 (veldig lavt) til 5 (veldig høyt).
 
-- Total helse (råscore): ${data.overallAvg.toFixed(2)}
-- Bayesiansk justert: ${data.bayesianAdjusted.toFixed(2)}
+- Teamhelse (hovedtall, bayesiansk justert): ${data.bayesianAdjusted.toFixed(2)}
+- Råscore (sekundært tall): ${data.overallAvg.toFixed(2)}
 - Svarprosent: ${data.responseRate.toFixed(0)}% (${data.responseCount} av ${data.memberCount})
 - Toppområde: ${data.topQuestionLabel ?? 'Ukjent'} (${data.topQuestionScore?.toFixed(2) ?? '–'})
 - Forbedringsområde: ${data.bottomQuestionLabel ?? 'Ukjent'} (${data.bottomQuestionScore?.toFixed(2) ?? '–'})
 
 Skriv en kort, innsiktsfull og litt morsom oppsummering på norsk (maks 3 setninger) for en teamleder.
+Bruk teamhelse (bayesiansk justert) som primært tall når du omtaler generell helse.
+Nevn råscore kun hvis det gir nyttig kontekst.
 Bruk gjerne norske uttrykk, metaforer eller lett humor, men hold det profesjonelt.
 Fokuser på de mest interessante punktene eller trendene i dataene.`
 
