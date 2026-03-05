@@ -150,7 +150,7 @@ async function generateSummary(
     : `📊 **${nonRespondentCount} teammedlem${nonRespondentCount === 1 ? '' : 'er'} har ikke svart.**
 Vurder å kommentere på dette med litt syrlig humor - f.eks. frykter de sannheten, eller er de bare opptatt med viktigere ting? Hold det lett og morsomt!`
 
-  const prompt = `Du er en hjelpsom og litt humoristisk assistent for teamledere.
+  const prompt = `Du er en hjelpsom og litt humoristisk assistent som oppsummerer teamdata.
 Her er ukens 'Team Temperature'-resultater for et team.
 Tallene går fra 1 (veldig lavt) til 5 (veldig høyt).
 
@@ -160,7 +160,7 @@ Tallene går fra 1 (veldig lavt) til 5 (veldig høyt).
 - Toppområde: ${data.topQuestionLabel ?? 'Ukjent'} (${data.topQuestionScore?.toFixed(2) ?? '–'})
 - Forbedringsområde: ${data.bottomQuestionLabel ?? 'Ukjent'} (${data.bottomQuestionScore?.toFixed(2) ?? '–'})
 
-Skriv en kort, innsiktsfull og litt morsom oppsummering på norsk (maks 3 setninger) for en teamleder.
+Skriv en kort, innsiktsfull og litt morsom oppsummering på norsk (maks 3 setninger).
 Bruk teamhelse (bayesiansk justert) som primært tall når du omtaler generell helse.
 Nevn råscore kun hvis det gir nyttig kontekst.
 Bruk gjerne norske uttrykk, metaforer eller lett humor, men hold det profesjonelt.
