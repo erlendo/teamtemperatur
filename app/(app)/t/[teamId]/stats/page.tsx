@@ -45,29 +45,31 @@ export default async function Page({ params, searchParams }: PageProps) {
   if (teamYearStats.length > 0) {
     const latestWeek = teamYearStats[teamYearStats.length - 1] // Siste uken i arrayet
 
-    // Extract question stats for summary
-    const motivationStat = latestWeek.question_stats?.find(
-      (q) => q.question_label === 'Motivasjon'
-    )
-    const workloadStat = latestWeek.question_stats?.find(
-      (q) => q.question_label === 'Arbeidsmengde'
-    )
-    const wellbeingStat = latestWeek.question_stats?.find(
-      (q) => q.question_label === 'Trivsel'
-    )
+    if (latestWeek) {
+      // Extract question stats for summary
+      const motivationStat = latestWeek.question_stats?.find(
+        (q) => q.question_label === 'Motivasjon'
+      )
+      const workloadStat = latestWeek.question_stats?.find(
+        (q) => q.question_label === 'Arbeidsmengde'
+      )
+      const wellbeingStat = latestWeek.question_stats?.find(
+        (q) => q.question_label === 'Trivsel'
+      )
 
-    const summaryData = {
-      motivation: motivationStat?.avg_score ?? 0,
-      workload: workloadStat?.avg_score ?? 0,
-      wellbeing: wellbeingStat?.avg_score ?? 0,
+      const summaryData = {
+        motivation: motivationStat?.avg_score ?? 0,
+        workload: workloadStat?.avg_score ?? 0,
+        wellbeing: wellbeingStat?.avg_score ?? 0,
+      }
+
+      weeklySummary = await getOrGenerateWeeklySummary(
+        team.id,
+        year,
+        latestWeek.week,
+        summaryData
+      )
     }
-
-    weeklySummary = await getOrGenerateWeeklySummary(
-      team.id,
-      year,
-      latestWeek.week,
-      summaryData
-    )
   }
 
   return (
