@@ -77,21 +77,22 @@ export default async function Page({ params, searchParams }: PageProps) {
 
   let weeklySummary = ''
   if (selectedWeek) {
-    // Extract question stats for summary
-    const motivationStat = selectedWeek.question_stats?.find(
-      (q) => q.question_label === 'Motivasjon'
+    const sortedQuestions = [...(selectedWeek.question_stats ?? [])].sort(
+      (a, b) => a.avg_score - b.avg_score
     )
-    const workloadStat = selectedWeek.question_stats?.find(
-      (q) => q.question_label === 'Arbeidsmengde'
-    )
-    const wellbeingStat = selectedWeek.question_stats?.find(
-      (q) => q.question_label === 'Trivsel'
-    )
+    const bottomQuestion = sortedQuestions[0]
+    const topQuestion = sortedQuestions[sortedQuestions.length - 1]
 
     const summaryData = {
-      motivation: motivationStat?.avg_score ?? 0,
-      workload: workloadStat?.avg_score ?? 0,
-      wellbeing: wellbeingStat?.avg_score ?? 0,
+      overallAvg: selectedWeek.overall_avg ?? 0,
+      bayesianAdjusted: selectedWeek.bayesian_adjusted ?? 0,
+      responseRate: selectedWeek.response_rate ?? 0,
+      responseCount: selectedWeek.response_count ?? 0,
+      memberCount: selectedWeek.member_count ?? 0,
+      topQuestionLabel: topQuestion?.question_label,
+      topQuestionScore: topQuestion?.avg_score,
+      bottomQuestionLabel: bottomQuestion?.question_label,
+      bottomQuestionScore: bottomQuestion?.avg_score,
     }
 
     weeklySummary = await getOrGenerateWeeklySummary(

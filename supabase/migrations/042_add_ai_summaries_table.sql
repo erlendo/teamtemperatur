@@ -15,4 +15,4 @@ alter table public.ai_weekly_summaries enable row level security;
 -- Policies
 create policy "Allow members to read summaries"
 on public.ai_weekly_summaries for select
-using ( is_team_member(auth.uid(), team_id) );
+using ( public.is_team_member(team_id) );
