@@ -142,6 +142,14 @@ async function generateSummary(
 
   console.log('[AI Summary] Calling OpenAI with model:', model)
 
+  const allResponded = data.responseCount === data.memberCount
+  const nonRespondentCount = data.memberCount - data.responseCount
+
+  const participationInstruction = allResponded
+    ? `🎉 **Alle teammedlemmer har svart!** Gi gjerne formiddabel skryt for høy deltakelse og engasjement rundt temperaturmålingen.`
+    : `📊 **${nonRespondentCount} teammedlem${nonRespondentCount === 1 ? '' : 'er'} har ikke svart.**
+Vurder å kommentere på dette med litt syrlig humor - f.eks. frykter de sannheten, eller er de bare opptatt med viktigere ting? Hold det lett og morsomt!`
+
   const prompt = `Du er en hjelpsom og litt humoristisk assistent for teamledere.
 Her er ukens 'Team Temperature'-resultater for et team.
 Tallene går fra 1 (veldig lavt) til 5 (veldig høyt).
@@ -156,7 +164,9 @@ Skriv en kort, innsiktsfull og litt morsom oppsummering på norsk (maks 3 setnin
 Bruk teamhelse (bayesiansk justert) som primært tall når du omtaler generell helse.
 Nevn råscore kun hvis det gir nyttig kontekst.
 Bruk gjerne norske uttrykk, metaforer eller lett humor, men hold det profesjonelt.
-Fokuser på de mest interessante punktene eller trendene i dataene.`
+Fokuser på de mest interessante punktene eller trendene i dataene.
+
+${participationInstruction}`
 
   try {
     const { text } = await generateText({
