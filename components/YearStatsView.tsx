@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Area,
   AreaChart,
@@ -33,7 +34,15 @@ type WeekData = {
   question_stats: QuestionStat[]
 }
 
-export function YearStatsView({ data }: { data: WeekData[] }) {
+type YearStatsViewProps = {
+  data: WeekData[]
+  teamId: string
+  selectedWeekNumber?: number
+}
+
+export function YearStatsView({ data, teamId: _teamId, selectedWeekNumber }: YearStatsViewProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null)
 
   const weeksWithResponses = data.filter(
@@ -46,14 +55,41 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
 
   const selectableWeeks =
     weeksWithResponses.length > 0 ? weeksWithResponses : data
-  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(
-    Math.max(selectableWeeks.length - 1, 0)
-  )
+  
+  // Initialize selectedWeekIndex based on selectedWeekNumber prop
+  const getInitialWeekIndex = () => {
+    if (selectedWeekNumber) {
+      const index = selectableWeeks.findIndex((w) => w.week === selectedWeekNumber)
+      if (index !== -1) return index
+    }
+    return Math.max(selectableWeeks.length - 1, 0)
+  }
+
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(getInitialWeekIndex())
+
+  // Update selectedWeekIndex when selectedWeekNumber changes
+  useEffect(() => {
+    if (selectedWeekNumber) {
+      const index = selectableWeeks.findIndex((w) => w.week === selectedWeekNumber)
+      if (index !== -1 && index !== selectedWeekIndex) {
+        setSelectedWeekIndex(index)
+      }
+    }
+  }, [selectedWeekNumber, selectableWeeks, selectedWeekIndex])
 
   const selectedWeek =
     selectableWeeks.length > 0 ? selectableWeeks[selectedWeekIndex] : null
   const previousWeek =
     selectedWeekIndex > 0 ? selectableWeeks[selectedWeekIndex - 1] : null
+
+  const handleWeekSelect = (week: WeekData, index: number) => {
+    setSelectedWeekIndex(index)
+    
+    // Update URL with week parameter
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('week', week.week.toString())
+    router.push(`?${params.toString()}`, { scroll: false })
+  }
 
   const delta =
     selectedWeek && previousWeek
@@ -107,7 +143,7 @@ export function YearStatsView({ data }: { data: WeekData[] }) {
           {selectableWeeks.map((week, idx) => (
             <button
               key={week.week}
-              onClick={() => setSelectedWeekIndex(idx)}
+              onClick={() => handleWeekSelect(week, idx)}
               style={{
                 padding: '0.5rem 1rem',
                 backgroundColor:

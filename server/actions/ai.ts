@@ -1,7 +1,8 @@
 'use server'
 
 import { supabaseServer } from '@/lib/supabase/server'
-import OpenAI from 'openai'
+import { generateText } from 'ai'
+import { openai } from '@ai-sdk/openai'
 
 interface WeeklySummaryData {
   motivation: number
@@ -91,33 +92,27 @@ async function generateSummary(
     return 'OpenAI API-nøkkel er ikke konfigurert.'
   }
 
-  const openai = new OpenAI()
+  const prompt = `Du er en hjelpsom assistent for teamledere.
+Her er ukens 'Team Temperature'-resultater for et team.
+Tallene går fra 1 (veldig lavt) til 5 (veldig høyt).
 
-  const prompt = `
-    Du er en hjelpsom assistent for teamledere.
-    Her er ukens 'Team Temperature'-resultater for et team.
-    Tallene går fra 1 (veldig lavt) til 5 (veldig høyt).
+- Motivasjon: ${data.motivation.toFixed(1)}
+- Arbeidsmengde: ${data.workload.toFixed(1)}
+- Trivsel: ${data.wellbeing.toFixed(1)}
 
-    - Motivasjon: ${data.motivation.toFixed(1)}
-    - Arbeidsmengde: ${data.workload.toFixed(1)}
-    - Trivsel: ${data.wellbeing.toFixed(1)}
-
-    Skriv en kort, nøytral og innsiktsfull oppsummering på norsk (maks 3 setninger) for en teamleder.
-    Fokuser på de mest interessante punktene eller trendene i dataene.
-  `
+Skriv en kort, nøytral og innsiktsfull oppsummering på norsk (maks 3 setninger) for en teamleder.
+Fokuser på de mest interessante punktene eller trendene i dataene.`
 
   try {
-    const response = await openai.chat.completions.create({
-      model,
-      messages: [{ role: 'user', content: prompt }],
+    const { text } = await generateText({
+      model: openai(model),
+      prompt,
       temperature: 0.5,
-      max_tokens: 150,
     })
 
-    const summary = response.choices[0]?.message?.content
-    if (!summary) throw new Error('Fikk ikke generert en oppsummering.')
+    if (!text) throw new Error('Fikk ikke generert en oppsummering.')
 
-    return summary.trim()
+    return text.trim()
   } catch (error) {
     console.error('Error calling OpenAI API:', error)
     return 'Det skjedde en feil under generering av oppsummering.'

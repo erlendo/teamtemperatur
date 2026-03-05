@@ -9,7 +9,7 @@ export const revalidate = 0
 
 type PageProps = {
   params: { teamId: string }
-  searchParams: { year?: string }
+  searchParams: { year?: string; week?: string }
 }
 
 export default async function Page({ params, searchParams }: PageProps) {
@@ -40,36 +40,50 @@ export default async function Page({ params, searchParams }: PageProps) {
   )
   const teamYearStats = await getYearStats(team.id, currentWeek)
 
+  // Filter weeks with actual responses
+  const weeksWithResponses = teamYearStats.filter(
+    (w) => w.response_count > 0 && w.question_stats && w.question_stats.length > 0
+  )
+
+  // Determine which week to show summary for
+  let selectedWeek = null
+  const requestedWeek = searchParams.week ? parseInt(searchParams.week, 10) : null
+  
+  if (requestedWeek) {
+    // Use the requested week if it exists in the data
+    selectedWeek = weeksWithResponses.find((w) => w.week === requestedWeek)
+  }
+  
+  if (!selectedWeek && weeksWithResponses.length > 0) {
+    // Fall back to the most recent week with responses
+    selectedWeek = weeksWithResponses[weeksWithResponses.length - 1]
+  }
+
   let weeklySummary = ''
-  // Vi henter/genererer kun for den siste uken med data
-  if (teamYearStats.length > 0) {
-    const latestWeek = teamYearStats[teamYearStats.length - 1] // Siste uken i arrayet
+  if (selectedWeek) {
+    // Extract question stats for summary
+    const motivationStat = selectedWeek.question_stats?.find(
+      (q) => q.question_label === 'Motivasjon'
+    )
+    const workloadStat = selectedWeek.question_stats?.find(
+      (q) => q.question_label === 'Arbeidsmengde'
+    )
+    const wellbeingStat = selectedWeek.question_stats?.find(
+      (q) => q.question_label === 'Trivsel'
+    )
 
-    if (latestWeek) {
-      // Extract question stats for summary
-      const motivationStat = latestWeek.question_stats?.find(
-        (q) => q.question_label === 'Motivasjon'
-      )
-      const workloadStat = latestWeek.question_stats?.find(
-        (q) => q.question_label === 'Arbeidsmengde'
-      )
-      const wellbeingStat = latestWeek.question_stats?.find(
-        (q) => q.question_label === 'Trivsel'
-      )
-
-      const summaryData = {
-        motivation: motivationStat?.avg_score ?? 0,
-        workload: workloadStat?.avg_score ?? 0,
-        wellbeing: wellbeingStat?.avg_score ?? 0,
-      }
-
-      weeklySummary = await getOrGenerateWeeklySummary(
-        team.id,
-        year,
-        latestWeek.week,
-        summaryData
-      )
+    const summaryData = {
+      motivation: motivationStat?.avg_score ?? 0,
+      workload: workloadStat?.avg_score ?? 0,
+      wellbeing: wellbeingStat?.avg_score ?? 0,
     }
+
+    weeklySummary = await getOrGenerateWeeklySummary(
+      team.id,
+      year,
+      selectedWeek.week,
+      summaryData
+    )
   }
 
   return (
@@ -83,7 +97,11 @@ export default async function Page({ params, searchParams }: PageProps) {
 
       <AISummary summary={weeklySummary} />
 
-      <YearStatsView data={teamYearStats} />
+      <YearStatsView 
+        data={teamYearStats} 
+        teamId={team.id}
+        selectedWeekNumber={selectedWeek?.week}
+      />
     </div>
   )
 }
