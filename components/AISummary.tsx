@@ -1,12 +1,12 @@
-import { Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react'
 
 interface AISummaryProps {
-  summary: string;
+  summary: string
 }
 
 export function AISummary({ summary }: AISummaryProps) {
   if (!summary) {
-    return null;
+    return null
   }
 
   return (
@@ -15,15 +15,15 @@ export function AISummary({ summary }: AISummaryProps) {
         <div className="flex-shrink-0">
           <Sparkles className="h-5 w-5 text-purple-600" aria-hidden="true" />
         </div>
-        <div className="ml-3 flex-1">
+        <div className="ml-3 flex-1 min-w-0">
           <h3 className="text-sm font-medium text-purple-800">
             Ukentlig innsikt (AI-generert)
           </h3>
           <div className="mt-2 text-sm text-purple-700">
-            <p>{summary}</p>
+            <p className="break-words">{summary}</p>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

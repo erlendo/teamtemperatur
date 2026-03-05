@@ -57,11 +57,24 @@ export async function getOrGenerateWeeklySummary(
   // 2. Hvis ingen oppsummering finnes, generer en ny
   // Sjekk at vi har data å analysere for å unngå unødvendige API-kall
   if (data.responseCount === 0 || data.memberCount === 0) {
-    console.log('[AI Summary] Skipping generation - no data (responseCount:', data.responseCount, 'memberCount:', data.memberCount, ')')
+    console.log(
+      '[AI Summary] Skipping generation - no data (responseCount:',
+      data.responseCount,
+      'memberCount:',
+      data.memberCount,
+      ')'
+    )
     return '' // Ikke generer sammendrag for tomme data
   }
 
-  console.log('[AI Summary] Generating new summary for team:', teamId, 'year:', year, 'week:', weekNumber)
+  console.log(
+    '[AI Summary] Generating new summary for team:',
+    teamId,
+    'year:',
+    year,
+    'week:',
+    weekNumber
+  )
   const model = 'gpt-4o-mini'
   const newSummary = await generateSummary(data, model)
   console.log('[AI Summary] Generated summary length:', newSummary?.length || 0)
@@ -128,7 +141,10 @@ Fokuser på de mest interessante punktene eller trendene i dataene.`
       temperature: 0.7,
     })
 
-    console.log('[AI Summary] OpenAI response received, length:', text?.length || 0)
+    console.log(
+      '[AI Summary] OpenAI response received, length:',
+      text?.length || 0
+    )
 
     if (!text) throw new Error('Fikk ikke generert en oppsummering.')
 

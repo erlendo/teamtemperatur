@@ -110,7 +110,7 @@ export default async function Page({ params, searchParams }: PageProps) {
         teamName={team.name}
         isTeamAdmin={isTeamAdmin}
       />
-      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8 overflow-x-hidden">
         <div className="mb-8">
           <h1 className="text-2xl font-bold leading-tight tracking-tight text-gray-900">
             Statistikk for {team.name}
