@@ -3,8 +3,6 @@
 import { supabaseServer } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI()
-
 interface WeeklySummaryData {
   motivation: number
   workload: number
@@ -92,6 +90,8 @@ async function generateSummary(
   if (!process.env.OPENAI_API_KEY) {
     return 'OpenAI API-nøkkel er ikke konfigurert.'
   }
+
+  const openai = new OpenAI()
 
   const prompt = `
     Du er en hjelpsom assistent for teamledere.
