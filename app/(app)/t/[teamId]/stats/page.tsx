@@ -130,13 +130,13 @@ export default async function Page({ params, searchParams }: PageProps) {
             Statistikk – År {year}
           </h1>
 
-        <AISummary summary={weeklySummary} />
+          <AISummary summary={weeklySummary} />
 
-        <YearStatsView
-          data={teamYearStats}
-          teamId={team.id}
-          selectedWeekNumber={selectedWeek?.week}
-        />
+          <YearStatsView
+            data={teamYearStats}
+            teamId={team.id}
+            selectedWeekNumber={selectedWeek?.week}
+          />
         </div>
       </main>
     </>
