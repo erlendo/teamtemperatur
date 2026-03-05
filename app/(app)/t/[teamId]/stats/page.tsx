@@ -1,4 +1,5 @@
 import { AISummary } from '@/components/AISummary'
+import { AppHeader } from '@/components/AppHeader'
 import { YearStatsView } from '@/components/YearStatsView'
 import { supabaseServer } from '@/lib/supabase/server'
 import { getOrGenerateWeeklySummary } from '@/server/actions/ai'
@@ -31,6 +32,18 @@ export default async function Page({ params, searchParams }: PageProps) {
   if (!team) {
     return notFound()
   }
+
+  // Check user role for admin features
+  const { data: membership } = await supabase
+    .from('team_memberships')
+    .select('role')
+    .eq('team_id', params.teamId)
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  const isTeamAdmin =
+    membership?.role === 'owner' || membership?.role === 'admin'
 
   const year = searchParams.year
     ? parseInt(searchParams.year, 10)
@@ -90,21 +103,28 @@ export default async function Page({ params, searchParams }: PageProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold leading-tight tracking-tight text-gray-900">
-          Statistikk for {team.name}
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">År: {year}</p>
-      </div>
-
-      <AISummary summary={weeklySummary} />
-
-      <YearStatsView
-        data={teamYearStats}
+    <>
+      <AppHeader
         teamId={team.id}
-        selectedWeekNumber={selectedWeek?.week}
+        teamName={team.name}
+        isTeamAdmin={isTeamAdmin}
       />
-    </div>
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold leading-tight tracking-tight text-gray-900">
+            Statistikk for {team.name}
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">År: {year}</p>
+        </div>
+
+        <AISummary summary={weeklySummary} />
+
+        <YearStatsView
+          data={teamYearStats}
+          teamId={team.id}
+          selectedWeekNumber={selectedWeek?.week}
+        />
+      </div>
+    </>
   )
 }
