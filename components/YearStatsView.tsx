@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import {
   Area,
   AreaChart,
@@ -40,7 +40,11 @@ type YearStatsViewProps = {
   selectedWeekNumber?: number
 }
 
-export function YearStatsView({ data, teamId: _teamId, selectedWeekNumber }: YearStatsViewProps) {
+export function YearStatsView({
+  data,
+  teamId: _teamId,
+  selectedWeekNumber,
+}: YearStatsViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null)
@@ -55,22 +59,28 @@ export function YearStatsView({ data, teamId: _teamId, selectedWeekNumber }: Yea
 
   const selectableWeeks =
     weeksWithResponses.length > 0 ? weeksWithResponses : data
-  
+
   // Initialize selectedWeekIndex based on selectedWeekNumber prop
   const getInitialWeekIndex = () => {
     if (selectedWeekNumber) {
-      const index = selectableWeeks.findIndex((w) => w.week === selectedWeekNumber)
+      const index = selectableWeeks.findIndex(
+        (w) => w.week === selectedWeekNumber
+      )
       if (index !== -1) return index
     }
     return Math.max(selectableWeeks.length - 1, 0)
   }
 
-  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(getInitialWeekIndex())
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(
+    getInitialWeekIndex()
+  )
 
   // Update selectedWeekIndex when selectedWeekNumber changes
   useEffect(() => {
     if (selectedWeekNumber) {
-      const index = selectableWeeks.findIndex((w) => w.week === selectedWeekNumber)
+      const index = selectableWeeks.findIndex(
+        (w) => w.week === selectedWeekNumber
+      )
       if (index !== -1 && index !== selectedWeekIndex) {
         setSelectedWeekIndex(index)
       }
@@ -84,7 +94,7 @@ export function YearStatsView({ data, teamId: _teamId, selectedWeekNumber }: Yea
 
   const handleWeekSelect = (week: WeekData, index: number) => {
     setSelectedWeekIndex(index)
-    
+
     // Update URL with week parameter
     const params = new URLSearchParams(searchParams.toString())
     params.set('week', week.week.toString())

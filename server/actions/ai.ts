@@ -1,8 +1,8 @@
 'use server'
 
 import { supabaseServer } from '@/lib/supabase/server'
-import { generateText } from 'ai'
 import { openai } from '@ai-sdk/openai'
+import { generateText } from 'ai'
 
 interface WeeklySummaryData {
   motivation: number

@@ -42,18 +42,21 @@ export default async function Page({ params, searchParams }: PageProps) {
 
   // Filter weeks with actual responses
   const weeksWithResponses = teamYearStats.filter(
-    (w) => w.response_count > 0 && w.question_stats && w.question_stats.length > 0
+    (w) =>
+      w.response_count > 0 && w.question_stats && w.question_stats.length > 0
   )
 
   // Determine which week to show summary for
   let selectedWeek = null
-  const requestedWeek = searchParams.week ? parseInt(searchParams.week, 10) : null
-  
+  const requestedWeek = searchParams.week
+    ? parseInt(searchParams.week, 10)
+    : null
+
   if (requestedWeek) {
     // Use the requested week if it exists in the data
     selectedWeek = weeksWithResponses.find((w) => w.week === requestedWeek)
   }
-  
+
   if (!selectedWeek && weeksWithResponses.length > 0) {
     // Fall back to the most recent week with responses
     selectedWeek = weeksWithResponses[weeksWithResponses.length - 1]
@@ -97,8 +100,8 @@ export default async function Page({ params, searchParams }: PageProps) {
 
       <AISummary summary={weeklySummary} />
 
-      <YearStatsView 
-        data={teamYearStats} 
+      <YearStatsView
+        data={teamYearStats}
         teamId={team.id}
         selectedWeekNumber={selectedWeek?.week}
       />
