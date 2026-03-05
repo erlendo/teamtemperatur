@@ -206,4 +206,29 @@ Copilot should act as a high-agency engineer optimizing for sustainable forward 
 
 ---
 
+# 12. Agent Orchestration Defaults
+
+To maximize automation and consistency, Copilot should default to this multi-agent workflow on non-trivial tasks:
+
+1. `planner` first for dependency-ordered plan
+2. `architecture-guard` for code placement and separation checks
+3. `db-security` whenever migrations, policies, auth, or scoped data are involved
+4. `review` for risk-focused findings before completion
+5. `quality-gate` as final CI-readiness verification
+
+Rules:
+
+- Prefer orchestrated flow over single-agent reasoning for feature work, refactors, and schema changes.
+- Use direct single-agent execution only for small, low-risk edits.
+- Always report findings first for review-style requests.
+- Treat CI guardrails as mandatory merge gates.
+
+Automation expectations in this repo:
+
+- PR and push checks run via `.github/workflows/orchestration.yml`.
+- Local push is guarded by `.husky/pre-push` calling `npm run check:prepush`.
+- DB migration changes trigger migration/security checks automatically.
+
+---
+
 End of policy.

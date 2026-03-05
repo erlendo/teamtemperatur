@@ -10,6 +10,10 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check:migrations": "node scripts/check-migrations.mjs",
+    "check:prepush": "node scripts/check-prepush.mjs",
+    "ci:verify": "npm run lint && npm run type-check && npm run check:architecture && npm run build",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "prepare": "husky"
   },

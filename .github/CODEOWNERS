@@ -1,0 +1,11 @@
+# Default owner
+
+- @erlendo
+
+# High-risk backend and DB areas
+
+/server/actions/** @erlendo
+/server/queries/** @erlendo
+/lib/supabase/** @erlendo
+/supabase/migrations/** @erlendo
+/.github/workflows/\*\* @erlendo

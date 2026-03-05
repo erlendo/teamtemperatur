@@ -1,0 +1,66 @@
+name: Orchestration Gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: orchestration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect_changes:
+    runs-on: ubuntu-latest
+    outputs:
+      migrations_changed: ${{ steps.changed.outputs.any_changed }}
+      migration_files: ${{ steps.changed.outputs.all_changed_files }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: changed
+        uses: tj-actions/changed-files@v46
+        with:
+          files: |
+            supabase/migrations/*.sql
+
+  quality:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm run build
+
+  architecture:
+    name: Architecture Guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run check:architecture
+
+  db_security:
+    name: DB Security Guard
+    runs-on: ubuntu-latest
+    needs: detect_changes
+    if: needs.detect_changes.outputs.migrations_changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Validate migration files
+        run: npm run check:migrations -- ${{ needs.detect_changes.outputs.migration_files }}
