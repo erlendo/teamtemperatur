@@ -92,7 +92,7 @@ async function generateSummary(
     return 'OpenAI API-nøkkel er ikke konfigurert.'
   }
 
-  const prompt = `Du er en hjelpsom assistent for teamledere.
+  const prompt = `Du er en hjelpsom og litt humoristisk assistent for teamledere.
 Her er ukens 'Team Temperature'-resultater for et team.
 Tallene går fra 1 (veldig lavt) til 5 (veldig høyt).
 
@@ -100,14 +100,15 @@ Tallene går fra 1 (veldig lavt) til 5 (veldig høyt).
 - Arbeidsmengde: ${data.workload.toFixed(1)}
 - Trivsel: ${data.wellbeing.toFixed(1)}
 
-Skriv en kort, nøytral og innsiktsfull oppsummering på norsk (maks 3 setninger) for en teamleder.
+Skriv en kort, innsiktsfull og litt morsom oppsummering på norsk (maks 3 setninger) for en teamleder.
+Bruk gjerne norske uttrykk, metaforer eller lett humor, men hold det profesjonelt.
 Fokuser på de mest interessante punktene eller trendene i dataene.`
 
   try {
     const { text } = await generateText({
       model: openai(model),
       prompt,
-      temperature: 0.5,
+      temperature: 0.7,
     })
 
     if (!text) throw new Error('Fikk ikke generert en oppsummering.')
