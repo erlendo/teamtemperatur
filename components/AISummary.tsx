@@ -1,8 +1,8 @@
 'use client'
 
+import { regenerateWeeklySummary } from '@/server/actions/ai'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
-import { regenerateWeeklySummary } from '@/server/actions/ai'
 
 interface AISummaryProps {
   summary: string
@@ -71,10 +71,7 @@ export function AISummary({
       <div className="flex items-start justify-between">
         <div className="flex items-start flex-1">
           <div className="flex-shrink-0">
-            <Sparkles
-              className="h-5 w-5 text-purple-600"
-              aria-hidden="true"
-            />
+            <Sparkles className="h-5 w-5 text-purple-600" aria-hidden="true" />
           </div>
           <div className="ml-3 flex-1 min-w-0">
             <h3 className="text-sm font-medium text-purple-800">
@@ -83,9 +80,7 @@ export function AISummary({
             <div className="mt-2 text-sm text-purple-700">
               <p className="break-words">{summary}</p>
             </div>
-            {error && (
-              <p className="mt-2 text-sm text-red-600">{error}</p>
-            )}
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
           </div>
         </div>
         {isTeamAdmin && (

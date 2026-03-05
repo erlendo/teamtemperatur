@@ -130,23 +130,36 @@ export default async function Page({ params, searchParams }: PageProps) {
             Statistikk – År {year}
           </h1>
 
-          <AISummary 
-            summary={weeklySummary} 
+          <AISummary
+            summary={weeklySummary}
             teamId={team.id}
             isTeamAdmin={isTeamAdmin}
             year={year}
             weekNumber={selectedWeek?.week}
-            summaryData={selectedWeek ? {
-              overallAvg: selectedWeek.overall_avg ?? 0,
-              bayesianAdjusted: selectedWeek.bayesian_adjusted ?? 0,
-              responseRate: selectedWeek.response_rate ?? 0,
-              responseCount: selectedWeek.response_count ?? 0,
-              memberCount: selectedWeek.member_count ?? 0,
-              topQuestionLabel: (selectedWeek.question_stats ?? []).sort((a, b) => b.avg_score - a.avg_score)[0]?.question_label,
-              topQuestionScore: (selectedWeek.question_stats ?? []).sort((a, b) => b.avg_score - a.avg_score)[0]?.avg_score,
-              bottomQuestionLabel: (selectedWeek.question_stats ?? []).sort((a, b) => a.avg_score - b.avg_score)[0]?.question_label,
-              bottomQuestionScore: (selectedWeek.question_stats ?? []).sort((a, b) => a.avg_score - b.avg_score)[0]?.avg_score,
-            } : undefined}
+            summaryData={
+              selectedWeek
+                ? {
+                    overallAvg: selectedWeek.overall_avg ?? 0,
+                    bayesianAdjusted: selectedWeek.bayesian_adjusted ?? 0,
+                    responseRate: selectedWeek.response_rate ?? 0,
+                    responseCount: selectedWeek.response_count ?? 0,
+                    memberCount: selectedWeek.member_count ?? 0,
+                    topQuestionLabel: (selectedWeek.question_stats ?? []).sort(
+                      (a, b) => b.avg_score - a.avg_score
+                    )[0]?.question_label,
+                    topQuestionScore: (selectedWeek.question_stats ?? []).sort(
+                      (a, b) => b.avg_score - a.avg_score
+                    )[0]?.avg_score,
+                    bottomQuestionLabel: (
+                      selectedWeek.question_stats ?? []
+                    ).sort((a, b) => a.avg_score - b.avg_score)[0]
+                      ?.question_label,
+                    bottomQuestionScore: (
+                      selectedWeek.question_stats ?? []
+                    ).sort((a, b) => a.avg_score - b.avg_score)[0]?.avg_score,
+                  }
+                : undefined
+            }
           />
 
           <YearStatsView

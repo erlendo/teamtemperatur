@@ -208,7 +208,10 @@ export async function regenerateWeeklySummary(
   const supabase = supabaseServer()
 
   // 1. Verifiser at brukeren er authenticated
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
   if (authError || !user) {
     return { success: false, error: 'Ikke autentisert' }
   }
@@ -222,8 +225,14 @@ export async function regenerateWeeklySummary(
     .eq('is_active', true)
     .single()
 
-  if (!membership || (membership.role !== 'admin' && membership.role !== 'owner')) {
-    return { success: false, error: 'Kun admin/owner kan regenerere sammendrag' }
+  if (
+    !membership ||
+    (membership.role !== 'admin' && membership.role !== 'owner')
+  ) {
+    return {
+      success: false,
+      error: 'Kun admin/owner kan regenerere sammendrag',
+    }
   }
 
   // 3. Slett det old sammendraget
