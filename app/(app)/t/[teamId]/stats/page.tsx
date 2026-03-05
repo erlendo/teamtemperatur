@@ -1,53 +1,73 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { getTeamById } from '@/server/actions/teams';
-import { notFound } from 'next/navigation';
-import { getTeamYearStats } from '@/server/actions/stats';
-import { YearStatsView } from '@/components/YearStatsView';
-import { getOrGenerateWeeklySummary } from '@/server/actions/ai';
-import { AISummary } from '@/components/AISummary';
+import { AISummary } from '@/components/AISummary'
+import { YearStatsView } from '@/components/YearStatsView'
+import { supabaseServer } from '@/lib/supabase/server'
+import { getOrGenerateWeeklySummary } from '@/server/actions/ai'
+import { getYearStats } from '@/server/actions/stats'
+import { notFound } from 'next/navigation'
 
-export const revalidate = 0;
+export const revalidate = 0
 
 type PageProps = {
-  params: { teamId: string };
-  searchParams: { year?: string };
-};
+  params: { teamId: string }
+  searchParams: { year?: string }
+}
 
 export default async function Page({ params, searchParams }: PageProps) {
-  const supabase = createSupabaseServerClient();
+  const supabase = supabaseServer()
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    return notFound();
+    return notFound()
   }
 
-  const team = await getTeamById(params.teamId);
+  const { data: team } = await supabase
+    .from('teams')
+    .select('id, name')
+    .eq('id', params.teamId)
+    .single()
+
   if (!team) {
-    return notFound();
+    return notFound()
   }
 
-  const year = searchParams.year ? parseInt(searchParams.year, 10) : new Date().getFullYear();
-  const teamYearStats = await getTeamYearStats(team.id, year);
+  const year = searchParams.year
+    ? parseInt(searchParams.year, 10)
+    : new Date().getFullYear()
+  const currentWeek = Math.ceil(
+    (new Date().getTime() - new Date(year, 0, 1).getTime()) / 604800000
+  )
+  const teamYearStats = await getYearStats(team.id, currentWeek)
 
-  let weeklySummary = '';
+  let weeklySummary = ''
   // Vi henter/genererer kun for den siste uken med data
-  if (teamYearStats.weeklyStats.length > 0) {
-    const latestWeek = teamYearStats.weeklyStats[0]; // Forutsatt synkende sortering
+  if (teamYearStats.length > 0) {
+    const latestWeek = teamYearStats[teamYearStats.length - 1] // Siste uken i arrayet
+
+    // Extract question stats for summary
+    const motivationStat = latestWeek.question_stats?.find(
+      (q) => q.question_label === 'Motivasjon'
+    )
+    const workloadStat = latestWeek.question_stats?.find(
+      (q) => q.question_label === 'Arbeidsmengde'
+    )
+    const wellbeingStat = latestWeek.question_stats?.find(
+      (q) => q.question_label === 'Trivsel'
+    )
 
     const summaryData = {
-      motivation: latestWeek.averages['Motivasjon'] ?? 0,
-      workload: latestWeek.averages['Arbeidsmengde'] ?? 0,
-      wellbeing: latestWeek.averages['Trivsel'] ?? 0,
-    };
+      motivation: motivationStat?.avg_score ?? 0,
+      workload: workloadStat?.avg_score ?? 0,
+      wellbeing: wellbeingStat?.avg_score ?? 0,
+    }
 
     weeklySummary = await getOrGenerateWeeklySummary(
       team.id,
       year,
-      latestWeek.week_number,
+      latestWeek.week,
       summaryData
-    );
+    )
   }
 
   return (
@@ -56,19 +76,12 @@ export default async function Page({ params, searchParams }: PageProps) {
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-gray-900">
           Statistikk for {team.name}
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          År: {year}
-        </p>
+        <p className="mt-1 text-sm text-gray-500">År: {year}</p>
       </div>
 
       <AISummary summary={weeklySummary} />
 
-      <YearStatsView
-        teamId={team.id}
-        currentYear={year}
-        weeklyStats={teamYearStats.weeklyStats}
-        questions={teamYearStats.questionLabels}
-      />
+      <YearStatsView data={teamYearStats} />
     </div>
-  );
+  )
 }

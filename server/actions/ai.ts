@@ -1,16 +1,14 @@
+'use server'
 
-'use server';
+import { supabaseServer } from '@/lib/supabase/server'
+import OpenAI from 'openai'
 
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { getWeek } from 'date-fns';
-import OpenAI from 'openai';
-
-const openai = new OpenAI();
+const openai = new OpenAI()
 
 interface WeeklySummaryData {
-  motivation: number;
-  workload: number;
-  wellbeing: number;
+  motivation: number
+  workload: number
+  wellbeing: number
 }
 
 /**
@@ -28,9 +26,9 @@ export async function getOrGenerateWeeklySummary(
   teamId: string,
   year: number,
   weekNumber: number,
-  data: WeeklySummaryData,
+  data: WeeklySummaryData
 ): Promise<string> {
-  const supabase = createSupabaseServerClient();
+  const supabase = supabaseServer()
 
   // 1. Sjekk for eksisterende sammendrag
   const { data: existingSummary, error: selectError } = await supabase
@@ -39,28 +37,29 @@ export async function getOrGenerateWeeklySummary(
     .eq('team_id', teamId)
     .eq('year', year)
     .eq('week_number', weekNumber)
-    .single();
+    .single()
 
-  if (selectError && selectError.code !== 'PGRST116') { // Ignore 'no rows' error
-    console.error('Error fetching summary:', selectError);
-    return ''; // Returnerer tomt hvis det er en feil
+  if (selectError && selectError.code !== 'PGRST116') {
+    // Ignore 'no rows' error
+    console.error('Error fetching summary:', selectError)
+    return '' // Returnerer tomt hvis det er en feil
   }
 
   if (existingSummary) {
-    return existingSummary.summary;
+    return existingSummary.summary
   }
 
   // 2. Hvis ingen oppsummering finnes, generer en ny
   // Sjekk at vi har data å analysere for å unngå unødvendige API-kall
-  if (Object.values(data).every(val => val === 0)) {
-    return ''; // Ikke generer sammendrag for tomme data
+  if (Object.values(data).every((val) => val === 0)) {
+    return '' // Ikke generer sammendrag for tomme data
   }
-  
-  const model = 'gpt-4o-mini';
-  const newSummary = await generateSummary(data, model);
+
+  const model = 'gpt-4o-mini'
+  const newSummary = await generateSummary(data, model)
 
   if (!newSummary || newSummary.includes('feil')) {
-    return newSummary; // Returner feilmeldingen fra genereringsfunksjonen
+    return newSummary // Returner feilmeldingen fra genereringsfunksjonen
   }
 
   // 3. Lagre det nye sammendraget i databasen
@@ -72,23 +71,26 @@ export async function getOrGenerateWeeklySummary(
       week_number: weekNumber,
       summary: newSummary,
       model_used: model,
-    });
+    })
 
   if (insertError) {
-    console.error('Error saving new summary:', insertError);
+    console.error('Error saving new summary:', insertError)
     // Returnerer det nylig genererte sammendraget uansett,
     // slik at brukeren ser det selv om lagring feiler.
   }
 
-  return newSummary;
+  return newSummary
 }
 
 /**
  * Intern funksjon for å kalle LLM og generere tekst.
  */
-async function generateSummary(data: WeeklySummaryData, model: string): Promise<string> {
+async function generateSummary(
+  data: WeeklySummaryData,
+  model: string
+): Promise<string> {
   if (!process.env.OPENAI_API_KEY) {
-    return 'OpenAI API-nøkkel er ikke konfigurert.';
+    return 'OpenAI API-nøkkel er ikke konfigurert.'
   }
 
   const prompt = `
@@ -102,7 +104,7 @@ async function generateSummary(data: WeeklySummaryData, model: string): Promise<
 
     Skriv en kort, nøytral og innsiktsfull oppsummering på norsk (maks 3 setninger) for en teamleder.
     Fokuser på de mest interessante punktene eller trendene i dataene.
-  `;
+  `
 
   try {
     const response = await openai.chat.completions.create({
@@ -110,15 +112,14 @@ async function generateSummary(data: WeeklySummaryData, model: string): Promise<
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.5,
       max_tokens: 150,
-    });
+    })
 
-    const summary = response.choices[0]?.message?.content;
-    if (!summary) throw new Error('Fikk ikke generert en oppsummering.');
-    
-    return summary.trim();
+    const summary = response.choices[0]?.message?.content
+    if (!summary) throw new Error('Fikk ikke generert en oppsummering.')
+
+    return summary.trim()
   } catch (error) {
-    console.error('Error calling OpenAI API:', error);
-    return 'Det skjedde en feil under generering av oppsummering.';
+    console.error('Error calling OpenAI API:', error)
+    return 'Det skjedde en feil under generering av oppsummering.'
   }
 }
-
