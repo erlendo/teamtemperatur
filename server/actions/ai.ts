@@ -188,3 +188,91 @@ ${participationInstruction}`
     return 'Det skjedde en feil under generering av oppsummering.'
   }
 }
+
+/**
+ * Lar admin/owner tvinge regenerering av et ukentlig sammendrag ved å slette det cachede
+ * og generere nytt.
+ *
+ * @param teamId Teamets ID
+ * @param year År for sammendraget
+ * @param weekNumber Ukenummer for sammendraget
+ * @param data Datagrunnlaget for generering
+ * @returns Resultat med success/error
+ */
+export async function regenerateWeeklySummary(
+  teamId: string,
+  year: number,
+  weekNumber: number,
+  data: WeeklySummaryData
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = supabaseServer()
+
+  // 1. Verifiser at brukeren er authenticated
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return { success: false, error: 'Ikke autentisert' }
+  }
+
+  // 2. Verifiser at brukeren er admin/owner av teamet
+  const { data: membership } = await supabase
+    .from('team_memberships')
+    .select('role')
+    .eq('team_id', teamId)
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .single()
+
+  if (!membership || (membership.role !== 'admin' && membership.role !== 'owner')) {
+    return { success: false, error: 'Kun admin/owner kan regenerere sammendrag' }
+  }
+
+  // 3. Slett det old sammendraget
+  const { error: deleteError } = await supabase
+    .from('ai_weekly_summaries')
+    .delete()
+    .eq('team_id', teamId)
+    .eq('year', year)
+    .eq('week_number', weekNumber)
+
+  if (deleteError) {
+    console.error('[AI Summary] Error deleting old summary:', deleteError)
+    return { success: false, error: 'Kunne ikke slette gammelt sammendrag' }
+  }
+
+  // 4. Generer nytt sammendrag
+  console.log(
+    '[AI Summary] Regenerating summary for team:',
+    teamId,
+    'year:',
+    year,
+    'week:',
+    weekNumber
+  )
+  const newSummary = await generateSummary(data, 'gpt-4o-mini')
+
+  if (!newSummary || newSummary.includes('feil')) {
+    return { success: false, error: 'Kunne ikke generere nytt sammendrag' }
+  }
+
+  // 5. Lagre det nye sammendraget
+  const promptVersion = 'bayesian-primary-v1'
+  const modelUsed = `gpt-4o-mini:${promptVersion}`
+
+  const { error: insertError } = await supabase
+    .from('ai_weekly_summaries')
+    .insert({
+      team_id: teamId,
+      year,
+      week_number: weekNumber,
+      summary: newSummary,
+      model_used: modelUsed,
+    })
+
+  if (insertError) {
+    console.error('[AI Summary] Error saving regenerated summary:', insertError)
+    return { success: false, error: 'Kunne ikke lagre nytt sammendrag' }
+  }
+
+  console.log('[AI Summary] Successfully regenerated and saved summary')
+  return { success: true }
+}
