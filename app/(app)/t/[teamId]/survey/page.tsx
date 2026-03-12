@@ -66,13 +66,13 @@ export default async function SurveyPage({
             }}
           >
             <h1 style={{ color: 'var(--color-neutral-700)' }}>
-              📋 Helse-undersøkelse
+              Helseundersøkelse
             </h1>
             <div
               style={{
                 backgroundColor: 'var(--color-neutral-100)',
                 padding: 'var(--space-lg)',
-                borderRadius: 'var(--radius-lg)',
+                borderRadius: 'var(--border-radius-lg)',
                 marginTop: 'var(--space-xl)',
               }}
             >
@@ -113,7 +113,9 @@ export default async function SurveyPage({
   const requestedWeek = sp?.week ? parseInt(sp.week, 10) : null
   // Allow submitting up to 4 weeks back, but not future weeks
   const week =
-    requestedWeek && requestedWeek >= currentWeek - 4 && requestedWeek <= currentWeek
+    requestedWeek &&
+    requestedWeek >= currentWeek - 4 &&
+    requestedWeek <= currentWeek
       ? requestedWeek
       : currentWeek
 
@@ -139,7 +141,7 @@ export default async function SurveyPage({
               padding: 'var(--space-xl) var(--space-md)',
             }}
           >
-            <h1 style={{ color: 'var(--color-error)' }}>❌ Feil</h1>
+            <h1 style={{ color: 'var(--color-error)' }}>Feil</h1>
             <p>Fant ingen aktiv spørreundersøkelse for dette teamet.</p>
             {error ? (
               <p
@@ -182,7 +184,7 @@ export default async function SurveyPage({
           }}
         >
           <div style={{ marginBottom: 'var(--space-2xl)' }}>
-            <h1 style={{ marginBottom: 'var(--space-md)' }}>📝 Ny måling</h1>
+            <h1 style={{ marginBottom: 'var(--space-md)' }}>Ny måling</h1>
             <p style={{ color: 'var(--color-neutral-600)', marginBottom: 0 }}>
               Versjon {questionnaire.version} av {questionnaire.name}
             </p>
@@ -193,7 +195,7 @@ export default async function SurveyPage({
           ) : null}
           {submittedWeek ? (
             <div className="alert alert-success">
-              ✅ Lagret for uke {submittedWeek}. Takk for tilbakemeldingen!
+              Lagret for uke {submittedWeek}. Takk for tilbakemeldingen.
             </div>
           ) : null}
 

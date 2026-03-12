@@ -79,7 +79,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
       {/* Header */}
       <header
         style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: 'var(--color-neutral-100)',
           borderBottom: '1px solid var(--color-neutral-200)',
           boxShadow: 'var(--shadow-sm)',
         }}
@@ -141,7 +141,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
             }}
           >
             <Users size={28} />
-            Mine Team
+            Mine team
           </h1>
           <p
             style={{
@@ -158,7 +158,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
           {/* Create Team Form */}
           <div
             style={{
-              backgroundColor: 'white',
+              backgroundColor: 'var(--color-neutral-100)',
               borderRadius: 'var(--border-radius-lg)',
               border: '1px solid var(--color-neutral-200)',
               padding: 'var(--space-xl)',
@@ -176,7 +176,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
               }}
             >
               <Plus size={20} />
-              Opprett Nytt Team
+              Opprett nytt team
             </h2>
             <form
               action={handleCreateTeam}
@@ -244,7 +244,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                   }
                 }}
               >
-                {isPending ? '⏳ Opprettet...' : '✨ Opprett Team'}
+                {isPending ? 'Oppretter team...' : 'Opprett team'}
               </button>
             </form>
           </div>
@@ -269,7 +269,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                 fontWeight: '500',
               }}
             >
-              ✓ {successMessage}
+              {successMessage}
             </div>
           )}
 
@@ -300,9 +300,9 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                     style={{
                       display: 'block',
                       padding: 'var(--space-xl)',
-                      backgroundColor: 'white',
-                      border: '2px solid var(--color-neutral-300)',
-                      borderRadius: 'var(--border-radius-lg)',
+                      backgroundColor: 'var(--color-neutral-100)',
+                      border: '1px solid var(--color-neutral-200)',
+                      borderRadius: '1.25rem',
                       textDecoration: 'none',
                       color: 'inherit',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -352,9 +352,9 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                             justifyContent: 'center',
                             width: '48px',
                             height: '48px',
-                            backgroundColor: 'var(--color-primary-light)',
-                            borderRadius: 'var(--border-radius-md)',
-                            color: 'var(--color-primary)',
+                            backgroundColor: 'var(--color-mist)',
+                            borderRadius: '0.9rem',
+                            color: 'var(--color-primary-dark)',
                           }}
                         >
                           <Thermometer size={24} strokeWidth={2} />
@@ -412,8 +412,8 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                       </div>
                       <span
                         style={{
-                          fontSize: 'var(--font-size-2xl)',
-                          color: 'var(--color-primary)',
+                          fontSize: 'var(--font-size-xl)',
+                          color: 'var(--color-primary-dark)',
                           fontWeight: '700',
                         }}
                       >
@@ -536,9 +536,9 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: 'var(--space-xl)',
-                      backgroundColor: 'white',
-                      border: '2px solid var(--color-neutral-300)',
-                      borderRadius: 'var(--border-radius-lg)',
+                      backgroundColor: 'var(--color-neutral-100)',
+                      border: '1px solid var(--color-neutral-200)',
+                      borderRadius: '1.25rem',
                       color: 'inherit',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       boxShadow: 'var(--shadow-md)',
@@ -558,13 +558,17 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                           justifyContent: 'center',
                           width: '48px',
                           height: '48px',
-                          backgroundColor: 'var(--color-secondary-dark)',
-                          borderRadius: 'var(--border-radius-md)',
+                          backgroundColor: 'var(--color-sand)',
+                          borderRadius: '0.9rem',
                           color: 'white',
-                          opacity: 0.7,
+                          opacity: 1,
                         }}
                       >
-                        <Thermometer size={24} strokeWidth={2} />
+                        <Thermometer
+                          size={24}
+                          strokeWidth={2}
+                          color="var(--color-primary-dark)"
+                        />
                       </div>
                       <div>
                         <div
@@ -630,7 +634,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                         }
                       }}
                     >
-                      {isPending ? '⏳ Blir medlem...' : '✨ Bli medlem'}
+                      {isPending ? 'Blir medlem...' : 'Bli medlem'}
                     </button>
                   </div>
                 ))}
@@ -668,7 +672,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
                 backgroundColor: 'transparent',
                 color: 'var(--color-neutral-600)',
                 border: '1px solid var(--color-neutral-300)',
-                borderRadius: 'var(--border-radius-md)',
+                borderRadius: '999px',
                 fontWeight: '500',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -715,12 +719,13 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
         >
           <div
             style={{
-              backgroundColor: 'white',
-              borderRadius: 'var(--border-radius-lg)',
+              backgroundColor: 'var(--color-neutral-100)',
+              borderRadius: '1.25rem',
               padding: 'var(--space-xl)',
               maxWidth: '400px',
               width: '90%',
-              boxShadow: 'var(--shadow-lg)',
+              boxShadow: '0 24px 48px rgba(67, 51, 47, 0.16)',
+              border: '1px solid var(--color-neutral-200)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -764,7 +769,7 @@ export function TeamsList({ myTeams, availableTeams }: TeamsListProps) {
 
             <div
               style={{
-                backgroundColor: 'var(--color-neutral-50)',
+                backgroundColor: 'var(--color-canvas)',
                 border: '1px solid var(--color-neutral-200)',
                 borderRadius: 'var(--border-radius-md)',
                 padding: 'var(--space-md)',

@@ -16,20 +16,22 @@ export function AppHeaderNav({
   const baseStyle: CSSProperties = {
     color: 'var(--color-neutral-600)',
     fontSize: 'var(--font-size-sm)',
-    fontWeight: '500',
+    fontWeight: '600',
     padding: 'var(--space-sm) var(--space-md)',
-    borderRadius: 'var(--border-radius-md)',
+    borderRadius: '999px',
     transition: 'all 0.2s ease',
     textDecoration: 'none',
     display: 'flex',
     alignItems: 'center',
     gap: 'var(--space-xs)',
-    border: '1px solid transparent',
+    border: '1px solid var(--color-neutral-200)',
+    backgroundColor: 'rgba(250, 247, 242, 0.72)',
   }
   const activeStyle: CSSProperties = {
-    color: 'var(--color-primary)',
-    backgroundColor: 'var(--color-neutral-100)',
-    borderColor: 'var(--color-neutral-200)',
+    color: 'var(--color-primary-dark)',
+    backgroundColor: 'var(--color-mist)',
+    borderColor: 'var(--color-teal)',
+    boxShadow: 'var(--shadow-sm)',
   }
 
   const getStyle = (isActive: boolean) =>
@@ -39,20 +41,21 @@ export function AppHeaderNav({
     <nav
       style={{
         display: 'flex',
-        gap: 'var(--space-lg)',
+        gap: 'var(--space-sm)',
         marginLeft: 'auto',
+        flexWrap: 'wrap',
       }}
     >
       <Link href={`/t/${teamId}`} style={getStyle(pathname === `/t/${teamId}`)}>
         <LayoutDashboard size={16} />
-        Dashboard
+        Oversikt
       </Link>
       <Link
         href={`/t/${teamId}/survey`}
         style={getStyle(pathname?.startsWith(`/t/${teamId}/survey`) ?? false)}
       >
         <PenTool size={16} />
-        Ny måling
+        Måling
       </Link>
       <Link
         href={`/t/${teamId}/stats`}
@@ -67,7 +70,7 @@ export function AppHeaderNav({
           style={getStyle(pathname?.startsWith(`/t/${teamId}/admin`) ?? false)}
         >
           <Users size={16} />
-          Team Admin
+          Admin
         </Link>
       )}
       <Link

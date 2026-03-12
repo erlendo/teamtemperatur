@@ -123,6 +123,7 @@ UI must:
 - Use `useTransition()` for async interactions when it improves UX
 - Favor clear hierarchy, strong affordances, and concise Norwegian microcopy
 - Improve flows deliberately: fewer steps, clearer next actions, and visible states beat decorative polish
+- Keep adjacent pages in the same user flow visually and structurally aligned; avoid upgrading one screen while leaving sibling screens in an older pattern
 
 Do not:
 
@@ -130,6 +131,7 @@ Do not:
 - Introduce heavy global state
 - Over-engineer animations
 - Ship UI changes that reduce readability or accessibility for visual novelty
+- Mix emojis, heading styles, card treatments, or button patterns inconsistently across the same flow
 
 Favor:
 
@@ -137,6 +139,7 @@ Favor:
 - Reusable card patterns
 - Composition over inheritance
 - Clear empty states, loading states, and error states
+- Shared layout and copy patterns for auth, onboarding, and dashboard-adjacent pages
 
 ---
 

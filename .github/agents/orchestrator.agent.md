@@ -26,6 +26,7 @@ Your job is to coordinate specialist subagents and return one clear execution pl
 4. Use `db-security` when any SQL migration, RLS, auth, team/user scope, or query logic is involved.
 5. Use `quality-gate` before completion to validate required checks.
 6. Use `review` for bug, risk, and regression findings before final recommendation.
+7. For UI work, explicitly check whether adjacent pages in the same flow also need alignment before closing the task.
 
 ## Output Format
 

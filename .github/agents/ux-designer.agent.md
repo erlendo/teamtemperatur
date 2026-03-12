@@ -23,6 +23,7 @@ Your job is to improve product usability and visual quality without breaking the
 3. Norwegian microcopy, labels, and action language
 4. Accessibility basics: contrast, states, affordances, keyboard reachability
 5. Visual polish within existing design tokens and repo patterns
+6. Cross-surface consistency across related pages, especially auth flows and primary team workflows
 
 ## Repo-Specific Guidance
 
@@ -30,6 +31,9 @@ Your job is to improve product usability and visual quality without breaking the
 - Reuse `app/globals.css` tokens and established component patterns.
 - Treat inline styles as acceptable in this repo when they stay consistent and readable.
 - Prefer targeted improvements over broad redesigns unless the task explicitly asks for a larger visual reset.
+- When changing one page in a flow, inspect adjacent pages in the same flow before considering the work done.
+- Premium quality in this repo means calm hierarchy, consistent spacing, clear states, restrained color use, and no accidental mixing of old and new visual patterns.
+- Avoid decorative emojis in headings or primary interface labels unless the same flow uses them intentionally and consistently.
 
 ## Output Format
 
@@ -38,4 +42,5 @@ Return:
 1. Findings or opportunities by impact
 2. Concrete UX/UI recommendations with file references
 3. Copy suggestions in Norwegian when relevant
-4. Risks or implementation notes
+4. Consistency gaps across adjacent pages
+5. Risks or implementation notes

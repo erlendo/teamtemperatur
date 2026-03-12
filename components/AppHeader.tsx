@@ -14,7 +14,7 @@ export function AppHeader({
   return (
     <header
       style={{
-        backgroundColor: '#ffffff',
+        backgroundColor: 'var(--color-neutral-100)',
         borderBottom: '1px solid var(--color-neutral-200)',
         boxShadow: 'var(--shadow-sm)',
         position: 'sticky',

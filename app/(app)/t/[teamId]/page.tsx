@@ -153,18 +153,50 @@ export default async function TeamHome({
             padding: 'var(--space-3xl) var(--space-xl)',
           }}
         >
-          <h1
+          <section
             style={{
-              margin: '0 0 var(--space-3xl) 0',
-              fontSize: 'var(--font-size-4xl)',
-              fontWeight: '900',
-              color: 'var(--color-neutral-900)',
-              letterSpacing: '-0.02em',
+              marginBottom: 'var(--space-3xl)',
+              padding: 'var(--space-2xl)',
+              borderRadius: '1.5rem',
+              background:
+                'linear-gradient(135deg, rgba(220, 224, 214, 0.9), rgba(250, 247, 242, 0.96))',
+              border: '1px solid var(--color-neutral-200)',
+              boxShadow: 'var(--shadow-md)',
             }}
           >
-            Dashboard – Uke {weekInfo.week} ({formatDate(weekInfo.start)}–
-            {formatDate(weekInfo.end)})
-          </h1>
+            <p
+              style={{
+                marginBottom: 'var(--space-xs)',
+                color: 'var(--color-primary-dark)',
+                fontWeight: 700,
+                fontSize: 'var(--font-size-sm)',
+              }}
+            >
+              Teamoversikt
+            </p>
+            <h1
+              style={{
+                margin: '0 0 var(--space-sm) 0',
+                fontSize: 'var(--font-size-4xl)',
+                fontWeight: '900',
+                color: 'var(--color-neutral-900)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Uke {weekInfo.week} for {teamName ?? 'teamet'}
+            </h1>
+            <p
+              style={{
+                marginBottom: 0,
+                color: 'var(--color-neutral-600)',
+                maxWidth: '48rem',
+              }}
+            >
+              Følg ukemål, pipeline, mål, retro og helsesignaler i samme flate.
+              Perioden dekker {formatDate(weekInfo.start)}–
+              {formatDate(weekInfo.end)}.
+            </p>
+          </section>
 
           {/* Row 1: Ukemål | Pipeline | Mål (with cross-column linking) */}
           <DashboardClient
@@ -187,9 +219,9 @@ export default async function TeamHome({
                   marginBottom: 'var(--space-lg)',
                   fontSize: 'var(--font-size-xl, 1.25rem)',
                   fontWeight: 600,
-                  color: '#10b981',
+                  color: 'var(--color-primary-dark)',
                   paddingBottom: 'var(--space-md)',
-                  borderBottom: '3px solid #10b981',
+                  borderBottom: '2px solid var(--color-sand)',
                 }}
               >
                 Helse

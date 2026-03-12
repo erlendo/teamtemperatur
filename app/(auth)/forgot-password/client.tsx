@@ -1,9 +1,23 @@
 'use client'
 
 import { supabaseBrowser } from '@/lib/supabase/browser'
-import { CheckCircle, Mail, Thermometer } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle,
+  Loader,
+  Mail,
+  ShieldCheck,
+  Thermometer,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
+
+const featureHighlights = [
+  'Behold samme rolige flyt når noen mister tilgangen sin',
+  'Send en ny lenke uten å måtte kontakte administrator først',
+  'Kom raskt tilbake til teamoversikt, målinger og oppfølging',
+]
 
 export function ForgotPasswordClient() {
   const [email, setEmail] = useState('')
@@ -27,71 +41,95 @@ export function ForgotPasswordClient() {
 
     if (error) {
       setMsg({ type: 'error', text: `Feil: ${error.message}` })
-    } else {
-      setMsg({
-        type: 'success',
-        text: 'Sjekk e-posten din for en lenke til å tilbakestille passordet.',
-      })
-      setEmail('')
+      return
     }
+
+    setMsg({
+      type: 'success',
+      text: 'Sjekk e-posten din for en lenke til å tilbakestille passordet.',
+    })
+    setEmail('')
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'var(--color-neutral-50)',
-      }}
-    >
-      <div
-        style={{ maxWidth: '420px', width: '100%', padding: 'var(--space-lg)' }}
-      >
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 'var(--space-3xl)' }}>
+    <div className="auth-shell">
+      <div className="auth-orb auth-orb-primary" />
+      <div className="auth-orb auth-orb-secondary" />
+      <div className="auth-grid">
+        <section className="auth-hero" aria-label="Introduksjon">
+          <div className="auth-badge">
+            <Thermometer size={16} />
+            Teamtemperatur
+          </div>
+          <h1 style={{ marginBottom: 'var(--space-md)' }}>
+            Få tilgang igjen uten å miste momentum.
+          </h1>
+          <p
+            style={{
+              fontSize: 'var(--font-size-lg)',
+              color: 'var(--color-neutral-700)',
+              marginBottom: 'var(--space-xl)',
+              maxWidth: '34rem',
+            }}
+          >
+            Send en ny tilbakestillingslenke til e-postadressen din og kom raskt
+            tilbake til teamets arbeidsflate.
+          </p>
+
+          <div className="auth-feature-list" aria-label="Fordeler">
+            {featureHighlights.map((feature) => (
+              <div key={feature} className="auth-feature-item">
+                <CheckCircle size={18} />
+                <span>{feature}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="auth-card" aria-label="Tilbakestill passord">
           <div
             style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: 'var(--border-radius-lg)',
-              background:
-                'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto',
-              marginBottom: 'var(--space-lg)',
-              color: 'white',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: 'var(--space-md)',
+              marginBottom: 'var(--space-xl)',
             }}
           >
-            <Thermometer size={32} />
+            <div>
+              <p
+                style={{
+                  marginBottom: 'var(--space-xs)',
+                  color: 'var(--color-primary-dark)',
+                  fontWeight: 700,
+                  fontSize: 'var(--font-size-sm)',
+                }}
+              >
+                Glemt passord
+              </p>
+              <h2
+                style={{
+                  marginBottom: 'var(--space-sm)',
+                  fontSize: 'var(--font-size-2xl)',
+                }}
+              >
+                Be om ny innloggingslenke
+              </h2>
+              <p
+                style={{
+                  marginBottom: 0,
+                  color: 'var(--color-neutral-600)',
+                  fontSize: 'var(--font-size-sm)',
+                }}
+              >
+                Skriv inn e-postadressen din, så sender vi deg en trygg lenke
+                for å opprette et nytt passord.
+              </p>
+            </div>
+            <div className="auth-icon-panel" aria-hidden="true">
+              <ShieldCheck size={20} />
+            </div>
           </div>
-          <h1 style={{ marginBottom: 'var(--space-sm)' }}>Teamtemperatur</h1>
-          <p style={{ color: 'var(--color-neutral-600)' }}>
-            Tilbakestill passordet ditt
-          </p>
-        </div>
-
-        {/* Form Card */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            borderRadius: 'var(--border-radius-lg)',
-            border: '1px solid var(--color-neutral-200)',
-            padding: 'var(--space-xl)',
-            boxShadow: 'var(--shadow-md)',
-          }}
-        >
-          <h2
-            style={{
-              marginBottom: 'var(--space-lg)',
-              fontSize: 'var(--font-size-xl)',
-            }}
-          >
-            Glemt passord
-          </h2>
 
           <form
             onSubmit={handleSubmit}
@@ -99,9 +137,8 @@ export function ForgotPasswordClient() {
           >
             <div>
               <label
+                htmlFor="forgot-email"
                 style={{
-                  display: 'block',
-                  fontWeight: '600',
                   marginBottom: 'var(--space-sm)',
                   color: 'var(--color-neutral-700)',
                 }}
@@ -125,9 +162,11 @@ export function ForgotPasswordClient() {
                   }}
                 />
                 <input
+                  id="forgot-email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   type="email"
+                  autoComplete="email"
                   placeholder="din@epost.com"
                   required
                   disabled={loading}
@@ -144,6 +183,7 @@ export function ForgotPasswordClient() {
             </div>
 
             <button
+              className="auth-submit-button"
               type="submit"
               disabled={loading}
               style={{
@@ -182,13 +222,24 @@ export function ForgotPasswordClient() {
                 }
               }}
             >
-              <Mail size={18} />
-              {loading ? 'Sender...' : 'Send tilbakestillingslenke'}
+              {loading ? (
+                <>
+                  <Loader size={18} className="animate-spin" />
+                  Sender lenke...
+                </>
+              ) : (
+                <>
+                  Send tilbakestillingslenke
+                  <ArrowRight size={18} />
+                </>
+              )}
             </button>
           </form>
 
           {msg && (
             <div
+              role={msg.type === 'error' ? 'alert' : 'status'}
+              aria-live="polite"
               className={
                 msg.type === 'error'
                   ? 'alert alert-error'
@@ -206,7 +257,12 @@ export function ForgotPasswordClient() {
                   size={20}
                   style={{ flexShrink: 0, marginTop: '2px' }}
                 />
-              ) : null}
+              ) : (
+                <AlertCircle
+                  size={20}
+                  style={{ flexShrink: 0, marginTop: '2px' }}
+                />
+              )}
               <span>{msg.text}</span>
             </div>
           )}
@@ -231,7 +287,7 @@ export function ForgotPasswordClient() {
               </Link>
             </p>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   )

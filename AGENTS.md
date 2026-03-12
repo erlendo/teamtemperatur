@@ -662,6 +662,13 @@ For agentdrevet arbeid i denne kodebasen bør standardløkken være:
 - `review`: Prioriterer bugs, regressjoner og manglende tester
 - `quality-gate`: Verifiserer at endringen faktisk er merge-klar
 
+### UX-kvalitet
+
+- Når én side i en flyt oppdateres visuelt, skal nærliggende sider i samme flyt vurderes for samme oppgradering
+- Premium uttrykk betyr rolig hierarki, konsistente kort- og knappemønstre, tydelige tilstander og disiplinert bruk av aksentfarger
+- Unngå blanding av gamle og nye mønstre på auth-sider, teamoversikt og andre primære arbeidsflater
+- Unngå tilfeldig bruk av emojis i overskrifter og primære grensesnitt-elementer
+
 ### Branching Strategy
 
 - `main` - Production branch
