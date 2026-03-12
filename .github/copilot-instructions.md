@@ -9,8 +9,8 @@ Copilot must behave like a pragmatic senior engineer optimizing for sustainable 
 
 Environment:
 
-- Single environment only: production on Vercel + Supabase.
-- No local or staging environments.
+- Production runs on Vercel + Supabase.
+- Local development is expected and should be kept easy to boot.
 
 ---
 
@@ -41,11 +41,11 @@ When uncertain, prefer:
 When building new functionality, always follow this order:
 
 1. Define or extend TypeScript types
-2. Implement service-layer DB logic
-3. Add server action (if mutation)
+2. Implement or extend server-side DB/query logic in the existing repo structure
+3. Add or update server action (if mutation)
 4. Connect UI
 5. Add error handling
-6. Add test (if logic is non-trivial)
+6. Add test for non-trivial pure logic
 
 Never start with UI-first when backend logic is required.
 
@@ -56,7 +56,8 @@ Never start with UI-first when backend logic is required.
 Hard rules:
 
 - No direct Supabase calls inside UI components.
-- All DB logic must live in `lib/supabase/` or `services/`.
+- Reuse the current server-side structure: `server/actions/` for mutations and server-loaded data, `server/queries/` for reusable reads when helpful, and `lib/supabase/` for client creation only.
+- Do not invent a `services/` layer unless the existing code actually needs it.
 - All mutations must live in `server/actions/`.
 - UI components must remain thin.
 - Prefer server components.
@@ -84,10 +85,11 @@ Preferred Query Pattern:
 
 ```ts
 export async function fetchTeams() {
-  const { data, error } = await supabaseServer.from('teams').select('id, name')
+  const supabase = supabaseServer()
+  const { data, error } = await supabase.from('teams').select('id, name')
 
-  if (error) throw new Error(error.message)
-  return data
+  if (error) return { data: [], error: error.message }
+  return { data }
 }
 ```
 
@@ -116,21 +118,25 @@ When implementing features:
 UI must:
 
 - Be small and focused
-- Use Tailwind consistently
-- Use lucide-react icons only
-- Use `useTransition()` for async interactions
+- Preserve the repo's current styling approach: existing inline styles and `app/globals.css` design tokens are both valid here
+- Use lucide-react icons where icons are needed
+- Use `useTransition()` for async interactions when it improves UX
+- Favor clear hierarchy, strong affordances, and concise Norwegian microcopy
+- Improve flows deliberately: fewer steps, clearer next actions, and visible states beat decorative polish
 
 Do not:
 
 - Mix database logic in UI
 - Introduce heavy global state
 - Over-engineer animations
+- Ship UI changes that reduce readability or accessibility for visual novelty
 
 Favor:
 
 - Predictable layout
 - Reusable card patterns
 - Composition over inheritance
+- Clear empty states, loading states, and error states
 
 ---
 
@@ -138,8 +144,8 @@ Favor:
 
 All mutations must:
 
-- Throw explicit `Error`
-- Return structured responses when needed
+- Return structured results instead of relying on thrown errors for expected failures
+- Log server-side errors with context
 - Avoid silent failures
 
 UI must:
@@ -153,14 +159,14 @@ UI must:
 
 Tests required for:
 
-- Service-layer logic
-- Permission logic
-- Data transformations
+- Pure data transformations
+- Non-trivial permission logic when extracted into testable helpers
+- Utility logic that can run without Next.js runtime
 
 Testing Guidelines:
 
 - Use Vitest
-- Mock Supabase clients
+- Prefer extracting pure helpers rather than over-mocking Next.js or Supabase internals
 - Cover success and failure cases
 
 ---
@@ -196,7 +202,7 @@ Copilot must not:
 
 If intent is unclear:
 
-- Default to service + server action pattern
+- Default to existing query/server-action patterns in this repo
 - Default to explicit typing
 - Default to least-complex solution
 - Default to secure RLS-friendly query
@@ -211,10 +217,11 @@ Copilot should act as a high-agency engineer optimizing for sustainable forward 
 To maximize automation and consistency, Copilot should default to this multi-agent workflow on non-trivial tasks:
 
 1. `planner` first for dependency-ordered plan
-2. `architecture-guard` for code placement and separation checks
-3. `db-security` whenever migrations, policies, auth, or scoped data are involved
-4. `review` for risk-focused findings before completion
-5. `quality-gate` as final CI-readiness verification
+2. `ux-designer` whenever the work changes user flows, UI structure, microcopy, or visual polish
+3. `architecture-guard` for code placement and separation checks
+4. `db-security` whenever migrations, policies, auth, or scoped data are involved
+5. `review` for risk-focused findings before completion
+6. `quality-gate` as final CI-readiness verification
 
 Rules:
 
@@ -226,6 +233,7 @@ Rules:
 Automation expectations in this repo:
 
 - PR and push checks run via `.github/workflows/orchestration.yml`.
+- Local verification should prefer `npm run check:agent-ready`.
 - Local push is guarded by `.husky/pre-push` calling `npm run check:prepush`.
 - DB migration changes trigger migration/security checks automatically.
 

@@ -9,11 +9,14 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
+    "test": "vitest",
+    "test:run": "vitest run",
     "type-check": "tsc --noEmit",
     "check:architecture": "node scripts/check-architecture.mjs",
+    "check:agent-ready": "npm run lint && npm run type-check && npm run test:run && npm run check:architecture && npm run build",
     "check:migrations": "node scripts/check-migrations.mjs",
     "check:prepush": "node scripts/check-prepush.mjs",
-    "ci:verify": "npm run lint && npm run type-check && npm run check:architecture && npm run build",
+    "ci:verify": "npm run check:agent-ready",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "prepare": "husky"
   },
@@ -51,7 +54,8 @@
     "lint-staged": "^15.2.0",
     "pg": "^8.17.2",
     "prettier": "^3.2.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

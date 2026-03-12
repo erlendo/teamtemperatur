@@ -17,11 +17,8 @@ Your job is to run required validations and report merge readiness.
 
 ## Required Checks
 
-1. `npm run lint`
-2. `npm run type-check`
-3. `npm run check:architecture`
-4. `npm run build`
-5. `npm run check:migrations -- <files>` when migrations changed
+1. `npm run check:agent-ready`
+2. `npm run check:migrations -- <files>` when migrations changed
 
 ## Output Format
 

@@ -14,15 +14,17 @@ Your job is to produce a minimal-risk execution plan that follows repository pol
 - DO NOT propose UI-first implementation when backend logic is required.
 - DO NOT include vague steps.
 - DO NOT skip validation and rollback considerations.
+- DO NOT skip UX review when the task materially changes user flows or UI structure.
 
 ## Required Order
 
 1. TypeScript types
 2. Service-layer DB logic
 3. Server actions for mutations
-4. UI integration
-5. Error handling
-6. Tests for non-trivial logic
+4. UX/UI review for frontend-impacting work
+5. UI integration
+6. Error handling
+7. Tests for non-trivial logic
 
 ## Output Format
 
