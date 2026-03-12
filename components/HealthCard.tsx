@@ -100,11 +100,11 @@ export function HealthCard({
   return (
     <div
       style={{
-        backgroundColor: 'white',
-        borderRadius: 'var(--radius-lg, 0.5rem)',
+        backgroundColor: 'var(--color-neutral-100)',
+        borderRadius: 'var(--border-radius-lg)',
         padding: 'var(--space-md)',
         boxShadow: 'var(--shadow-sm)',
-        border: '1px solid var(--color-neutral-200, #e5e5e5)',
+        border: '1px solid var(--color-neutral-200)',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-sm)',
@@ -175,8 +175,8 @@ export function HealthCard({
       {availableWeeks.length > 0 && (
         <div
           style={{
-            backgroundColor: 'var(--color-neutral-50, #fafafa)',
-            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--color-canvas)',
+            borderRadius: 'var(--border-radius-md)',
             padding: 'var(--space-sm)',
             marginTop: 0,
             position: 'relative',
@@ -208,7 +208,7 @@ export function HealthCard({
                 y1="100"
                 x2="100"
                 y2="100"
-                stroke="#e5e7eb"
+                stroke="var(--color-neutral-300)"
                 strokeWidth="0.5"
               />
 
@@ -216,7 +216,7 @@ export function HealthCard({
               <polyline
                 points={generateTrendPoints()}
                 fill="none"
-                stroke="#10b981"
+                stroke="var(--color-primary)"
                 strokeWidth="0.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -243,7 +243,7 @@ export function HealthCard({
                       onMouseLeave={() => setHoveredWeek(null)}
                     />
                     {/* Visible data point */}
-                    <circle cx={x} cy={y} r="2" fill="#10b981" />
+                    <circle cx={x} cy={y} r="2" fill="var(--color-primary)" />
                   </g>
                 )
               })}
@@ -272,7 +272,7 @@ export function HealthCard({
                       top: `${yPercent}%`,
                       transform: 'translate(-50%, 0)',
                       pointerEvents: 'none',
-                      backgroundColor: 'var(--color-neutral-900)',
+                      backgroundColor: 'var(--color-primary-dark)',
                       color: 'white',
                       padding: '6px 10px',
                       borderRadius: '4px',
@@ -292,7 +292,7 @@ export function HealthCard({
                     </div>
                     <div
                       style={{
-                        color: '#10b981',
+                        color: 'var(--color-canvas)',
                         fontSize: '16px',
                         fontWeight: '700',
                       }}
@@ -309,8 +309,8 @@ export function HealthCard({
       <div
         style={{
           padding: 'var(--space-sm)',
-          backgroundColor: 'var(--color-neutral-50, #fafafa)',
-          borderRadius: 'var(--radius-md)',
+          backgroundColor: 'var(--color-canvas)',
+          borderRadius: 'var(--border-radius-md)',
         }}
       >
         <p
@@ -331,7 +331,7 @@ export function HealthCard({
           display: 'inline-flex',
           alignItems: 'center',
           gap: 'var(--space-xs)',
-          color: 'var(--color-primary, #3b82f6)',
+          color: 'var(--color-primary-dark)',
           textDecoration: 'none',
           fontSize: 'var(--font-size-sm)',
           fontWeight: 500,

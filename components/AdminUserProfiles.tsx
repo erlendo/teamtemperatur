@@ -21,6 +21,36 @@ interface AdminUserProfilesProps {
   teamMembers: TeamMember[]
 }
 
+function getRoleColors(role: string) {
+  switch (role) {
+    case 'external':
+      return {
+        background: 'var(--color-mist)',
+        color: 'var(--color-primary-dark)',
+      }
+    case 'owner':
+      return {
+        background: 'var(--color-error-light)',
+        color: 'var(--color-error-dark)',
+      }
+    case 'admin':
+      return {
+        background: 'var(--color-mist)',
+        color: 'var(--color-primary-dark)',
+      }
+    case 'member':
+      return {
+        background: 'var(--color-success-light)',
+        color: 'var(--color-success-dark)',
+      }
+    default:
+      return {
+        background: 'var(--color-sand)',
+        color: 'var(--color-neutral-700)',
+      }
+  }
+}
+
 export function AdminUserProfiles({
   teamId,
   teamMembers,
@@ -180,12 +210,12 @@ export function AdminUserProfiles({
               borderRadius: '0.5rem',
               backgroundColor:
                 message.type === 'error'
-                  ? 'rgba(239, 68, 68, 0.1)'
-                  : 'rgba(34, 197, 94, 0.1)',
+                  ? 'var(--color-error-light)'
+                  : 'var(--color-success-light)',
               color:
                 message.type === 'error'
-                  ? 'var(--color-error, #ef4444)'
-                  : 'var(--color-success, #22c55e)',
+                  ? 'var(--color-error-dark)'
+                  : 'var(--color-success-dark)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -203,8 +233,8 @@ export function AdminUserProfiles({
 
       <div
         style={{
-          backgroundColor: 'white',
-          borderRadius: '0.5rem',
+          backgroundColor: 'var(--color-neutral-100)',
+          borderRadius: '1rem',
           border: '1px solid var(--color-neutral-200)',
           overflow: 'hidden',
         }}
@@ -336,22 +366,8 @@ export function AdminUserProfiles({
                       fontSize: '0.75rem',
                       fontWeight: '500',
                       border: '1px solid var(--color-neutral-300)',
-                      backgroundColor:
-                        member.role === 'external'
-                          ? 'rgba(168, 85, 247, 0.1)'
-                          : member.role === 'owner'
-                            ? 'rgba(239, 68, 68, 0.1)'
-                            : member.role === 'admin'
-                              ? 'rgba(59, 130, 246, 0.1)'
-                              : 'rgba(34, 197, 94, 0.1)',
-                      color:
-                        member.role === 'external'
-                          ? '#7c3aed'
-                          : member.role === 'owner'
-                            ? '#dc2626'
-                            : member.role === 'admin'
-                              ? '#2563eb'
-                              : '#16a34a',
+                      backgroundColor: getRoleColors(member.role).background,
+                      color: getRoleColors(member.role).color,
                       cursor: 'pointer',
                     }}
                   >
@@ -424,7 +440,7 @@ export function AdminUserProfiles({
                         disabled={saving}
                         style={{
                           padding: '0.5rem 1rem',
-                          backgroundColor: 'var(--color-primary, #3b82f6)',
+                          backgroundColor: 'var(--color-primary)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '0.375rem',

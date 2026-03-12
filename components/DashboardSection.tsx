@@ -30,10 +30,16 @@ type ItemType = 'ukemål' | 'pipeline' | 'mål' | 'retro'
 
 // Nordic nature colors
 const NORDIC_COLORS: Record<ItemType, { accent: string; light: string }> = {
-  ukemål: { accent: '#6b7280', light: '#f3f4f6' }, // Fjell-grå
-  pipeline: { accent: '#1a472a', light: '#f0fdf4' }, // Skog-grønn
-  mål: { accent: '#0f766e', light: '#f0fdfa' }, // Fjord-blå
-  retro: { accent: '#92400e', light: '#fefce8' }, // Antikk-brun
+  ukemål: {
+    accent: 'var(--color-neutral-600)',
+    light: 'var(--color-neutral-100)',
+  },
+  pipeline: {
+    accent: 'var(--color-secondary-dark)',
+    light: 'var(--color-success-light)',
+  },
+  mål: { accent: 'var(--color-primary-dark)', light: 'var(--color-mist)' },
+  retro: { accent: 'var(--color-bark)', light: 'var(--color-sand)' },
 }
 
 // Wrapper component to make TeamItemCard sortable
@@ -250,10 +256,10 @@ export function DashboardSection({
             onClick={() => setIsAdding(true)}
             style={{
               padding: 'var(--space-sm) var(--space-md)',
-              backgroundColor: 'var(--color-primary, #3b82f6)',
+              backgroundColor: 'var(--color-primary)',
               color: 'white',
               border: 'none',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--border-radius-md)',
               cursor: 'pointer',
               fontSize: 'var(--font-size-sm)',
               fontWeight: 500,
@@ -275,15 +281,15 @@ export function DashboardSection({
           {errorMsg && (
             <p
               style={{
-                color: 'var(--color-error, #ef4444)',
+                color: 'var(--color-error)',
                 fontSize: 'var(--font-size-sm)',
                 margin: 0,
                 padding: 'var(--space-sm)',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--color-error-light)',
+                borderRadius: 'var(--border-radius-md)',
               }}
             >
-              ❌ {errorMsg}
+              {errorMsg}
             </p>
           )}
           <div
@@ -316,7 +322,7 @@ export function DashboardSection({
                 flex: 1,
                 padding: 'var(--space-sm) var(--space-md)',
                 border: '1px solid var(--color-neutral-300)',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 'var(--border-radius-md)',
                 fontSize: 'var(--font-size-base)',
               }}
             />
@@ -327,7 +333,7 @@ export function DashboardSection({
                 backgroundColor: 'var(--color-primary)',
                 color: 'white',
                 border: 'none',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 'var(--border-radius-md)',
                 cursor: 'pointer',
                 fontSize: 'var(--font-size-sm)',
               }}
@@ -345,7 +351,7 @@ export function DashboardSection({
                 backgroundColor: 'var(--color-neutral-200)',
                 color: 'var(--color-neutral-700)',
                 border: 'none',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 'var(--border-radius-md)',
                 cursor: 'pointer',
                 fontSize: 'var(--font-size-sm)',
               }}

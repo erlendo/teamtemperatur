@@ -37,6 +37,12 @@ interface TeamItemCardProps {
 
 type ItemStatus = 'planlagt' | 'pågår' | 'ferdig'
 
+const STATUS_COLORS: Record<ItemStatus, string> = {
+  planlagt: 'var(--color-mist)',
+  pågår: 'var(--color-sand)',
+  ferdig: 'var(--color-success-light)',
+}
+
 export function TeamItemCard({
   item,
   teamMembers,
@@ -245,48 +251,38 @@ export function TeamItemCard({
     (m) => !assignedUserIds.includes(m.id)
   )
 
-  // Get background color based on status (Nordic nature palette)
   const getBackgroundColor = (): string => {
-    switch (item.status) {
-      case 'planlagt':
-        return '#E3F2FD' // Light blue - planned
-      case 'pågår':
-        return '#FFFACD' // Light yellow - in progress
-      case 'ferdig':
-        return '#E8F5E9' // Light green - done
-      default:
-        return 'white'
-    }
+    return STATUS_COLORS[item.status] ?? 'var(--color-neutral-100)'
   }
 
   return (
     <div
       style={{
         backgroundColor: getBackgroundColor(),
-        borderRadius: 'var(--radius-lg, 0.5rem)',
+        borderRadius: 'var(--border-radius-lg)',
         padding: 'var(--space-md)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: '1px solid var(--color-neutral-200, #e5e5e5)',
+        boxShadow: '0 8px 18px rgba(84, 63, 58, 0.08)',
+        border: '1px solid var(--color-neutral-200)',
         transition: 'all 0.3s ease',
         position: 'relative',
         zIndex: isEditMode ? 1000 : 1,
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'
+        e.currentTarget.style.boxShadow = '0 16px 32px rgba(84, 63, 58, 0.14)'
         e.currentTarget.style.transform = 'translateY(-2px)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'
+        e.currentTarget.style.boxShadow = '0 8px 18px rgba(84, 63, 58, 0.08)'
         e.currentTarget.style.transform = 'translateY(0)'
       }}
     >
       {error && (
         <div
           style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            color: 'var(--color-error, #ef4444)',
+            backgroundColor: 'var(--color-error-light)',
+            color: 'var(--color-error)',
             padding: 'var(--space-sm)',
-            borderRadius: 'var(--radius-md)',
+            borderRadius: 'var(--border-radius-md)',
             fontSize: 'var(--font-size-sm)',
             marginBottom: 'var(--space-md)',
             display: 'flex',
@@ -302,11 +298,13 @@ export function TeamItemCard({
         <div
           style={{
             backgroundColor: statusMessage.startsWith('✓')
-              ? 'rgba(34, 197, 94, 0.1)'
-              : 'rgba(96, 165, 250, 0.1)',
-            color: statusMessage.startsWith('✓') ? '#22c55e' : '#3b82f6',
+              ? 'var(--color-success-light)'
+              : 'var(--color-mist)',
+            color: statusMessage.startsWith('✓')
+              ? 'var(--color-success-dark)'
+              : 'var(--color-primary-dark)',
             padding: 'var(--space-sm)',
-            borderRadius: 'var(--radius-md)',
+            borderRadius: 'var(--border-radius-md)',
             fontSize: '12px',
             marginBottom: 'var(--space-md)',
             display: 'flex',
@@ -359,7 +357,7 @@ export function TeamItemCard({
                 width: '100%',
                 padding: '4px 6px',
                 border: '1px solid var(--color-primary)',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 'var(--border-radius-md)',
                 fontSize: '13px',
                 fontWeight: 500,
               }}
@@ -400,8 +398,8 @@ export function TeamItemCard({
                     <span
                       key={tag.tag_name}
                       style={{
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        color: 'var(--color-primary, #3b82f6)',
+                        backgroundColor: 'var(--color-mist)',
+                        color: 'var(--color-primary-dark)',
                         padding: '2px 8px',
                         borderRadius: '12px',
                         fontSize: '11px',
@@ -440,7 +438,7 @@ export function TeamItemCard({
                           justifyContent: 'center',
                           width: '24px',
                           height: '24px',
-                          backgroundColor: 'var(--color-primary, #3b82f6)',
+                          backgroundColor: 'var(--color-primary-dark)',
                           color: 'white',
                           borderRadius: '50%',
                           fontSize: '10px',
@@ -475,8 +473,8 @@ export function TeamItemCard({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        color: '#059669',
+                        backgroundColor: 'var(--color-success-light)',
+                        color: 'var(--color-success-dark)',
                         padding: '2px 6px',
                         borderRadius: '12px',
                         fontSize: '11px',
@@ -498,7 +496,7 @@ export function TeamItemCard({
                             border: 'none',
                             cursor: 'pointer',
                             padding: 0,
-                            color: '#059669',
+                            color: 'var(--color-success-dark)',
                             display: 'flex',
                             alignItems: 'center',
                             fontSize: '10px',
@@ -519,8 +517,8 @@ export function TeamItemCard({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
-                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                        color: '#7c3aed',
+                        backgroundColor: 'var(--color-sand)',
+                        color: 'var(--color-espresso)',
                         padding: '2px 6px',
                         borderRadius: '12px',
                         fontSize: '11px',
@@ -542,7 +540,7 @@ export function TeamItemCard({
                             border: 'none',
                             cursor: 'pointer',
                             padding: 0,
-                            color: '#7c3aed',
+                            color: 'var(--color-espresso)',
                             display: 'flex',
                             alignItems: 'center',
                             fontSize: '10px',
@@ -713,7 +711,7 @@ export function TeamItemCard({
               style={{
                 padding: '4px 6px',
                 border: '1px solid var(--color-neutral-300)',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 'var(--border-radius-md)',
                 fontSize: '12px',
                 cursor: isStatusChanging ? 'not-allowed' : 'pointer',
                 opacity: isStatusChanging ? 0.6 : 1,
@@ -754,7 +752,7 @@ export function TeamItemCard({
                   padding: '4px 8px',
                   backgroundColor: 'var(--color-neutral-100)',
                   border: '1px dashed var(--color-neutral-400)',
-                  borderRadius: 'var(--radius-full)',
+                  borderRadius: '999px',
                   cursor: isAddingMember ? 'not-allowed' : 'pointer',
                   fontSize: '12px',
                   fontWeight: 500,
@@ -786,7 +784,7 @@ export function TeamItemCard({
                     marginTop: 'var(--space-xs)',
                     backgroundColor: 'white',
                     border: '1px solid var(--color-neutral-300)',
-                    borderRadius: 'var(--radius-md)',
+                    borderRadius: 'var(--border-radius-md)',
                     boxShadow: 'var(--shadow-md)',
                     zIndex: 9999,
                     minWidth: '200px',
