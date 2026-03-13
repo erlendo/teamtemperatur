@@ -192,7 +192,10 @@ export async function regenerateWeeklySummary(
 
   if (insertError) {
     console.error('[AI Summary] Error saving summary:', insertError)
-    return { success: false, error: 'Kunne ikke lagre nytt sammendrag' }
+    return {
+      success: false,
+      error: `Kunne ikke lagre nytt sammendrag: ${insertError.message}`,
+    }
   }
 
   revalidatePath(`/t/${teamId}/stats`)
