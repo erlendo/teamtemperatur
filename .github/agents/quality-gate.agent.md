@@ -19,11 +19,14 @@ Your job is to run required validations and report merge readiness.
 
 1. `npm run check:agent-ready`
 2. `npm run check:migrations -- <files>` when migrations changed
+3. For interactive UI changes, verify that switching tabs, filters, query params, or selected periods does not leave stale client state on screen
+4. For performance-sensitive changes, verify that expensive charts, repeated filtering, and broad queries were explicitly reviewed rather than assumed acceptable
 
 ## Output Format
 
 Return:
 
 1. Command results summary
-2. Failing checks with root-cause hints
-3. Ready/Not ready decision
+2. Scenario-check summary for interactive or performance-sensitive UI
+3. Failing checks with root-cause hints
+4. Ready/Not ready decision

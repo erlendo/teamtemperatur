@@ -657,10 +657,19 @@ For agentdrevet arbeid i denne kodebasen bør standardløkken være:
 - `orchestrator`: Koordinerer spesialistene for større oppgaver
 - `planner`: Lager gjennomførbar rekkefølge med lav regressjonsrisiko
 - `ux-designer`: Forbedrer brukervennlighet, informasjonsarkitektur, mikrotekst, tilgjengelighet og visuell kvalitet
+- `frontend-runtime`: Fanger stale state, optimistic UI-feil, query-param-/tab-bytter og andre interaktive runtime-regresjoner
+- `performance`: Fanger bundle-vekt, N+1 reads, unødvendig renderarbeid, tunge charts og svak lazy-loading/cache-strategi
 - `architecture-guard`: Passer på at UI, server actions og datalag holder riktige grenser
 - `db-security`: Fanger auth-, scope- og migrasjonsrisiko
 - `review`: Prioriterer bugs, regressjoner og manglende tester
 - `quality-gate`: Verifiserer at endringen faktisk er merge-klar
+
+### Agenthierarki
+
+- Bruk grunt hierarki: `orchestrator` -> `planner` -> relevante spesialister
+- Ikke legg inn flere lag enn nødvendig; målet er tydelig ansvar, ikke agent-byråkrati
+- Ved interaktive UI-endringer skal `ux-designer`, `frontend-runtime` og `quality-gate` normalt være med
+- Ved tunge data- eller visualiseringsflater skal `performance` vurderes eksplisitt
 
 ### UX-kvalitet
 
