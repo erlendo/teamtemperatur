@@ -90,6 +90,10 @@ export default async function Page({ params, searchParams }: PageProps) {
         topQuestionScore?: number
         bottomQuestionLabel?: string
         bottomQuestionScore?: number
+        learningYesRate?: number
+        learningYesCount?: number
+        obstaclesYesRate?: number
+        obstaclesYesCount?: number
       }
     | undefined
 
@@ -99,6 +103,15 @@ export default async function Page({ params, searchParams }: PageProps) {
     )
     const bottomQuestion = sortedQuestions[0]
     const topQuestion = sortedQuestions[sortedQuestions.length - 1]
+    const learningSignal = teamYearBinaryStats.find(
+      (signal) =>
+        signal.week === selectedWeek?.week && signal.question_key === 'learning'
+    )
+    const obstaclesSignal = teamYearBinaryStats.find(
+      (signal) =>
+        signal.week === selectedWeek?.week &&
+        signal.question_key === 'obstacles'
+    )
 
     summaryData = {
       overallAvg: selectedWeek.overall_avg ?? 0,
@@ -110,6 +123,10 @@ export default async function Page({ params, searchParams }: PageProps) {
       topQuestionScore: topQuestion?.avg_score,
       bottomQuestionLabel: bottomQuestion?.question_label,
       bottomQuestionScore: bottomQuestion?.avg_score,
+      learningYesRate: learningSignal?.yes_rate,
+      learningYesCount: learningSignal?.yes_count,
+      obstaclesYesRate: obstaclesSignal?.yes_rate,
+      obstaclesYesCount: obstaclesSignal?.yes_count,
     }
 
     weeklySummary = await getWeeklySummary(team.id, year, selectedWeek.week)

@@ -15,6 +15,10 @@ export interface WeeklySummaryData {
   topQuestionScore?: number
   bottomQuestionLabel?: string
   bottomQuestionScore?: number
+  learningYesRate?: number
+  learningYesCount?: number
+  obstaclesYesRate?: number
+  obstaclesYesCount?: number
 }
 
 export async function getWeeklySummary(
@@ -61,21 +65,48 @@ async function generateSummary(
     : `📊 **${nonRespondentCount} teammedlem${nonRespondentCount === 1 ? '' : 'er'} har ikke svart.**
 Vurder å kommentere på dette med litt syrlig humor - f.eks. frykter de sannheten, eller er de bare opptatt med viktigere ting? Hold det lett og morsomt!`
 
+  const hasLearningSignal =
+    typeof data.learningYesRate === 'number' &&
+    typeof data.learningYesCount === 'number'
+  const hasObstacleSignal =
+    typeof data.obstaclesYesRate === 'number' &&
+    typeof data.obstaclesYesCount === 'number'
+
+  const signalLines = [
+    hasLearningSignal
+      ? `- Læring: ${data.learningYesRate?.toFixed(0)}% ja (${data.learningYesCount} av ${data.responseCount})`
+      : null,
+    hasObstacleSignal
+      ? `- Hindringer: ${data.obstaclesYesRate?.toFixed(0)}% ja (${data.obstaclesYesCount} av ${data.responseCount})`
+      : null,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  const signalInstruction =
+    hasLearningSignal || hasObstacleSignal
+      ? `Tolkning av signaler:
+- Høy andel ja på læring er positivt.
+- Høy andel ja på hindringer er et faresignal.
+- Nevn disse signalene bare hvis de faktisk gir viktig kontekst til ukens oppsummering.`
+      : ''
+
   const prompt = `Du er en hjelpsom og litt humoristisk assistent som oppsummerer teamdata.
 Her er ukens 'Team Temperature'-resultater for et team.
 Tallene går fra 1 (veldig lavt) til 5 (veldig høyt).
 
 - Teamhelse (hovedtall, bayesiansk justert): ${data.bayesianAdjusted.toFixed(2)}
-- Råscore (sekundært tall): ${data.overallAvg.toFixed(2)}
 - Svarprosent: ${data.responseRate.toFixed(0)}% (${data.responseCount} av ${data.memberCount})
 - Toppområde: ${data.topQuestionLabel ?? 'Ukjent'} (${data.topQuestionScore?.toFixed(2) ?? '–'})
 - Forbedringsområde: ${data.bottomQuestionLabel ?? 'Ukjent'} (${data.bottomQuestionScore?.toFixed(2) ?? '–'})
+${signalLines ? `${signalLines}\n` : ''}
 
 Skriv en kort, innsiktsfull og litt morsom oppsummering på norsk (maks 3 setninger).
 Bruk teamhelse (bayesiansk justert) som primært tall når du omtaler generell helse.
-Nevn råscore kun hvis det gir nyttig kontekst.
 Bruk gjerne norske uttrykk, metaforer eller lett humor, men hold det profesjonelt.
 Fokuser på de mest interessante punktene eller trendene i dataene.
+Ikke bruk råscore som hovedtall i teksten.
+${signalInstruction}
 
 ${participationInstruction}`
 
@@ -117,7 +148,7 @@ export async function regenerateWeeklySummary(
 ): Promise<{ success: boolean; error?: string; summary?: string }> {
   const supabase = supabaseServer()
   const model = 'gpt-4o-mini'
-  const promptVersion = 'bayesian-primary-v1'
+  const promptVersion = 'bayesian-signals-v2'
   const modelUsed = `${model}:${promptVersion}`
 
   // 1. Verifiser at brukeren er authenticated
