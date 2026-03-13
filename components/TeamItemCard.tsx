@@ -224,6 +224,8 @@ export function TeamItemCard({
 
   const handleDeleteRelation = async (relationId: string) => {
     try {
+      setError(null)
+      setStatusMessage('Fjerner kobling...')
       // Optimistic update - remove from local state immediately
       setRelations((prev) => ({
         inbound: prev.inbound.filter((r) => r.id !== relationId),
@@ -244,15 +246,20 @@ export function TeamItemCard({
             outbound: updatedRelations.outbound,
           })
         }
-        alert(`Feil: ${result.error}`)
+        setError(result.error)
+        setStatusMessage(null)
+        await onRefetch?.()
         return
       }
 
       // Trigger router refresh to ensure consistency
+      setStatusMessage('✓ Kobling fjernet')
+      setTimeout(() => setStatusMessage(null), 2000)
       await onRefetch?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
-      alert(`Feil ved sletting av relasjon: ${msg}`)
+      setError(`Feil ved sletting av relasjon: ${msg}`)
+      setStatusMessage(null)
       // Refetch on error
       const updatedRelations = await getItemRelations(item.id, item.team_id)
       if (!updatedRelations.error) {
@@ -261,6 +268,7 @@ export function TeamItemCard({
           outbound: updatedRelations.outbound,
         })
       }
+      await onRefetch?.()
     }
   }
 

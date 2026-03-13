@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Area,
   AreaChart,
@@ -56,6 +56,9 @@ export function YearStatsView({
   const router = useRouter()
   const searchParams = useSearchParams()
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null)
+  const [shouldRenderQuestionCharts, setShouldRenderQuestionCharts] =
+    useState(false)
+  const questionSectionRef = useRef<HTMLDivElement | null>(null)
 
   const weeksWithResponses = data.filter(
     (week) =>
@@ -94,6 +97,28 @@ export function YearStatsView({
       }
     }
   }, [selectedWeekNumber, selectableWeeks, selectedWeekIndex])
+
+  useEffect(() => {
+    if (!questionSectionRef.current || shouldRenderQuestionCharts) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldRenderQuestionCharts(true)
+          observer.disconnect()
+        }
+      },
+      {
+        rootMargin: '240px 0px',
+      }
+    )
+
+    observer.observe(questionSectionRef.current)
+
+    return () => observer.disconnect()
+  }, [shouldRenderQuestionCharts])
 
   const selectedWeek =
     selectableWeeks.length > 0 ? selectableWeeks[selectedWeekIndex] : null
@@ -397,7 +422,10 @@ export function YearStatsView({
       </div>
 
       {/* Question Cards Grid */}
-      <div style={{ display: 'grid', gap: 'var(--space-md)' }}>
+      <div
+        ref={questionSectionRef}
+        style={{ display: 'grid', gap: 'var(--space-md)' }}
+      >
         <h2
           style={{
             marginBottom: 0,
@@ -407,6 +435,15 @@ export function YearStatsView({
         >
           Spørsmål
         </h2>
+        <p
+          style={{
+            margin: 0,
+            color: 'var(--color-neutral-600)',
+            fontSize: 'var(--font-size-sm)',
+          }}
+        >
+          Detaljgrafer lastes først når du kommer ned til denne delen.
+        </p>
         <div
           style={{
             display: 'grid',
@@ -416,16 +453,19 @@ export function YearStatsView({
           }}
         >
           {questions.map((q) => {
-            const trend = getQuestionTrend(q.question_key)
+            const trend = shouldRenderQuestionCharts
+              ? getQuestionTrend(q.question_key)
+              : []
             const qDelta = getQuestionDelta(q.question_key)
             const isExpanded = expandedQuestion === q.question_key
 
             return (
               <div key={q.question_key}>
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    setShouldRenderQuestionCharts(true)
                     setExpandedQuestion(isExpanded ? null : q.question_key)
-                  }
+                  }}
                   style={{
                     width: '100%',
                     padding: '1rem',
@@ -480,19 +520,31 @@ export function YearStatsView({
                     </div>
                     {/* Sparkline */}
                     <div style={{ width: 80, height: 40 }}>
-                      <ResponsiveContainer>
-                        <AreaChart data={trend}>
-                          <Area
-                            type="monotone"
-                            dataKey="score"
-                            stroke={CHART_COLORS.bayesian}
-                            fill={CHART_COLORS.bayesian}
-                            fillOpacity={0.3}
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
+                      {shouldRenderQuestionCharts ? (
+                        <ResponsiveContainer>
+                          <AreaChart data={trend}>
+                            <Area
+                              type="monotone"
+                              dataKey="score"
+                              stroke={CHART_COLORS.bayesian}
+                              fill={CHART_COLORS.bayesian}
+                              fillOpacity={0.3}
+                              strokeWidth={2}
+                              dot={false}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: '999px',
+                            background:
+                              'linear-gradient(90deg, var(--color-neutral-100), var(--color-sand), var(--color-neutral-100))',
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                   <div
@@ -506,7 +558,7 @@ export function YearStatsView({
                 </button>
 
                 {/* Expanded detail */}
-                {isExpanded && (
+                {isExpanded && shouldRenderQuestionCharts && (
                   <div
                     style={{
                       marginTop: '1rem',

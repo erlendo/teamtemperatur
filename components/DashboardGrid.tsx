@@ -26,6 +26,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { AlertCircle, CheckCircle } from 'lucide-react'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import { RelationConnectors } from './RelationConnectors'
 import { TeamItemCard } from './TeamItemCard'
@@ -63,7 +64,7 @@ function SortableItemWrapper(
   {
     item,
     teamMembers,
-    allRelations,
+    relations,
     onRefetch,
     userRole,
     onHover,
@@ -71,7 +72,10 @@ function SortableItemWrapper(
   }: {
     item: TeamItem
     teamMembers: Array<{ id: string; firstName: string }>
-    allRelations: ItemRelation[]
+    relations: {
+      inbound: ItemRelation[]
+      outbound: ItemRelation[]
+    }
     onRefetch?: () => Promise<void>
     userRole: string
     onHover?: (itemId: string | null) => void
@@ -94,12 +98,6 @@ function SortableItemWrapper(
     opacity: isDragging ? 0.5 : 1,
   }
 
-  // Filter relations for this specific item
-  const itemRelations = {
-    inbound: allRelations.filter((r) => r.target_item_id === item.id),
-    outbound: allRelations.filter((r) => r.source_item_id === item.id),
-  }
-
   return (
     <div
       ref={setNodeRef}
@@ -113,7 +111,7 @@ function SortableItemWrapper(
       <TeamItemCard
         item={item}
         teamMembers={teamMembers}
-        relations={itemRelations}
+        relations={relations}
         onRefetch={onRefetch}
         userRole={userRole}
         onRelationDelete={onRelationDelete}
@@ -128,7 +126,7 @@ function GridSection({
   title,
   type,
   items,
-  allRelations,
+  relationLookup,
   teamId,
   teamMembers,
   userRole,
@@ -143,7 +141,13 @@ function GridSection({
   title: string
   type: ItemType
   items: TeamItem[]
-  allRelations: ItemRelation[]
+  relationLookup: Map<
+    string,
+    {
+      inbound: ItemRelation[]
+      outbound: ItemRelation[]
+    }
+  >
   teamId: string
   teamMembers: Array<{ id: string; firstName: string }>
   userRole: string
@@ -391,7 +395,9 @@ function GridSection({
                 key={item.id}
                 item={item}
                 teamMembers={teamMembers}
-                allRelations={allRelations}
+                relations={
+                  relationLookup.get(item.id) || { inbound: [], outbound: [] }
+                }
                 userRole={userRole}
                 onRefetch={onRefetch}
                 onHover={onHover}
@@ -443,6 +449,10 @@ export function DashboardGrid({
     null
   )
   const [activeDragItem, setActiveDragItem] = useState<TeamItem | null>(null)
+  const [feedbackMessage, setFeedbackMessage] = useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const allItems = useRef([...ukemålItems, ...pipelineItems, ...målItems])
@@ -456,8 +466,36 @@ export function DashboardGrid({
   // Optimistic delete handler - removes relation from state immediately
   const handleRelationDelete = async (relationId: string) => {
     setAllRelations((prev) => prev.filter((r) => r.id !== relationId))
+    setFeedbackMessage({
+      type: 'success',
+      text: 'Koblingen ble fjernet.',
+    })
     await onRefetch?.()
   }
+
+  const relationLookup = new Map<
+    string,
+    {
+      inbound: ItemRelation[]
+      outbound: ItemRelation[]
+    }
+  >()
+
+  allRelations.forEach((relation) => {
+    const sourceRelations = relationLookup.get(relation.source_item_id) || {
+      inbound: [],
+      outbound: [],
+    }
+    sourceRelations.outbound.push(relation)
+    relationLookup.set(relation.source_item_id, sourceRelations)
+
+    const targetRelations = relationLookup.get(relation.target_item_id) || {
+      inbound: [],
+      outbound: [],
+    }
+    targetRelations.inbound.push(relation)
+    relationLookup.set(relation.target_item_id, targetRelations)
+  })
 
   // Update card positions from DOM query selector
   useEffect(() => {
@@ -571,8 +609,15 @@ export function DashboardGrid({
 
         if (result.error) {
           console.error('Failed to create relation:', result.error)
-          alert(`Feil: ${result.error}`)
+          setFeedbackMessage({
+            type: 'error',
+            text: `Kunne ikke opprette kobling: ${result.error}`,
+          })
         } else {
+          setFeedbackMessage({
+            type: 'success',
+            text: 'Koblingen ble opprettet.',
+          })
           await onRefetch?.()
         }
       }
@@ -654,6 +699,35 @@ export function DashboardGrid({
           marginBottom: 'var(--space-2xl)',
         }}
       >
+        {feedbackMessage && (
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.875rem 1rem',
+              borderRadius: '1rem',
+              backgroundColor:
+                feedbackMessage.type === 'success'
+                  ? 'var(--color-success-light)'
+                  : 'var(--color-error-light)',
+              color:
+                feedbackMessage.type === 'success'
+                  ? 'var(--color-success-dark)'
+                  : 'var(--color-error-dark)',
+            }}
+          >
+            {feedbackMessage.type === 'success' ? (
+              <CheckCircle size={16} />
+            ) : (
+              <AlertCircle size={16} />
+            )}
+            <span style={{ fontSize: 'var(--font-size-xs)' }}>
+              {feedbackMessage.text}
+            </span>
+          </div>
+        )}
         {showRelations && (
           <RelationConnectors
             relations={allRelations}
@@ -666,7 +740,7 @@ export function DashboardGrid({
           title="Ukemål denne uka"
           type="ukemål"
           items={ukemålItems}
-          allRelations={allRelations}
+          relationLookup={relationLookup}
           teamId={teamId}
           teamMembers={teamMembers}
           userRole={userRole}
@@ -682,7 +756,7 @@ export function DashboardGrid({
           title="Pipeline"
           type="pipeline"
           items={pipelineItems}
-          allRelations={allRelations}
+          relationLookup={relationLookup}
           teamId={teamId}
           teamMembers={teamMembers}
           userRole={userRole}
@@ -698,7 +772,7 @@ export function DashboardGrid({
           title={`Mål (T${Math.ceil((new Date().getMonth() + 1) / 4)} ${new Date().getFullYear()})`}
           type="mål"
           items={målItems}
-          allRelations={allRelations}
+          relationLookup={relationLookup}
           teamId={teamId}
           teamMembers={teamMembers}
           userRole={userRole}

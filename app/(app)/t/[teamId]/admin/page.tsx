@@ -67,24 +67,26 @@ export default async function AdminPage({
     // Get user emails and first names
     let teamMembers: TeamMember[] = []
     if (members && members.length > 0) {
+      const userIds = members.map((member) => member.user_id)
       const { data: profiles } = await supabase
         .from('user_profiles')
-        .select('user_id, first_name')
+        .select('user_id, first_name, email')
+        .in('user_id', userIds)
 
       const profileMap = new Map(
         (
-          (profiles as Array<{ user_id: string; first_name: string }>) || []
-        ).map((p) => [p.user_id, p.first_name])
+          (profiles as Array<{
+            user_id: string
+            first_name: string | null
+            email: string | null
+          }>) || []
+        ).map((p) => [p.user_id, p])
       )
-
-      // Get emails from auth users
-      const { data } = await supabase.auth.admin.listUsers()
-      const usersMap = new Map((data?.users || []).map((u) => [u.id, u.email]))
 
       teamMembers = members.map((m) => ({
         user_id: m.user_id,
-        email: usersMap.get(m.user_id) || m.user_id,
-        first_name: profileMap.get(m.user_id),
+        email: profileMap.get(m.user_id)?.email || m.user_id,
+        first_name: profileMap.get(m.user_id)?.first_name || undefined,
         role: m.role,
         include_in_stats: m.include_in_stats,
       }))

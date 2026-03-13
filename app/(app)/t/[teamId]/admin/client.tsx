@@ -4,6 +4,7 @@ import {
   deleteUserSubmissions,
   getUsersWithSubmissions,
 } from '@/server/actions/teams'
+import { AlertCircle, CheckCircle } from 'lucide-react'
 import { useState, useTransition } from 'react'
 
 interface UserWithSubmissions {
@@ -25,13 +26,16 @@ export default function AdminUsersWithSubmissions({
   const [users, setUsers] = useState<UserWithSubmissions[]>(initialUsers)
   const [isPending, startTransition] = useTransition()
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
+  const [confirmingUserId, setConfirmingUserId] = useState<string | null>(null)
+  const [message, setMessage] = useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
 
   const handleDelete = async (userId: string, email: string) => {
-    if (
-      !confirm(
-        `Er du sikker på at du vil slette alle besvarelser fra ${email}? Dette kan ikke angres.`
-      )
-    ) {
+    if (confirmingUserId !== userId) {
+      setConfirmingUserId(userId)
+      setMessage(null)
       return
     }
 
@@ -40,20 +44,26 @@ export default function AdminUsersWithSubmissions({
       const result = await deleteUserSubmissions(teamId, userId)
 
       if (result.error) {
-        alert('Feil: ' + result.error)
+        setMessage({ type: 'error', text: `Feil: ${result.error}` })
         setDeletingUserId(null)
+        setConfirmingUserId(null)
         return
       }
-
-      alert(`Slettet ${result.count} besvarelser`)
 
       // Refresh the list
       const refreshResult = await getUsersWithSubmissions(teamId)
       if (!refreshResult.error && refreshResult.data) {
         setUsers(refreshResult.data)
+        setMessage({
+          type: 'success',
+          text: `Slettet ${result.count} besvarelser for ${email}`,
+        })
+      } else if (refreshResult.error) {
+        setMessage({ type: 'error', text: refreshResult.error })
       }
 
       setDeletingUserId(null)
+      setConfirmingUserId(null)
     })
   }
 
@@ -98,6 +108,34 @@ export default function AdminUsersWithSubmissions({
           Tidligere medlemmer vises dempet, men historikken deres er fortsatt
           bevart.
         </p>
+        {message && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.875rem 1rem',
+              borderRadius: '1rem',
+              backgroundColor:
+                message.type === 'success'
+                  ? 'var(--color-success-light)'
+                  : 'var(--color-error-light)',
+              color:
+                message.type === 'success'
+                  ? 'var(--color-success-dark)'
+                  : 'var(--color-error-dark)',
+            }}
+          >
+            {message.type === 'success' ? (
+              <CheckCircle size={16} />
+            ) : (
+              <AlertCircle size={16} />
+            )}
+            <span style={{ fontSize: 'var(--font-size-xs)' }}>
+              {message.text}
+            </span>
+          </div>
+        )}
       </div>
 
       <div
@@ -244,44 +282,98 @@ export default function AdminUsersWithSubmissions({
                   )}
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'center' }}>
-                  <button
-                    onClick={() => handleDelete(user.user_id, user.email)}
-                    disabled={
-                      isPending ||
-                      deletingUserId === user.user_id ||
-                      user.submission_count === 0
-                    }
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor:
+                  {confirmingUserId === user.user_id ? (
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        gap: '0.5rem',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <button
+                        onClick={() => handleDelete(user.user_id, user.email)}
+                        disabled={isPending || deletingUserId === user.user_id}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          backgroundColor:
+                            isPending || deletingUserId === user.user_id
+                              ? 'var(--color-neutral-200)'
+                              : 'var(--color-error)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '999px',
+                          cursor:
+                            isPending || deletingUserId === user.user_id
+                              ? 'not-allowed'
+                              : 'pointer',
+                          fontSize: 'var(--font-size-xs)',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {deletingUserId === user.user_id
+                          ? 'Sletter...'
+                          : 'Bekreft sletting'}
+                      </button>
+                      <button
+                        onClick={() => setConfirmingUserId(null)}
+                        disabled={isPending || deletingUserId === user.user_id}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          backgroundColor: 'var(--color-neutral-100)',
+                          color: 'var(--color-neutral-700)',
+                          border: '1px solid var(--color-neutral-300)',
+                          borderRadius: '999px',
+                          cursor:
+                            isPending || deletingUserId === user.user_id
+                              ? 'not-allowed'
+                              : 'pointer',
+                          fontSize: 'var(--font-size-xs)',
+                          fontWeight: 500,
+                        }}
+                      >
+                        Avbryt
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleDelete(user.user_id, user.email)}
+                      disabled={
                         isPending ||
                         deletingUserId === user.user_id ||
                         user.submission_count === 0
-                          ? 'var(--color-neutral-200)'
-                          : 'var(--color-error)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '999px',
-                      cursor:
-                        isPending ||
-                        deletingUserId === user.user_id ||
-                        user.submission_count === 0
-                          ? 'not-allowed'
-                          : 'pointer',
-                      fontSize: 'var(--font-size-xs)',
-                      fontWeight: 500,
-                      opacity:
-                        isPending ||
-                        deletingUserId === user.user_id ||
-                        user.submission_count === 0
-                          ? 0.6
-                          : 1,
-                    }}
-                  >
-                    {deletingUserId === user.user_id
-                      ? 'Sletter...'
-                      : 'Slett besvarelser'}
-                  </button>
+                      }
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor:
+                          isPending ||
+                          deletingUserId === user.user_id ||
+                          user.submission_count === 0
+                            ? 'var(--color-neutral-200)'
+                            : 'var(--color-error)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '999px',
+                        cursor:
+                          isPending ||
+                          deletingUserId === user.user_id ||
+                          user.submission_count === 0
+                            ? 'not-allowed'
+                            : 'pointer',
+                        fontSize: 'var(--font-size-xs)',
+                        fontWeight: 500,
+                        opacity:
+                          isPending ||
+                          deletingUserId === user.user_id ||
+                          user.submission_count === 0
+                            ? 0.6
+                            : 1,
+                      }}
+                    >
+                      Slett besvarelser
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
