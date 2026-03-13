@@ -38,6 +38,7 @@ Your job is to improve product usability and visual quality without breaking the
 - Avoid decorative emojis in headings or primary interface labels unless the same flow uses them intentionally and consistently.
 - Prefer the richer house palette over fallback blue/green defaults when a meaningful semantic mapping already exists in `app/globals.css`.
 - On survey and form-heavy screens, optimize for answer speed first: larger hit targets, one clear action per row, and minimal scanning cost.
+- On interactive views with tabs, week switches, filters, or query-param navigation, verify that client state resets or re-syncs correctly when props change.
 
 ## Output Format
 

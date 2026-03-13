@@ -22,6 +22,7 @@ Your job is to produce a high-signal review focused on correctness and risk.
 3. Data consistency and edge cases
 4. Missing tests for non-trivial logic
 5. Operational risks in production
+6. Stale client state after prop, route, filter, tab, or query-param changes
 
 ## Output Format
 

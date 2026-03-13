@@ -179,6 +179,7 @@ export default async function Page({ params, searchParams }: PageProps) {
           </section>
 
           <AISummary
+            key={`ai-summary-${team.id}-${year}-${selectedWeek?.week ?? 'none'}`}
             summary={weeklySummary}
             teamId={team.id}
             isTeamOwner={isTeamOwner}

@@ -4,7 +4,7 @@ import type { WeeklySummaryData } from '@/server/actions/ai'
 import { regenerateWeeklySummary } from '@/server/actions/ai'
 import { Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface AISummaryProps {
   summary: string
@@ -27,6 +27,11 @@ export function AISummary({
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [localSummary, setLocalSummary] = useState(summary)
+
+  useEffect(() => {
+    setLocalSummary(summary)
+    setError(null)
+  }, [summary, teamId, year, weekNumber])
 
   const hasCompleteResponseSet =
     !!summaryData &&
