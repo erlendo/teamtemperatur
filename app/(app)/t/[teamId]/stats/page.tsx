@@ -2,7 +2,7 @@ import { AISummary } from '@/components/AISummary'
 import { AppHeader } from '@/components/AppHeader'
 import { YearStatsView } from '@/components/YearStatsView'
 import { supabaseServer } from '@/lib/supabase/server'
-import { getOrGenerateWeeklySummary } from '@/server/actions/ai'
+import { getWeeklySummary } from '@/server/actions/ai'
 import { getYearStats } from '@/server/actions/stats'
 import { notFound } from 'next/navigation'
 
@@ -42,8 +42,8 @@ export default async function Page({ params, searchParams }: PageProps) {
     .eq('status', 'active')
     .maybeSingle()
 
-  const isTeamAdmin =
-    membership?.role === 'owner' || membership?.role === 'admin'
+  const isTeamOwner = membership?.role === 'owner'
+  const isTeamAdmin = isTeamOwner || membership?.role === 'admin'
 
   const year = searchParams.year
     ? parseInt(searchParams.year, 10)
@@ -76,6 +76,20 @@ export default async function Page({ params, searchParams }: PageProps) {
   }
 
   let weeklySummary = ''
+  let summaryData:
+    | {
+        overallAvg: number
+        bayesianAdjusted: number
+        responseRate: number
+        responseCount: number
+        memberCount: number
+        topQuestionLabel?: string
+        topQuestionScore?: number
+        bottomQuestionLabel?: string
+        bottomQuestionScore?: number
+      }
+    | undefined
+
   if (selectedWeek) {
     const sortedQuestions = [...(selectedWeek.question_stats ?? [])].sort(
       (a, b) => a.avg_score - b.avg_score
@@ -83,7 +97,7 @@ export default async function Page({ params, searchParams }: PageProps) {
     const bottomQuestion = sortedQuestions[0]
     const topQuestion = sortedQuestions[sortedQuestions.length - 1]
 
-    const summaryData = {
+    summaryData = {
       overallAvg: selectedWeek.overall_avg ?? 0,
       bayesianAdjusted: selectedWeek.bayesian_adjusted ?? 0,
       responseRate: selectedWeek.response_rate ?? 0,
@@ -95,12 +109,7 @@ export default async function Page({ params, searchParams }: PageProps) {
       bottomQuestionScore: bottomQuestion?.avg_score,
     }
 
-    weeklySummary = await getOrGenerateWeeklySummary(
-      team.id,
-      year,
-      selectedWeek.week,
-      summaryData
-    )
+    weeklySummary = await getWeeklySummary(team.id, year, selectedWeek.week)
   }
 
   return (
@@ -172,33 +181,10 @@ export default async function Page({ params, searchParams }: PageProps) {
           <AISummary
             summary={weeklySummary}
             teamId={team.id}
-            isTeamAdmin={isTeamAdmin}
+            isTeamOwner={isTeamOwner}
             year={year}
             weekNumber={selectedWeek?.week}
-            summaryData={
-              selectedWeek
-                ? {
-                    overallAvg: selectedWeek.overall_avg ?? 0,
-                    bayesianAdjusted: selectedWeek.bayesian_adjusted ?? 0,
-                    responseRate: selectedWeek.response_rate ?? 0,
-                    responseCount: selectedWeek.response_count ?? 0,
-                    memberCount: selectedWeek.member_count ?? 0,
-                    topQuestionLabel: (selectedWeek.question_stats ?? []).sort(
-                      (a, b) => b.avg_score - a.avg_score
-                    )[0]?.question_label,
-                    topQuestionScore: (selectedWeek.question_stats ?? []).sort(
-                      (a, b) => b.avg_score - a.avg_score
-                    )[0]?.avg_score,
-                    bottomQuestionLabel: (
-                      selectedWeek.question_stats ?? []
-                    ).sort((a, b) => a.avg_score - b.avg_score)[0]
-                      ?.question_label,
-                    bottomQuestionScore: (
-                      selectedWeek.question_stats ?? []
-                    ).sort((a, b) => a.avg_score - b.avg_score)[0]?.avg_score,
-                  }
-                : undefined
-            }
+            summaryData={summaryData}
           />
 
           <YearStatsView

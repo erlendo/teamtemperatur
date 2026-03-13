@@ -1,38 +1,46 @@
 'use client'
 
+import type { WeeklySummaryData } from '@/server/actions/ai'
 import { regenerateWeeklySummary } from '@/server/actions/ai'
 import { Sparkles } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 interface AISummaryProps {
   summary: string
   teamId?: string
-  isTeamAdmin?: boolean
+  isTeamOwner?: boolean
   year?: number
   weekNumber?: number
-  summaryData?: {
-    overallAvg: number
-    bayesianAdjusted: number
-    responseRate: number
-    responseCount: number
-    memberCount: number
-    topQuestionLabel?: string
-    topQuestionScore?: number
-    bottomQuestionLabel?: string
-    bottomQuestionScore?: number
-  }
+  summaryData?: WeeklySummaryData
 }
 
 export function AISummary({
   summary,
   teamId,
-  isTeamAdmin,
+  isTeamOwner,
   year,
   weekNumber,
   summaryData,
 }: AISummaryProps) {
+  const router = useRouter()
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [localSummary, setLocalSummary] = useState(summary)
+
+  const hasCompleteResponseSet =
+    !!summaryData &&
+    summaryData.memberCount > 0 &&
+    summaryData.responseCount === summaryData.memberCount
+
+  const canGenerate =
+    !!teamId &&
+    !!year &&
+    !!weekNumber &&
+    !!summaryData &&
+    hasCompleteResponseSet
+
+  const buttonLabel = localSummary ? 'Generer på nytt' : 'Generer AI-sammendrag'
 
   const handleRegenerate = async () => {
     if (!teamId || !year || !weekNumber || !summaryData) return
@@ -49,58 +57,157 @@ export function AISummary({
       )
 
       if (!result.success) {
-        setError(result.error || 'Kunne ikke regenerere sammendrag')
+        setError(result.error || 'Kunne ikke generere sammendrag')
       } else {
-        // Reload siden
-        window.location.reload()
+        if (result.summary) {
+          setLocalSummary(result.summary)
+        }
+        router.refresh()
       }
     } catch (err) {
-      setError('En feil oppstod under regenerering')
+      setError('En feil oppstod under generering')
       console.error('Regenerate error:', err)
     } finally {
       setIsRegenerating(false)
     }
   }
 
-  if (!summary) {
+  if (!localSummary && !isTeamOwner) {
     return null
   }
 
   return (
-    <div className="mb-6 rounded-lg border border-purple-200 bg-purple-50 p-4">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start flex-1">
-          <div className="flex-shrink-0">
-            <Sparkles className="h-5 w-5 text-purple-600" aria-hidden="true" />
+    <div
+      style={{
+        marginBottom: 'var(--space-xl)',
+        borderRadius: '1rem',
+        border: '1px solid var(--color-neutral-200)',
+        background: localSummary
+          ? 'linear-gradient(180deg, var(--color-neutral-100), rgba(230, 239, 240, 0.7))'
+          : 'var(--color-neutral-100)',
+        padding: 'var(--space-lg)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 'var(--space-lg)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 'var(--space-md)',
+            flex: 1,
+            minWidth: 0,
+          }}
+        >
+          <div
+            style={{
+              flexShrink: 0,
+              width: '2.5rem',
+              height: '2.5rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '0.875rem',
+              backgroundColor: 'var(--color-teal-soft)',
+              color: 'var(--color-primary-dark)',
+            }}
+          >
+            <Sparkles size={18} aria-hidden="true" />
           </div>
-          <div className="ml-3 flex-1 min-w-0">
-            <h3 className="text-sm font-medium text-purple-800">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: 'var(--font-size-sm)',
+                fontWeight: 700,
+                color: 'var(--color-primary-dark)',
+              }}
+            >
               Ukentlig innsikt (AI-generert)
             </h3>
-            <div className="mt-2 text-sm text-purple-700">
-              <p className="break-words">{summary}</p>
+            <div
+              style={{
+                marginTop: 'var(--space-sm)',
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--color-neutral-700)',
+              }}
+            >
+              {localSummary ? (
+                <p style={{ margin: 0, wordBreak: 'break-word' }}>
+                  {localSummary}
+                </p>
+              ) : (
+                <p style={{ margin: 0 }}>
+                  Ingen AI-oppsummering er generert ennå. Teksten blir lagret og
+                  stående uendret til eier velger å generere på nytt.
+                </p>
+              )}
             </div>
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {!hasCompleteResponseSet && summaryData && (
+              <p
+                style={{
+                  marginTop: 'var(--space-sm)',
+                  marginBottom: 0,
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--color-neutral-600)',
+                }}
+              >
+                AI-sammendrag kan genereres når alle {summaryData.memberCount}{' '}
+                deltakere har svart. Nå er {summaryData.responseCount} av{' '}
+                {summaryData.memberCount} inne.
+              </p>
+            )}
+            {error && (
+              <p
+                style={{
+                  marginTop: 'var(--space-sm)',
+                  marginBottom: 0,
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--color-error-dark)',
+                }}
+              >
+                {error}
+              </p>
+            )}
           </div>
         </div>
-        {isTeamAdmin && (
+        {isTeamOwner && (
           <button
             onClick={handleRegenerate}
-            disabled={isRegenerating}
-            className="ml-4 flex-shrink-0 inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-purple-700 hover:text-purple-900 hover:bg-purple-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Regenerer AI-sammendrag"
+            disabled={isRegenerating || !canGenerate}
+            style={{
+              flexShrink: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '999px',
+              border: '1px solid var(--color-primary)',
+              backgroundColor:
+                isRegenerating || !canGenerate
+                  ? 'var(--color-neutral-100)'
+                  : 'var(--color-primary)',
+              color:
+                isRegenerating || !canGenerate
+                  ? 'var(--color-neutral-500)'
+                  : 'white',
+              fontSize: 'var(--font-size-xs)',
+              fontWeight: 600,
+              cursor:
+                isRegenerating || !canGenerate ? 'not-allowed' : 'pointer',
+              opacity: isRegenerating || !canGenerate ? 0.7 : 1,
+            }}
+            title="Generer AI-sammendrag"
           >
-            {isRegenerating ? (
-              <>
-                <span className="inline-block w-3 h-3 border-2 border-purple-700 border-t-transparent rounded-full animate-spin" />
-                Generer...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-3 h-3" />
-                Regenerer
-              </>
-            )}
+            <Sparkles size={14} />
+            {isRegenerating ? 'Genererer...' : buttonLabel}
           </button>
         )}
       </div>
