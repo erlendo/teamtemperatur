@@ -88,7 +88,9 @@ Vurder å kommentere på dette med litt syrlig humor - f.eks. frykter de sannhet
       ? `Tolkning av signaler:
 - Høy andel ja på læring er positivt.
 - Høy andel ja på hindringer er et faresignal.
-- Nevn disse signalene bare hvis de faktisk gir viktig kontekst til ukens oppsummering.`
+- Når ett eller begge signalene finnes, må du nevne minst ett av dem eksplisitt i oppsummeringen.
+- Bruk de faktiske ordene "læring" og/eller "hindringer" i teksten, ikke bare indirekte omskrivninger.
+- Hvis begge signalene er tilgjengelige og de peker i ulike retninger, er det best å nevne begge kort.`
       : ''
 
   const prompt = `Du er en hjelpsom og litt humoristisk assistent som oppsummerer teamdata.
@@ -106,6 +108,7 @@ Bruk teamhelse (bayesiansk justert) som primært tall når du omtaler generell h
 Bruk gjerne norske uttrykk, metaforer eller lett humor, men hold det profesjonelt.
 Fokuser på de mest interessante punktene eller trendene i dataene.
 Ikke bruk råscore som hovedtall i teksten.
+Hvis læring eller hindringer er oppgitt over, skal minst ett av disse signalene omtales tydelig.
 ${signalInstruction}
 
 ${participationInstruction}`
@@ -148,7 +151,7 @@ export async function regenerateWeeklySummary(
 ): Promise<{ success: boolean; error?: string; summary?: string }> {
   const supabase = supabaseServer()
   const model = 'gpt-4o-mini'
-  const promptVersion = 'bayesian-signals-v2'
+  const promptVersion = 'bayesian-signals-required-v3'
   const modelUsed = `${model}:${promptVersion}`
 
   // 1. Verifiser at brukeren er authenticated
