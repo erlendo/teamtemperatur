@@ -38,12 +38,14 @@ export function AISummary({
     summaryData.memberCount > 0 &&
     summaryData.responseCount === summaryData.memberCount
 
+  const hasExistingSummary = !!localSummary
+
   const canGenerate =
     !!teamId &&
     !!year &&
     !!weekNumber &&
     !!summaryData &&
-    hasCompleteResponseSet
+    (hasCompleteResponseSet || hasExistingSummary)
 
   const buttonLabel = localSummary ? 'Generer på nytt' : 'Generer AI-sammendrag'
 
@@ -155,7 +157,7 @@ export function AISummary({
                 </p>
               )}
             </div>
-            {!hasCompleteResponseSet && summaryData && (
+            {!hasCompleteResponseSet && summaryData && !hasExistingSummary && (
               <p
                 style={{
                   marginTop: 'var(--space-sm)',
@@ -167,6 +169,20 @@ export function AISummary({
                 AI-sammendrag kan genereres når alle {summaryData.memberCount}{' '}
                 deltakere har svart. Nå er {summaryData.responseCount} av{' '}
                 {summaryData.memberCount} inne.
+              </p>
+            )}
+            {!hasCompleteResponseSet && summaryData && hasExistingSummary && (
+              <p
+                style={{
+                  marginTop: 'var(--space-sm)',
+                  marginBottom: 0,
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--color-neutral-600)',
+                }}
+              >
+                Dette sammendraget kan fortsatt oppdateres av eier, selv om bare{' '}
+                {summaryData.responseCount} av {summaryData.memberCount} svar er
+                inne.
               </p>
             )}
             {error && (

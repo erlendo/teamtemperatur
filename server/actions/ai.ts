@@ -152,7 +152,26 @@ export async function regenerateWeeklySummary(
     }
   }
 
-  if (data.responseCount !== data.memberCount) {
+  const { data: existingSummary, error: existingSummaryError } = await supabase
+    .from('ai_weekly_summaries')
+    .select('id')
+    .eq('team_id', teamId)
+    .eq('year', year)
+    .eq('week_number', weekNumber)
+    .maybeSingle()
+
+  if (existingSummaryError) {
+    console.error(
+      '[AI Summary] Error checking existing summary before regeneration:',
+      existingSummaryError
+    )
+    return {
+      success: false,
+      error: 'Kunne ikke kontrollere eksisterende sammendrag',
+    }
+  }
+
+  if (data.responseCount !== data.memberCount && !existingSummary) {
     return {
       success: false,
       error: 'AI-sammendrag kan først genereres når alle har svart',
