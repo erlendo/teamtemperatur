@@ -37,10 +37,28 @@ interface TeamItemCardProps {
 
 type ItemStatus = 'planlagt' | 'pågår' | 'ferdig'
 
-const STATUS_COLORS: Record<ItemStatus, string> = {
-  planlagt: 'var(--color-mist)',
-  pågår: 'var(--color-sand)',
-  ferdig: 'var(--color-success-light)',
+const STATUS_COLORS: Record<
+  ItemStatus,
+  { background: string; border: string; shadow: string; accent: string }
+> = {
+  planlagt: {
+    background: 'var(--color-porcelain)',
+    border: 'var(--color-sand)',
+    shadow: 'rgba(84, 63, 58, 0.08)',
+    accent: 'var(--color-bark)',
+  },
+  pågår: {
+    background: 'var(--color-clay-soft)',
+    border: 'var(--color-clay)',
+    shadow: 'rgba(200, 152, 105, 0.18)',
+    accent: 'var(--color-clay)',
+  },
+  ferdig: {
+    background: 'var(--color-moss-soft)',
+    border: 'var(--color-moss)',
+    shadow: 'rgba(144, 161, 122, 0.18)',
+    accent: 'var(--color-success-dark)',
+  },
 }
 
 export function TeamItemCard({
@@ -252,8 +270,9 @@ export function TeamItemCard({
   )
 
   const getBackgroundColor = (): string => {
-    return STATUS_COLORS[item.status] ?? 'var(--color-neutral-100)'
+    return STATUS_COLORS[item.status]?.background ?? 'var(--color-neutral-100)'
   }
+  const statusPalette = STATUS_COLORS[item.status]
 
   return (
     <div
@@ -261,14 +280,15 @@ export function TeamItemCard({
         backgroundColor: getBackgroundColor(),
         borderRadius: 'var(--border-radius-lg)',
         padding: 'var(--space-md)',
-        boxShadow: '0 8px 18px rgba(84, 63, 58, 0.08)',
-        border: '1px solid var(--color-neutral-200)',
+        boxShadow: `0 8px 18px ${statusPalette.shadow}`,
+        border: `1px solid ${statusPalette.border}`,
+        borderLeft: `4px solid ${statusPalette.accent}`,
         transition: 'all 0.3s ease',
         position: 'relative',
         zIndex: isEditMode ? 1000 : 1,
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 16px 32px rgba(84, 63, 58, 0.14)'
+        e.currentTarget.style.boxShadow = `0 16px 32px ${statusPalette.shadow}`
         e.currentTarget.style.transform = 'translateY(-2px)'
       }}
       onMouseLeave={(e) => {
@@ -305,7 +325,7 @@ export function TeamItemCard({
               : 'var(--color-primary-dark)',
             padding: 'var(--space-sm)',
             borderRadius: 'var(--border-radius-md)',
-            fontSize: '12px',
+            fontSize: 'var(--font-size-xs)',
             marginBottom: 'var(--space-md)',
             display: 'flex',
             alignItems: 'center',
@@ -358,7 +378,7 @@ export function TeamItemCard({
                 padding: '4px 6px',
                 border: '1px solid var(--color-primary)',
                 borderRadius: 'var(--border-radius-md)',
-                fontSize: '13px',
+                fontSize: 'var(--font-size-sm)',
                 fontWeight: 500,
               }}
             />
@@ -372,7 +392,7 @@ export function TeamItemCard({
                 style={{
                   margin: 0,
                   cursor: 'text',
-                  fontSize: '13px',
+                  fontSize: 'var(--font-size-sm)',
                   fontWeight: 500,
                   lineHeight: 1.4,
                   wordBreak: 'break-word',
@@ -402,7 +422,7 @@ export function TeamItemCard({
                         color: 'var(--color-primary-dark)',
                         padding: '2px 8px',
                         borderRadius: '12px',
-                        fontSize: '11px',
+                        fontSize: 'var(--font-size-xs)',
                         fontWeight: 500,
                         whiteSpace: 'nowrap',
                       }}
@@ -441,7 +461,7 @@ export function TeamItemCard({
                           backgroundColor: 'var(--color-primary-dark)',
                           color: 'white',
                           borderRadius: '50%',
-                          fontSize: '10px',
+                          fontSize: 'var(--font-size-xs)',
                           fontWeight: 600,
                         }}
                       >
@@ -477,7 +497,7 @@ export function TeamItemCard({
                         color: 'var(--color-success-dark)',
                         padding: '2px 6px',
                         borderRadius: '12px',
-                        fontSize: '11px',
+                        fontSize: 'var(--font-size-xs)',
                         fontWeight: 500,
                         whiteSpace: 'nowrap',
                       }}
@@ -499,7 +519,7 @@ export function TeamItemCard({
                             color: 'var(--color-success-dark)',
                             display: 'flex',
                             alignItems: 'center',
-                            fontSize: '10px',
+                            fontSize: 'var(--font-size-xs)',
                           }}
                           title="Fjern kobling"
                         >
@@ -521,7 +541,7 @@ export function TeamItemCard({
                         color: 'var(--color-espresso)',
                         padding: '2px 6px',
                         borderRadius: '12px',
-                        fontSize: '11px',
+                        fontSize: 'var(--font-size-xs)',
                         fontWeight: 500,
                         whiteSpace: 'nowrap',
                       }}
@@ -543,7 +563,7 @@ export function TeamItemCard({
                             color: 'var(--color-espresso)',
                             display: 'flex',
                             alignItems: 'center',
-                            fontSize: '10px',
+                            fontSize: 'var(--font-size-xs)',
                           }}
                           title="Fjern kobling"
                         >
@@ -712,9 +732,11 @@ export function TeamItemCard({
                 padding: '4px 6px',
                 border: '1px solid var(--color-neutral-300)',
                 borderRadius: 'var(--border-radius-md)',
-                fontSize: '12px',
+                fontSize: 'var(--font-size-xs)',
                 cursor: isStatusChanging ? 'not-allowed' : 'pointer',
                 opacity: isStatusChanging ? 0.6 : 1,
+                backgroundColor: 'var(--color-neutral-100)',
+                color: 'var(--color-neutral-800)',
               }}
             >
               <option value="planlagt">◆ Planlagt</option>
@@ -754,7 +776,7 @@ export function TeamItemCard({
                   border: '1px dashed var(--color-neutral-400)',
                   borderRadius: '999px',
                   cursor: isAddingMember ? 'not-allowed' : 'pointer',
-                  fontSize: '12px',
+                  fontSize: 'var(--font-size-xs)',
                   fontWeight: 500,
                   opacity: isAddingMember ? 0.6 : 1,
                   display: 'flex',
@@ -782,7 +804,7 @@ export function TeamItemCard({
                     top: '100%',
                     left: 0,
                     marginTop: 'var(--space-xs)',
-                    backgroundColor: 'white',
+                    backgroundColor: 'var(--color-neutral-100)',
                     border: '1px solid var(--color-neutral-300)',
                     borderRadius: 'var(--border-radius-md)',
                     boxShadow: 'var(--shadow-md)',

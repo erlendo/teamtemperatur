@@ -191,11 +191,23 @@ export function AdminUserProfiles({
   const membersWithoutNames = members.filter((m) => !m.first_name)
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ marginBottom: '1rem' }}>Bruker-fornavn</h2>
+    <div style={{ padding: '2rem', display: 'grid', gap: 'var(--space-lg)' }}>
+      <div style={{ display: 'grid', gap: 'var(--space-sm)' }}>
+        <h2
+          style={{
+            marginBottom: 0,
+            fontSize: 'var(--font-size-2xl)',
+            color: 'var(--color-neutral-900)',
+          }}
+        >
+          Brukerfornavn
+        </h2>
         <p
-          style={{ color: 'var(--color-neutral-600)', marginBottom: '1.5rem' }}
+          style={{
+            color: 'var(--color-neutral-600)',
+            marginBottom: 0,
+            fontSize: 'var(--font-size-sm)',
+          }}
         >
           {membersWithoutNames.length > 0
             ? `${membersWithoutNames.length} bruker(e) mangler fornavn`
@@ -207,7 +219,7 @@ export function AdminUserProfiles({
             style={{
               marginBottom: '1.5rem',
               padding: '1rem',
-              borderRadius: '0.5rem',
+              borderRadius: '1rem',
               backgroundColor:
                 message.type === 'error'
                   ? 'var(--color-error-light)'
@@ -253,6 +265,7 @@ export function AdminUserProfiles({
                   textAlign: 'left',
                   fontWeight: '600',
                   borderBottom: '1px solid var(--color-neutral-200)',
+                  color: 'var(--color-neutral-800)',
                 }}
               >
                 E-post
@@ -310,7 +323,7 @@ export function AdminUserProfiles({
                 <td
                   style={{
                     padding: '1rem',
-                    fontSize: '0.875rem',
+                    fontSize: 'var(--font-size-xs)',
                     color: 'var(--color-neutral-700)',
                   }}
                 >
@@ -332,7 +345,7 @@ export function AdminUserProfiles({
                         padding: '0.5rem',
                         border: '1px solid var(--color-primary)',
                         borderRadius: '0.375rem',
-                        fontSize: '0.875rem',
+                        fontSize: 'var(--font-size-xs)',
                         width: '100%',
                         maxWidth: '250px',
                       }}
@@ -352,7 +365,7 @@ export function AdminUserProfiles({
                 <td
                   style={{
                     padding: '1rem',
-                    fontSize: '0.875rem',
+                    fontSize: 'var(--font-size-xs)',
                   }}
                 >
                   <select
@@ -363,7 +376,7 @@ export function AdminUserProfiles({
                     style={{
                       padding: '0.25rem 0.5rem',
                       borderRadius: '6px',
-                      fontSize: '0.75rem',
+                      fontSize: 'var(--font-size-xs)',
                       fontWeight: '500',
                       border: '1px solid var(--color-neutral-300)',
                       backgroundColor: getRoleColors(member.role).background,
@@ -381,7 +394,7 @@ export function AdminUserProfiles({
                 <td
                   style={{
                     padding: '1rem',
-                    fontSize: '0.875rem',
+                    fontSize: 'var(--font-size-xs)',
                   }}
                 >
                   {member.role === 'external' ? (
@@ -416,7 +429,7 @@ export function AdminUserProfiles({
                     <span
                       style={{
                         color: 'var(--color-neutral-500)',
-                        fontSize: '0.875rem',
+                        fontSize: 'var(--font-size-xs)',
                       }}
                     >
                       Ja (alltid)
@@ -446,7 +459,7 @@ export function AdminUserProfiles({
                           borderRadius: '0.375rem',
                           cursor: saving ? 'not-allowed' : 'pointer',
                           opacity: saving ? 0.6 : 1,
-                          fontSize: '0.875rem',
+                          fontSize: 'var(--font-size-xs)',
                           fontWeight: '500',
                         }}
                       >
@@ -462,7 +475,7 @@ export function AdminUserProfiles({
                           border: '1px solid var(--color-neutral-300)',
                           borderRadius: '0.375rem',
                           cursor: saving ? 'not-allowed' : 'pointer',
-                          fontSize: '0.875rem',
+                          fontSize: 'var(--font-size-xs)',
                           fontWeight: '500',
                         }}
                       >
@@ -479,7 +492,7 @@ export function AdminUserProfiles({
                         border: '1px solid var(--color-neutral-300)',
                         borderRadius: '0.375rem',
                         cursor: 'pointer',
-                        fontSize: '0.875rem',
+                        fontSize: 'var(--font-size-xs)',
                         fontWeight: '500',
                       }}
                       onMouseEnter={(e) => {

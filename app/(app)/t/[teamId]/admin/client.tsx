@@ -63,7 +63,10 @@ export default function AdminUsersWithSubmissions({
         style={{
           padding: '2rem',
           textAlign: 'center',
-          color: '#666',
+          color: 'var(--color-neutral-500)',
+          backgroundColor: 'var(--color-neutral-100)',
+          border: '1px solid var(--color-neutral-200)',
+          borderRadius: '1rem',
         }}
       >
         Ingen besvarelser funnet i dette teamet.
@@ -72,23 +75,39 @@ export default function AdminUsersWithSubmissions({
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>
-        Administrer besvarelser
-      </h2>
-      <p
+    <div style={{ display: 'grid', gap: 'var(--space-lg)', padding: '2rem' }}>
+      <div style={{ display: 'grid', gap: 'var(--space-sm)' }}>
+        <h2
+          style={{
+            marginBottom: 0,
+            fontSize: 'var(--font-size-2xl)',
+            color: 'var(--color-neutral-900)',
+          }}
+        >
+          Administrer besvarelser
+        </h2>
+        <p
+          style={{
+            marginBottom: 0,
+            color: 'var(--color-neutral-600)',
+            fontSize: 'var(--font-size-sm)',
+            maxWidth: '54rem',
+          }}
+        >
+          Her kan du slette besvarelser fra nåværende og tidligere medlemmer.
+          Tidligere medlemmer vises dempet, men historikken deres er fortsatt
+          bevart.
+        </p>
+      </div>
+
+      <div
         style={{
-          marginBottom: '2rem',
-          color: '#666',
-          fontSize: '0.9rem',
+          border: '1px solid var(--color-neutral-200)',
+          borderRadius: '1rem',
+          backgroundColor: 'var(--color-neutral-100)',
+          overflow: 'hidden',
         }}
       >
-        Her kan du slette besvarelser fra nåværende og tidligere medlemmer. Merk
-        at tidligere medlemmer (vist i grått) ikke lenger har tilgang til
-        teamet, men deres besvarelser er bevart i historikken.
-      </p>
-
-      <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px' }}>
         <table
           style={{
             width: '100%',
@@ -98,8 +117,8 @@ export default function AdminUsersWithSubmissions({
           <thead>
             <tr
               style={{
-                backgroundColor: '#f5f5f5',
-                borderBottom: '2px solid #e0e0e0',
+                backgroundColor: 'var(--color-neutral-50)',
+                borderBottom: '1px solid var(--color-neutral-200)',
               }}
             >
               <th
@@ -154,14 +173,18 @@ export default function AdminUsersWithSubmissions({
               <tr
                 key={user.user_id}
                 style={{
-                  borderBottom: '1px solid #e0e0e0',
-                  backgroundColor: user.is_current_member ? '#fff' : '#f9f9f9',
+                  borderBottom: '1px solid var(--color-neutral-200)',
+                  backgroundColor: user.is_current_member
+                    ? 'var(--color-neutral-100)'
+                    : 'var(--color-neutral-50)',
                 }}
               >
                 <td
                   style={{
                     padding: '1rem',
-                    color: user.is_current_member ? '#000' : '#999',
+                    color: user.is_current_member
+                      ? 'var(--color-neutral-900)'
+                      : 'var(--color-neutral-500)',
                   }}
                 >
                   {user.email}
@@ -170,11 +193,11 @@ export default function AdminUsersWithSubmissions({
                   {user.is_current_member ? (
                     <span
                       style={{
-                        backgroundColor: '#e8f5e9',
-                        color: '#2e7d32',
+                        backgroundColor: 'var(--color-success-light)',
+                        color: 'var(--color-success-dark)',
                         padding: '0.25rem 0.75rem',
                         borderRadius: '12px',
-                        fontSize: '0.875rem',
+                        fontSize: 'var(--font-size-xs)',
                         fontWeight: 500,
                       }}
                     >
@@ -183,11 +206,11 @@ export default function AdminUsersWithSubmissions({
                   ) : (
                     <span
                       style={{
-                        backgroundColor: '#f5f5f5',
-                        color: '#757575',
+                        backgroundColor: 'var(--color-neutral-50)',
+                        color: 'var(--color-neutral-600)',
                         padding: '0.25rem 0.75rem',
                         borderRadius: '12px',
-                        fontSize: '0.875rem',
+                        fontSize: 'var(--font-size-xs)',
                         fontWeight: 500,
                       }}
                     >
@@ -207,8 +230,8 @@ export default function AdminUsersWithSubmissions({
                 <td
                   style={{
                     padding: '1rem',
-                    fontSize: '0.875rem',
-                    color: '#666',
+                    fontSize: 'var(--font-size-xs)',
+                    color: 'var(--color-neutral-600)',
                   }}
                 >
                   {new Date(user.latest_submission).toLocaleDateString(
@@ -234,18 +257,18 @@ export default function AdminUsersWithSubmissions({
                         isPending ||
                         deletingUserId === user.user_id ||
                         user.submission_count === 0
-                          ? '#e0e0e0'
-                          : '#d32f2f',
-                      color: '#fff',
+                          ? 'var(--color-neutral-200)'
+                          : 'var(--color-error)',
+                      color: 'white',
                       border: 'none',
-                      borderRadius: '4px',
+                      borderRadius: '999px',
                       cursor:
                         isPending ||
                         deletingUserId === user.user_id ||
                         user.submission_count === 0
                           ? 'not-allowed'
                           : 'pointer',
-                      fontSize: '0.875rem',
+                      fontSize: 'var(--font-size-xs)',
                       fontWeight: 500,
                       opacity:
                         isPending ||
@@ -269,14 +292,15 @@ export default function AdminUsersWithSubmissions({
       <div
         style={{
           marginTop: '2rem',
-          padding: '1rem',
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffc107',
-          borderRadius: '4px',
-          fontSize: '0.875rem',
+          padding: '1rem 1.25rem',
+          backgroundColor: 'var(--color-warning-light)',
+          border: '1px solid var(--color-warning)',
+          borderRadius: '1rem',
+          fontSize: 'var(--font-size-xs)',
+          color: 'var(--color-primary-dark)',
         }}
       >
-        <strong>⚠️ Advarsel:</strong> Når du sletter besvarelser fjernes de
+        <strong>Advarsel:</strong> Når du sletter besvarelser fjernes de
         permanent fra databasen og påvirker teamets statistikk og historikk.
         Denne handlingen kan ikke angres.
       </div>

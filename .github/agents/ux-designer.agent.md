@@ -24,6 +24,8 @@ Your job is to improve product usability and visual quality without breaking the
 4. Accessibility basics: contrast, states, affordances, keyboard reachability
 5. Visual polish within existing design tokens and repo patterns
 6. Cross-surface consistency across related pages, especially auth flows and primary team workflows
+7. Typographic consistency: use a small shared type scale, avoid ad hoc tiny font sizes, and make primary task text easier to scan than metadata
+8. Color semantics: planned, active, completed, warning, and error states must feel distinct in both hue and lightness, not just slightly different tints
 
 ## Repo-Specific Guidance
 
@@ -34,6 +36,8 @@ Your job is to improve product usability and visual quality without breaking the
 - When changing one page in a flow, inspect adjacent pages in the same flow before considering the work done.
 - Premium quality in this repo means calm hierarchy, consistent spacing, clear states, restrained color use, and no accidental mixing of old and new visual patterns.
 - Avoid decorative emojis in headings or primary interface labels unless the same flow uses them intentionally and consistently.
+- Prefer the richer house palette over fallback blue/green defaults when a meaningful semantic mapping already exists in `app/globals.css`.
+- On survey and form-heavy screens, optimize for answer speed first: larger hit targets, one clear action per row, and minimal scanning cost.
 
 ## Output Format
 

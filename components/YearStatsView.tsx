@@ -40,6 +40,14 @@ type YearStatsViewProps = {
   selectedWeekNumber?: number
 }
 
+const CHART_COLORS = {
+  raw: 'var(--color-bark)',
+  bayesian: 'var(--color-primary)',
+  moving: 'var(--color-secondary)',
+  response: 'var(--color-clay)',
+  grid: 'var(--color-sand)',
+}
+
 export function YearStatsView({
   data,
   teamId: _teamId,
@@ -146,23 +154,48 @@ export function YearStatsView({
   }
 
   return (
-    <div>
+    <div style={{ display: 'grid', gap: 'var(--space-2xl)' }}>
       {/* Week Selector */}
-      <div style={{ marginBottom: '2rem' }}>
+      <div
+        style={{
+          display: 'grid',
+          gap: 'var(--space-sm)',
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            color: 'var(--color-neutral-600)',
+            fontSize: 'var(--font-size-sm)',
+          }}
+        >
+          Velg uke for detaljvisning
+        </p>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {selectableWeeks.map((week, idx) => (
             <button
               key={week.week}
               onClick={() => handleWeekSelect(week, idx)}
               style={{
-                padding: '0.5rem 1rem',
+                padding: '0.625rem 1rem',
                 backgroundColor:
-                  idx === selectedWeekIndex ? '#3b82f6' : '#e5e7eb',
-                color: idx === selectedWeekIndex ? '#fff' : '#000',
-                border: 'none',
-                borderRadius: 6,
+                  idx === selectedWeekIndex
+                    ? 'var(--color-primary)'
+                    : 'var(--color-neutral-100)',
+                color:
+                  idx === selectedWeekIndex
+                    ? 'white'
+                    : 'var(--color-neutral-700)',
+                border:
+                  idx === selectedWeekIndex
+                    ? '1px solid var(--color-primary)'
+                    : '1px solid var(--color-neutral-200)',
+                borderRadius: 999,
                 cursor: 'pointer',
                 fontWeight: idx === selectedWeekIndex ? '600' : '400',
+                fontSize: 'var(--font-size-xs)',
+                boxShadow:
+                  idx === selectedWeekIndex ? 'var(--shadow-sm)' : 'none',
               }}
             >
               Uke {week.week}
@@ -175,54 +208,100 @@ export function YearStatsView({
       {selectedWeek && (
         <div
           style={{
-            padding: '1.5rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: 12,
-            marginBottom: '2rem',
+            padding: 'var(--space-xl)',
+            backgroundColor: 'var(--color-neutral-100)',
+            border: '1px solid var(--color-neutral-200)',
+            borderRadius: '1rem',
             display: 'grid',
             gap: '1rem',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           }}
         >
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+            <div
+              style={{
+                fontSize: 'var(--font-size-xs)',
+                color: 'var(--color-neutral-500)',
+              }}
+            >
               Inneværende uke
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+            <div
+              style={{
+                fontSize: 'var(--font-size-3xl)',
+                fontWeight: 'bold',
+                color: 'var(--color-neutral-900)',
+              }}
+            >
               Uke {selectedWeek.week}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+            <div
+              style={{
+                fontSize: 'var(--font-size-xs)',
+                color: 'var(--color-neutral-500)',
+              }}
+            >
               Teamhelse (Bayesiansk)
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+            <div
+              style={{
+                fontSize: 'var(--font-size-3xl)',
+                fontWeight: 'bold',
+                color: 'var(--color-neutral-900)',
+              }}
+            >
               {selectedWeek.bayesian_adjusted.toFixed(2)}
               {delta && (
                 <span
                   style={{
-                    fontSize: '1rem',
+                    fontSize: 'var(--font-size-sm)',
                     marginLeft: '0.5rem',
-                    color: Number(delta) >= 0 ? '#059669' : '#dc2626',
+                    color:
+                      Number(delta) >= 0
+                        ? 'var(--color-success-dark)'
+                        : 'var(--color-error-dark)',
                   }}
                 >
                   {Number(delta) >= 0 ? '↑' : '↓'} {Math.abs(Number(delta))}
                 </span>
               )}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+            <div
+              style={{
+                fontSize: 'var(--font-size-xs)',
+                color: 'var(--color-neutral-500)',
+              }}
+            >
               Råscore: {selectedWeek.overall_avg.toFixed(2)} · Glidende:{' '}
               {selectedWeek.moving_average.toFixed(2)}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+            <div
+              style={{
+                fontSize: 'var(--font-size-xs)',
+                color: 'var(--color-neutral-500)',
+              }}
+            >
               Svarprosent
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+            <div
+              style={{
+                fontSize: 'var(--font-size-3xl)',
+                fontWeight: 'bold',
+                color: 'var(--color-neutral-900)',
+              }}
+            >
               {selectedWeek.response_rate.toFixed(0)}%
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+            <div
+              style={{
+                fontSize: 'var(--font-size-xs)',
+                color: 'var(--color-neutral-500)',
+              }}
+            >
               {selectedWeek.response_count} av {selectedWeek.member_count}{' '}
               medlemmer
             </div>
@@ -231,11 +310,26 @@ export function YearStatsView({
       )}
 
       {/* Main Year Chart */}
-      <div style={{ marginBottom: '3rem' }}>
-        <h2 style={{ marginBottom: '1rem' }}>Årsoversikt (52 uker)</h2>
+      <div
+        style={{
+          padding: 'var(--space-xl)',
+          borderRadius: '1rem',
+          border: '1px solid var(--color-neutral-200)',
+          backgroundColor: 'var(--color-neutral-100)',
+        }}
+      >
+        <h2
+          style={{
+            marginBottom: '1rem',
+            color: 'var(--color-neutral-900)',
+            fontSize: 'var(--font-size-xl)',
+          }}
+        >
+          Årsoversikt
+        </h2>
         <ResponsiveContainer width="100%" height={300}>
           <ComposedChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
               dataKey="week"
               label={{ value: 'Uke', position: 'insideBottom', offset: -5 }}
@@ -266,7 +360,7 @@ export function YearStatsView({
               type="monotone"
               dataKey="råscore"
               name="Råscore"
-              stroke="#94a3b8"
+              stroke={CHART_COLORS.raw}
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={false}
@@ -276,7 +370,7 @@ export function YearStatsView({
               type="monotone"
               dataKey="bayesiansk"
               name="Bayesiansk justert"
-              stroke="#3b82f6"
+              stroke={CHART_COLORS.bayesian}
               strokeWidth={3}
               dot={false}
             />
@@ -285,7 +379,7 @@ export function YearStatsView({
               type="monotone"
               dataKey="glidende"
               name="Glidende gjennomsnitt"
-              stroke="#8b5cf6"
+              stroke={CHART_COLORS.moving}
               strokeWidth={2}
               dot={false}
             />
@@ -294,7 +388,7 @@ export function YearStatsView({
               type="monotone"
               dataKey="svarprosent"
               name="Svarprosent"
-              stroke="#10b981"
+              stroke={CHART_COLORS.response}
               strokeWidth={2}
               dot={false}
             />
@@ -303,8 +397,16 @@ export function YearStatsView({
       </div>
 
       {/* Question Cards Grid */}
-      <div>
-        <h2 style={{ marginBottom: '1rem' }}>Spørsmål</h2>
+      <div style={{ display: 'grid', gap: 'var(--space-md)' }}>
+        <h2
+          style={{
+            marginBottom: 0,
+            color: 'var(--color-neutral-900)',
+            fontSize: 'var(--font-size-xl)',
+          }}
+        >
+          Spørsmål
+        </h2>
         <div
           style={{
             display: 'grid',
@@ -327,18 +429,19 @@ export function YearStatsView({
                   style={{
                     width: '100%',
                     padding: '1rem',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 8,
-                    backgroundColor: 'white',
+                    border: '1px solid var(--color-neutral-200)',
+                    borderRadius: '1rem',
+                    backgroundColor: 'var(--color-neutral-100)',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.2s',
+                    boxShadow: isExpanded ? 'var(--shadow-sm)' : 'none',
                   }}
                 >
                   <div
                     style={{
-                      fontSize: '0.875rem',
-                      color: '#6b7280',
+                      fontSize: 'var(--font-size-sm)',
+                      color: 'var(--color-neutral-700)',
                       marginBottom: '0.5rem',
                     }}
                   >
@@ -351,14 +454,23 @@ export function YearStatsView({
                       alignItems: 'center',
                     }}
                   >
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    <div
+                      style={{
+                        fontSize: 'var(--font-size-2xl)',
+                        fontWeight: 'bold',
+                        color: 'var(--color-neutral-900)',
+                      }}
+                    >
                       {q.avg_score.toFixed(2)}
                       {qDelta && (
                         <span
                           style={{
-                            fontSize: '0.875rem',
+                            fontSize: 'var(--font-size-xs)',
                             marginLeft: '0.5rem',
-                            color: Number(qDelta) >= 0 ? '#059669' : '#dc2626',
+                            color:
+                              Number(qDelta) >= 0
+                                ? 'var(--color-success-dark)'
+                                : 'var(--color-error-dark)',
                           }}
                         >
                           {Number(qDelta) >= 0 ? '↑' : '↓'}{' '}
@@ -373,8 +485,8 @@ export function YearStatsView({
                           <Area
                             type="monotone"
                             dataKey="score"
-                            stroke="#2563eb"
-                            fill="#3b82f6"
+                            stroke={CHART_COLORS.bayesian}
+                            fill={CHART_COLORS.bayesian}
                             fillOpacity={0.3}
                             strokeWidth={2}
                             dot={false}
@@ -383,7 +495,12 @@ export function YearStatsView({
                       </ResponsiveContainer>
                     </div>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                  <div
+                    style={{
+                      fontSize: 'var(--font-size-xs)',
+                      color: 'var(--color-neutral-500)',
+                    }}
+                  >
                     {q.count} svar · Klikk for detaljer
                   </div>
                 </button>
@@ -394,12 +511,18 @@ export function YearStatsView({
                     style={{
                       marginTop: '1rem',
                       padding: '1rem',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: 8,
-                      backgroundColor: '#f9fafb',
+                      border: '1px solid var(--color-neutral-200)',
+                      borderRadius: '1rem',
+                      backgroundColor: 'var(--color-neutral-50)',
                     }}
                   >
-                    <h3 style={{ marginBottom: '1rem', fontSize: '1rem' }}>
+                    <h3
+                      style={{
+                        marginBottom: '1rem',
+                        fontSize: 'var(--font-size-sm)',
+                        color: 'var(--color-neutral-800)',
+                      }}
+                    >
                       Siste 52 uker
                     </h3>
                     <ResponsiveContainer width="100%" height={200}>
@@ -416,7 +539,10 @@ export function YearStatsView({
                           }
                         })}
                       >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke={CHART_COLORS.grid}
+                        />
                         <XAxis dataKey="week" />
                         <YAxis domain={[0, 5]} />
                         <Tooltip />
@@ -424,8 +550,8 @@ export function YearStatsView({
                           type="monotone"
                           dataKey="score"
                           name={q.question_label}
-                          fill="#3b82f6"
-                          stroke="#2563eb"
+                          fill={CHART_COLORS.bayesian}
+                          stroke={CHART_COLORS.bayesian}
                           fillOpacity={0.6}
                         />
                       </AreaChart>

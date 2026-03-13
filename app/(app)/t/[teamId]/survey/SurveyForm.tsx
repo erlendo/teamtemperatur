@@ -32,6 +32,13 @@ const SCALE_OPTIONS = [
   { val: 5, emoji: '😄', label: 'Høy' },
 ]
 
+const QUESTION_SURFACE = {
+  defaultBorder: '1px solid var(--color-neutral-200)',
+  answeredBorder: '1px solid var(--color-primary)',
+  defaultBackground: 'var(--color-neutral-100)',
+  answeredBackground: 'var(--color-info-light)',
+}
+
 export function SurveyForm({
   teamId,
   questionnaireId,
@@ -138,6 +145,10 @@ export function SurveyForm({
   const answeredCount = questions.filter(
     (q) => selectedAnswers[q.id] !== undefined && selectedAnswers[q.id] !== null
   ).length
+  const progressPercent =
+    questions.length > 0
+      ? Math.round((answeredCount / questions.length) * 100)
+      : 0
 
   return (
     <>
@@ -145,27 +156,155 @@ export function SurveyForm({
         id="survey-form"
         action={handleSubmit}
         onChange={handleChange}
-        style={{ display: 'flex', flexDirection: 'column', gap: '0' }}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-md)',
+        }}
       >
+        <div
+          style={{
+            backgroundColor: 'var(--color-neutral-100)',
+            border: '1px solid var(--color-neutral-200)',
+            borderRadius: '1rem',
+            padding: 'var(--space-md)',
+            display: 'grid',
+            gap: 'var(--space-md)',
+            marginBottom: 'var(--space-sm)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 'var(--space-md)',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  marginBottom: 'var(--space-xs)',
+                  color: 'var(--color-primary-dark)',
+                  fontWeight: 700,
+                  fontSize: 'var(--font-size-xs)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Fremdrift
+              </p>
+              <p
+                style={{
+                  marginBottom: 0,
+                  color: 'var(--color-neutral-600)',
+                  fontSize: 'var(--font-size-sm)',
+                }}
+              >
+                {answeredCount} av {questions.length} spørsmål besvart
+              </p>
+            </div>
+            <div
+              style={{
+                color: 'var(--color-neutral-700)',
+                fontWeight: 700,
+                fontSize: 'var(--font-size-base)',
+              }}
+            >
+              {progressPercent}%
+            </div>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: 'var(--space-sm)',
+              flexWrap: 'wrap',
+            }}
+          >
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 12px',
+                borderRadius: '999px',
+                backgroundColor: 'var(--color-teal-soft)',
+                color: 'var(--color-primary-dark)',
+                fontSize: 'var(--font-size-xs)',
+                fontWeight: 600,
+              }}
+            >
+              Ett trykk per spørsmål
+            </span>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 12px',
+                borderRadius: '999px',
+                backgroundColor: 'var(--color-neutral-50)',
+                color: 'var(--color-neutral-600)',
+                fontSize: 'var(--font-size-xs)',
+                fontWeight: 500,
+              }}
+            >
+              Utkast lagres automatisk
+            </span>
+          </div>
+          <div
+            style={{
+              height: '8px',
+              borderRadius: '999px',
+              backgroundColor: 'var(--color-sand)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                width: `${progressPercent}%`,
+                height: '100%',
+                borderRadius: '999px',
+                background:
+                  'linear-gradient(90deg, var(--color-primary), var(--color-secondary))',
+                transition: 'width 0.2s ease',
+              }}
+            />
+          </div>
+        </div>
+
         {/* Draft status */}
         {draftStatus !== 'idle' && (
           <div
             role="status"
             aria-live="polite"
             style={{
-              padding: '8px 12px',
-              borderRadius: '6px',
-              fontSize: '13px',
+              padding: '10px 14px',
+              borderRadius: '999px',
+              fontSize: 'var(--font-size-xs)',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              marginBottom: '16px',
+              alignSelf: 'flex-start',
               color:
                 draftStatus === 'saved'
                   ? 'var(--color-success-dark)'
                   : draftStatus === 'error'
                     ? 'var(--color-error-dark)'
                     : 'var(--color-neutral-600)',
+              backgroundColor:
+                draftStatus === 'saved'
+                  ? 'var(--color-success-light)'
+                  : draftStatus === 'error'
+                    ? 'var(--color-error-light)'
+                    : 'var(--color-neutral-100)',
+              border:
+                draftStatus === 'saved'
+                  ? '1px solid var(--color-moss)'
+                  : draftStatus === 'error'
+                    ? '1px solid var(--color-bark)'
+                    : '1px solid var(--color-neutral-200)',
             }}
           >
             {draftStatus === 'saving' && (
@@ -192,14 +331,18 @@ export function SurveyForm({
         {clientError && (
           <div
             style={{
-              padding: '10px 14px',
-              backgroundColor: 'rgba(239,68,68,0.08)',
-              color: 'var(--color-error-dark, #b91c1c)',
-              borderRadius: '8px',
-              fontSize: '14px',
-              marginBottom: '16px',
+              padding: '12px 16px',
+              backgroundColor: 'var(--color-error-light)',
+              color: 'var(--color-error-dark)',
+              borderRadius: 'var(--border-radius-lg)',
+              fontSize: 'var(--font-size-sm)',
+              border: '1px solid var(--color-bark)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
             }}
           >
+            <AlertCircle size={18} />
             {clientError}
           </div>
         )}
@@ -210,15 +353,23 @@ export function SurveyForm({
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            marginBottom: '20px',
-            fontSize: '13px',
+            fontSize: 'var(--font-size-xs)',
             color: 'var(--color-neutral-600)',
+            backgroundColor: 'var(--color-neutral-100)',
+            border: '1px solid var(--color-neutral-200)',
+            borderRadius: '999px',
+            padding: '10px 14px',
+            alignSelf: 'flex-start',
           }}
         >
           {currentWeek > maxWeek - 4 && currentWeek > 1 && (
             <a
               href={`/t/${teamId}/survey?week=${currentWeek - 1}`}
-              style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+              style={{
+                color: 'var(--color-primary)',
+                textDecoration: 'none',
+                fontWeight: 600,
+              }}
             >
               ← Forrige uke
             </a>
@@ -230,7 +381,11 @@ export function SurveyForm({
           {currentWeek < maxWeek && (
             <a
               href={`/t/${teamId}/survey?week=${currentWeek + 1}`}
-              style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+              style={{
+                color: 'var(--color-primary)',
+                textDecoration: 'none',
+                fontWeight: 600,
+              }}
             >
               Neste uke →
             </a>
@@ -238,7 +393,13 @@ export function SurveyForm({
         </div>
 
         {/* Questions */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-md)',
+          }}
+        >
           {questions.map((q, index) => {
             const draftAnswer = initialDraft?.answers.find(
               (a) => a.question_id === q.id
@@ -251,11 +412,17 @@ export function SurveyForm({
               <div
                 key={q.id}
                 style={{
-                  padding: '20px 0',
-                  borderBottom:
-                    index < questions.length - 1
-                      ? '1px solid var(--color-neutral-200)'
-                      : 'none',
+                  padding: 'var(--space-lg)',
+                  border: isAnswered
+                    ? QUESTION_SURFACE.answeredBorder
+                    : QUESTION_SURFACE.defaultBorder,
+                  borderRadius: '1rem',
+                  backgroundColor: isAnswered
+                    ? QUESTION_SURFACE.answeredBackground
+                    : QUESTION_SURFACE.defaultBackground,
+                  boxShadow: isAnswered ? 'var(--shadow-sm)' : 'none',
+                  display: 'grid',
+                  gap: 'var(--space-md)',
                 }}
               >
                 {/* Question label */}
@@ -263,33 +430,49 @@ export function SurveyForm({
                   style={{
                     display: 'flex',
                     alignItems: 'baseline',
-                    gap: '8px',
-                    marginBottom: '14px',
+                    gap: '10px',
+                    marginBottom: 'var(--space-md)',
                   }}
                 >
                   <span
                     style={{
-                      fontSize: '12px',
+                      fontSize: 'var(--font-size-xs)',
                       fontWeight: '700',
                       color: isAnswered
-                        ? 'var(--color-primary)'
+                        ? 'var(--color-primary-dark)'
                         : 'var(--color-neutral-400)',
-                      minWidth: '20px',
+                      minWidth: '28px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '28px',
+                      borderRadius: '999px',
+                      backgroundColor: isAnswered
+                        ? 'var(--color-teal-soft)'
+                        : 'var(--color-canvas)',
+                      border: isAnswered
+                        ? '1px solid rgba(92, 143, 149, 0.2)'
+                        : '1px solid var(--color-sand)',
                     }}
                   >
-                    {index + 1}.
+                    {index + 1}
                   </span>
                   <span
                     style={{
-                      fontSize: '15px',
-                      fontWeight: '500',
+                      fontSize: 'var(--font-size-base)',
+                      fontWeight: '600',
                       color: 'var(--color-neutral-900)',
-                      lineHeight: '1.4',
+                      lineHeight: 'var(--line-height-tight)',
                     }}
                   >
                     {q.label}
                     {q.required && (
-                      <span style={{ color: 'var(--color-error)', marginLeft: '3px' }}>
+                      <span
+                        style={{
+                          color: 'var(--color-error)',
+                          marginLeft: '3px',
+                        }}
+                      >
                         *
                       </span>
                     )}
@@ -300,9 +483,9 @@ export function SurveyForm({
                 {q.type === 'scale_1_5' && (
                   <div
                     style={{
-                      display: 'flex',
-                      gap: '8px',
-                      paddingLeft: '28px',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+                      gap: '12px',
                     }}
                   >
                     {SCALE_OPTIONS.map(({ val, emoji, label }) => {
@@ -316,31 +499,34 @@ export function SurveyForm({
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
-                            gap: '4px',
-                            padding: '10px 4px',
-                            borderRadius: '10px',
+                            gap: '6px',
+                            padding: '14px 8px',
+                            minHeight: '88px',
+                            borderRadius: '14px',
                             border: selected
                               ? '2px solid var(--color-primary)'
                               : '2px solid var(--color-neutral-200)',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
                             backgroundColor: selected
-                              ? 'var(--color-primary-light, #e8f5f0)'
-                              : 'white',
+                              ? 'var(--color-teal-soft)'
+                              : 'var(--color-porcelain)',
+                            boxShadow: selected ? 'var(--shadow-sm)' : 'none',
                           }}
                           onMouseEnter={(e) => {
                             if (!selected) {
                               e.currentTarget.style.borderColor =
                                 'var(--color-primary)'
                               e.currentTarget.style.backgroundColor =
-                                'var(--color-neutral-50)'
+                                'var(--color-canvas)'
                             }
                           }}
                           onMouseLeave={(e) => {
                             if (!selected) {
                               e.currentTarget.style.borderColor =
                                 'var(--color-neutral-200)'
-                              e.currentTarget.style.backgroundColor = 'white'
+                              e.currentTarget.style.backgroundColor =
+                                'var(--color-porcelain)'
                             }
                           }}
                           onClick={() =>
@@ -359,19 +545,19 @@ export function SurveyForm({
                             defaultChecked={draftAnswer?.value_num === val}
                             style={{ display: 'none' }}
                           />
-                          <span style={{ fontSize: '24px', lineHeight: '1' }}>
+                          <span style={{ fontSize: '28px', lineHeight: '1' }}>
                             {emoji}
                           </span>
                           <span
                             style={{
-                              fontSize: '11px',
+                              fontSize: 'var(--font-size-xs)',
                               fontWeight: '600',
                               color: selected
-                                ? 'var(--color-primary)'
+                                ? 'var(--color-primary-dark)'
                                 : 'var(--color-neutral-500)',
                             }}
                           >
-                            {val}
+                            {label || val}
                           </span>
                         </label>
                       )
@@ -384,8 +570,8 @@ export function SurveyForm({
                   <div
                     style={{
                       display: 'flex',
-                      gap: '8px',
-                      paddingLeft: '28px',
+                      gap: '10px',
+                      flexWrap: 'wrap',
                     }}
                   >
                     {[
@@ -398,21 +584,26 @@ export function SurveyForm({
                         <label
                           key={opt.val}
                           style={{
-                            padding: '8px 24px',
-                            borderRadius: '8px',
+                            padding: '14px 24px',
+                            minWidth: '136px',
+                            justifyContent: 'center',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            borderRadius: '12px',
                             border: isSelected
                               ? '2px solid var(--color-primary)'
                               : '2px solid var(--color-neutral-200)',
                             cursor: 'pointer',
                             backgroundColor: isSelected
-                              ? 'var(--color-primary-light, #e8f5f0)'
-                              : 'white',
+                              ? 'var(--color-teal-soft)'
+                              : 'var(--color-porcelain)',
                             color: isSelected
-                              ? 'var(--color-primary)'
+                              ? 'var(--color-primary-dark)'
                               : 'var(--color-neutral-700)',
                             fontWeight: isSelected ? '600' : '500',
-                            fontSize: '14px',
+                            fontSize: 'var(--font-size-sm)',
                             transition: 'all 0.15s ease',
+                            boxShadow: isSelected ? 'var(--shadow-sm)' : 'none',
                           }}
                           onClick={() =>
                             setSelectedAnswers((prev) => ({
@@ -448,16 +639,19 @@ export function SurveyForm({
                     defaultValue={draftAnswer?.value_text || ''}
                     style={{
                       width: '100%',
-                      padding: '10px 12px',
-                      minHeight: '80px',
+                      padding: '14px 16px',
+                      minHeight: '120px',
                       resize: 'vertical',
                       border: '1px solid var(--color-neutral-300)',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      marginLeft: '28px',
+                      borderRadius: '12px',
+                      fontSize: 'var(--font-size-sm)',
                       boxSizing: 'border-box',
+                      backgroundColor: 'var(--color-porcelain)',
+                      color: 'var(--color-neutral-800)',
+                      lineHeight: 'var(--line-height-normal)',
                     }}
                     disabled={isPending}
+                    placeholder="Skriv kort hvis du vil utdype"
                   />
                 )}
               </div>
@@ -468,7 +662,7 @@ export function SurveyForm({
         {/* Progress + Submit */}
         <div
           style={{
-            marginTop: '28px',
+            marginTop: 'var(--space-lg)',
             display: 'flex',
             alignItems: 'center',
             gap: '16px',
@@ -479,19 +673,20 @@ export function SurveyForm({
             type="submit"
             disabled={isPending}
             style={{
-              padding: '12px 28px',
+              padding: '14px 28px',
               backgroundColor: isPending
                 ? 'var(--color-neutral-300)'
                 : 'var(--color-primary)',
               color: 'white',
               border: 'none',
-              borderRadius: '8px',
-              fontSize: '15px',
+              borderRadius: '999px',
+              fontSize: 'var(--font-size-sm)',
               fontWeight: '700',
               cursor: isPending ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
+              boxShadow: isPending ? 'none' : 'var(--shadow-sm)',
             }}
           >
             {isPending ? (
@@ -508,7 +703,7 @@ export function SurveyForm({
           </button>
           <span
             style={{
-              fontSize: '13px',
+              fontSize: 'var(--font-size-xs)',
               color: 'var(--color-neutral-500)',
             }}
           >
@@ -524,7 +719,7 @@ export function SurveyForm({
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: 'white',
+          backgroundColor: 'var(--color-neutral-100)',
           borderTop: '1px solid var(--color-neutral-200)',
           padding: '12px 16px',
           paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
@@ -547,14 +742,15 @@ export function SurveyForm({
               : 'var(--color-primary)',
             color: 'white',
             border: 'none',
-            borderRadius: '8px',
-            fontSize: '15px',
+            borderRadius: '999px',
+            fontSize: 'var(--font-size-sm)',
             fontWeight: '700',
             cursor: isPending ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
+            boxShadow: isPending ? 'none' : 'var(--shadow-sm)',
           }}
         >
           {isPending ? (
@@ -569,7 +765,12 @@ export function SurveyForm({
             </>
           )}
         </button>
-        <span style={{ fontSize: '12px', color: 'var(--color-neutral-500)' }}>
+        <span
+          style={{
+            fontSize: 'var(--font-size-xs)',
+            color: 'var(--color-neutral-500)',
+          }}
+        >
           {answeredCount}/{questions.length}
         </span>
         <style jsx>{`

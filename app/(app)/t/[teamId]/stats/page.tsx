@@ -116,19 +116,58 @@ export default async function Page({ params, searchParams }: PageProps) {
             maxWidth: '1400px',
             margin: '0 auto',
             padding: 'var(--space-3xl) var(--space-xl)',
+            display: 'grid',
+            gap: 'var(--space-2xl)',
           }}
         >
-          <h1
+          <section
             style={{
-              margin: '0 0 var(--space-3xl) 0',
-              fontSize: 'var(--font-size-4xl)',
-              fontWeight: '900',
-              color: 'var(--color-neutral-900)',
-              letterSpacing: '-0.02em',
+              padding: 'var(--space-2xl)',
+              borderRadius: '1.5rem',
+              border: '1px solid var(--color-neutral-200)',
+              background:
+                'linear-gradient(180deg, var(--color-neutral-100), rgba(230, 239, 240, 0.72))',
+              boxShadow: 'var(--shadow-sm)',
+              display: 'grid',
+              gap: 'var(--space-sm)',
             }}
           >
-            Statistikk – År {year}
-          </h1>
+            <p
+              style={{
+                margin: 0,
+                color: 'var(--color-primary-dark)',
+                fontSize: 'var(--font-size-xs)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}
+            >
+              Teaminnsikt
+            </p>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: 'var(--font-size-4xl)',
+                fontWeight: 900,
+                color: 'var(--color-neutral-900)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Statistikk for {year}
+            </h1>
+            <p
+              style={{
+                margin: 0,
+                maxWidth: '42rem',
+                color: 'var(--color-neutral-600)',
+                fontSize: 'var(--font-size-base)',
+              }}
+            >
+              Følg utviklingen i teamhelse, deltakelse og spørsmålstrender med
+              samme rolige farge- og informasjonsstruktur som resten av
+              arbeidsflaten.
+            </p>
+          </section>
 
           <AISummary
             summary={weeklySummary}

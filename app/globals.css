@@ -9,6 +9,12 @@
   --color-porcelain: #faf7f2;
   --color-moss: #90a17a;
   --color-clay: #c89869;
+  --color-teal-soft: #e6eff0;
+  --color-moss-soft: #edf1e7;
+  --color-clay-soft: #f3e3d3;
+  --color-bark-soft: #efe4da;
+  --color-sand-soft: #efe6db;
+  --color-espresso-soft: #e5d8d3;
 
   --color-primary: var(--color-teal);
   --color-primary-dark: var(--color-espresso);
@@ -32,8 +38,10 @@
   --color-neutral-800: var(--color-espresso);
   --color-neutral-900: #43332f;
 
-  --color-success-light: #edf1e7;
+  --color-success-light: var(--color-moss-soft);
   --color-success-dark: #5d6d4d;
+  --color-info-light: var(--color-teal-soft);
+  --color-warning-light: var(--color-clay-soft);
 
   /* Spacing */
   --space-xs: 0.25rem;

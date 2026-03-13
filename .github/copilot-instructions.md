@@ -124,6 +124,8 @@ UI must:
 - Favor clear hierarchy, strong affordances, and concise Norwegian microcopy
 - Improve flows deliberately: fewer steps, clearer next actions, and visible states beat decorative polish
 - Keep adjacent pages in the same user flow visually and structurally aligned; avoid upgrading one screen while leaving sibling screens in an older pattern
+- Use the repo's type scale consistently; avoid ad hoc `11px`, `12px`, `13px` text unless there is a strong accessibility-reviewed reason
+- Use richer palette semantics from `app/globals.css`; planned, in-progress, completed, warning, and error states must be visually distinct in both color family and brightness
 
 Do not:
 

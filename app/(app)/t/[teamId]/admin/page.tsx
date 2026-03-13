@@ -103,6 +103,8 @@ export default async function AdminPage({
               maxWidth: '1400px',
               margin: '0 auto',
               padding: 'var(--space-3xl) var(--space-md)',
+              display: 'grid',
+              gap: 'var(--space-2xl)',
             }}
           >
             <nav
@@ -113,7 +115,7 @@ export default async function AdminPage({
                 gap: 'var(--space-xs)',
                 fontSize: 'var(--font-size-sm)',
                 color: 'var(--color-neutral-600)',
-                marginBottom: 'var(--space-lg)',
+                marginBottom: 0,
               }}
             >
               <Link
@@ -130,16 +132,54 @@ export default async function AdminPage({
               <span>Team Admin</span>
             </nav>
 
-            <h1
+            <section
               style={{
-                fontSize: '1.75rem',
-                fontWeight: 600,
                 margin: 0,
-                marginBottom: 'var(--space-2xl)',
+                padding: 'var(--space-2xl)',
+                borderRadius: '1.5rem',
+                border: '1px solid var(--color-neutral-200)',
+                background:
+                  'linear-gradient(180deg, var(--color-neutral-100), rgba(243, 227, 211, 0.55))',
+                boxShadow: 'var(--shadow-sm)',
+                display: 'grid',
+                gap: 'var(--space-sm)',
               }}
             >
-              Team Admin
-            </h1>
+              <p
+                style={{
+                  margin: 0,
+                  color: 'var(--color-primary-dark)',
+                  fontSize: 'var(--font-size-xs)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                Teamadministrasjon
+              </p>
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: 'var(--font-size-3xl)',
+                  fontWeight: 800,
+                  color: 'var(--color-neutral-900)',
+                }}
+              >
+                Administrer team, medlemmer og historikk
+              </h1>
+              <p
+                style={{
+                  margin: 0,
+                  color: 'var(--color-neutral-600)',
+                  fontSize: 'var(--font-size-base)',
+                  maxWidth: '44rem',
+                }}
+              >
+                Bruk adminflaten til å rydde i medlemsdata og historiske
+                besvarelser uten at den visuelle retningen bryter med resten av
+                produktet.
+              </p>
+            </section>
 
             {/* User Profiles Section */}
             <AdminUserProfiles teamId={teamId} teamMembers={teamMembers} />
@@ -147,8 +187,8 @@ export default async function AdminPage({
             {/* Submissions Section */}
             <div
               style={{
-                borderTop: '2px solid #e0e0e0',
-                marginTop: '2rem',
+                borderTop: '1px solid var(--color-neutral-200)',
+                paddingTop: 'var(--space-2xl)',
               }}
             >
               <AdminUsersWithSubmissions
@@ -164,13 +204,18 @@ export default async function AdminPage({
     console.error('[AdminPage] Unexpected error:', error)
     return (
       <div style={{ padding: '2rem' }}>
-        <h1 style={{ color: '#d32f2f' }}>Feil</h1>
+        <h1 style={{ color: 'var(--color-error-dark)' }}>Feil</h1>
         <p>Kunne ikke laste admin-siden. Sjekk at:</p>
         <ul>
           <li>Du er eier av teamet</li>
           <li>Alle database-migrasjoner er kjørt</li>
         </ul>
-        <p style={{ fontSize: '0.875rem', color: '#666' }}>
+        <p
+          style={{
+            fontSize: 'var(--font-size-xs)',
+            color: 'var(--color-neutral-600)',
+          }}
+        >
           Feil: {error instanceof Error ? error.message : 'Ukjent feil'}
         </p>
       </div>
