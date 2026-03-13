@@ -39,13 +39,10 @@ export function AISummary({
     summaryData.responseCount === summaryData.memberCount
 
   const hasExistingSummary = !!localSummary
+  const hasResponseData = !!summaryData && summaryData.responseCount > 0
 
   const canGenerate =
-    !!teamId &&
-    !!year &&
-    !!weekNumber &&
-    !!summaryData &&
-    (hasCompleteResponseSet || hasExistingSummary)
+    !!teamId && !!year && !!weekNumber && !!summaryData && hasResponseData
 
   const buttonLabel = localSummary ? 'Generer på nytt' : 'Generer AI-sammendrag'
 
@@ -166,9 +163,9 @@ export function AISummary({
                   color: 'var(--color-neutral-600)',
                 }}
               >
-                AI-sammendrag kan genereres når alle {summaryData.memberCount}{' '}
-                deltakere har svart. Nå er {summaryData.responseCount} av{' '}
-                {summaryData.memberCount} inne.
+                Eier kan generere et første sammendrag allerede nå basert på{' '}
+                {summaryData.responseCount} av {summaryData.memberCount} svar.
+                Teksten kan oppdateres igjen senere hvis flere svar kommer inn.
               </p>
             )}
             {!hasCompleteResponseSet && summaryData && hasExistingSummary && (
