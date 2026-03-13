@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  normalizeBinaryStatsRows,
   normalizeYearStatsRows,
   statsTestables,
 } from '@/server/actions/stats.shared'
@@ -90,5 +91,35 @@ describe('parseQuestionStats', () => {
         question_key: 'q1',
       })
     ).toEqual([])
+  })
+})
+
+describe('normalizeBinaryStatsRows', () => {
+  it('normalizes binary question rows from RPC results', () => {
+    const result = normalizeBinaryStatsRows([
+      {
+        week: 11,
+        question_key: 'learning',
+        question_label: 'Har du laert noe nytt denne uka?',
+        sort_order: 11,
+        yes_count: 3,
+        no_count: 1,
+        response_count: 4,
+        yes_rate: 75,
+      },
+    ])
+
+    expect(result).toEqual([
+      {
+        week: 11,
+        question_key: 'learning',
+        question_label: 'Har du laert noe nytt denne uka?',
+        sort_order: 11,
+        yes_count: 3,
+        no_count: 1,
+        response_count: 4,
+        yes_rate: 75,
+      },
+    ])
   })
 })
