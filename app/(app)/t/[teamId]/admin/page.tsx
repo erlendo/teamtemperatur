@@ -16,6 +16,10 @@ interface TeamMember {
   include_in_stats: boolean
 }
 
+function isLikelyEmail(value: string | null | undefined): value is string {
+  return Boolean(value && value.includes('@'))
+}
+
 export default async function AdminPage({
   params,
 }: {
@@ -67,6 +71,20 @@ export default async function AdminPage({
     // Get user emails and first names
     let teamMembers: TeamMember[] = []
     if (members && members.length > 0) {
+      const { data: memberEmails } = await supabase.rpc(
+        'get_team_members_with_emails',
+        { p_team_id: teamId }
+      )
+
+      const emailMap = new Map(
+        (
+          (memberEmails as Array<{ user_id: string; email: string }> | null) ||
+          []
+        )
+          .filter((entry) => entry.user_id)
+          .map((entry) => [entry.user_id, entry.email])
+      )
+
       const userIds = members.map((member) => member.user_id)
       const { data: profiles } = await supabase
         .from('user_profiles')
@@ -83,13 +101,43 @@ export default async function AdminPage({
         ).map((p) => [p.user_id, p])
       )
 
-      teamMembers = members.map((m) => ({
-        user_id: m.user_id,
-        email: profileMap.get(m.user_id)?.email || m.user_id,
-        first_name: profileMap.get(m.user_id)?.first_name || undefined,
-        role: m.role,
-        include_in_stats: m.include_in_stats,
-      }))
+      const roleOrder: Record<string, number> = {
+        owner: 0,
+        admin: 1,
+        member: 2,
+        viewer: 3,
+        external: 4,
+      }
+
+      teamMembers = members
+        .map((m) => {
+          const profile = profileMap.get(m.user_id)
+          const profileEmail = profile?.email || null
+          const rpcEmail = emailMap.get(m.user_id) || null
+
+          return {
+            user_id: m.user_id,
+            email:
+              (isLikelyEmail(profileEmail) && profileEmail) ||
+              (isLikelyEmail(rpcEmail) && rpcEmail) ||
+              'Ukjent e-post',
+            first_name: profile?.first_name || undefined,
+            role: m.role,
+            include_in_stats: m.include_in_stats,
+          }
+        })
+        .sort((a, b) => {
+          const roleDiff = (roleOrder[a.role] ?? 99) - (roleOrder[b.role] ?? 99)
+          if (roleDiff !== 0) {
+            return roleDiff
+          }
+
+          const aIdentity = a.first_name || a.email
+          const bIdentity = b.first_name || b.email
+          return aIdentity.localeCompare(bIdentity, 'nb', {
+            sensitivity: 'base',
+          })
+        })
     }
 
     return (

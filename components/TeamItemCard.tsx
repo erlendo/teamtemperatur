@@ -453,27 +453,27 @@ export function TeamItemCard({
                     const user = teamMembers.find(
                       (m) => m.id === member.user_id
                     )
-                    const initials = user?.firstName
-                      ? user.firstName.substring(0, 2).toUpperCase()
-                      : '?'
+                    const name = user?.firstName || 'Ukjent'
                     return (
                       <span
                         key={member.user_id}
-                        title={user?.firstName || 'Ukjent'}
+                        title={name}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '24px',
+                          justifyContent: 'flex-start',
+                          padding: '2px 8px',
+                          minHeight: '24px',
                           height: '24px',
                           backgroundColor: 'var(--color-primary-dark)',
                           color: 'white',
-                          borderRadius: '50%',
+                          borderRadius: '999px',
                           fontSize: 'var(--font-size-xs)',
                           fontWeight: 600,
+                          whiteSpace: 'nowrap',
                         }}
                       >
-                        {initials}
+                        {name}
                       </span>
                     )
                   })}
