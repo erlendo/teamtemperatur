@@ -53,6 +53,27 @@ function formatDate(date: Date): string {
   return `${day}.${month}`
 }
 
+function getDisplayNameFromEmail(
+  email: string | null | undefined
+): string | null {
+  if (!email || !email.includes('@')) {
+    return null
+  }
+
+  const localPart = email.split('@')[0]
+  if (!localPart) {
+    return null
+  }
+
+  return localPart
+    .replace(/[._-]+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
 export default async function TeamHome({
   params,
 }: {
@@ -87,39 +108,75 @@ export default async function TeamHome({
 
   const teamName = team?.name ?? undefined
 
-  // Fetch team members with first names from user_profiles
+  // Fetch team members with names and fallback emails for display
   const { data: members } = await supabase
     .from('team_memberships')
     .select('user_id')
     .eq('team_id', teamId)
     .eq('status', 'active')
 
-  // Get user first names from user_profiles
-  const userFirstNames: Record<string, string> = {}
+  const teamMembers: Array<{ id: string; firstName: string }> = []
+
   if (members && members.length > 0) {
     try {
       const userIds = members.map((m) => m.user_id)
-      // Query to get first names from user_profiles
+
       const { data: profiles } = await supabase
         .from('user_profiles')
-        .select('user_id, first_name')
+        .select('user_id, first_name, email')
         .in('user_id', userIds)
 
-      profiles?.forEach((p) => {
-        userFirstNames[p.user_id] = p.first_name
-      })
+      const profileMap = new Map(
+        (
+          (profiles as Array<{
+            user_id: string
+            first_name: string | null
+            email: string | null
+          }>) || []
+        ).map((profile) => [profile.user_id, profile])
+      )
+
+      const { data: memberEmails } = await supabase.rpc(
+        'get_team_members_with_emails',
+        { p_team_id: teamId }
+      )
+
+      const emailMap = new Map(
+        (
+          (memberEmails as Array<{ user_id: string; email: string }> | null) ||
+          []
+        ).map((entry) => [entry.user_id, entry.email])
+      )
+
+      teamMembers.push(
+        ...members
+          .map((m) => {
+            const profile = profileMap.get(m.user_id)
+            const displayName =
+              profile?.first_name ||
+              getDisplayNameFromEmail(profile?.email) ||
+              getDisplayNameFromEmail(emailMap.get(m.user_id)) ||
+              'Ukjent medlem'
+
+            return {
+              id: m.user_id,
+              firstName: displayName,
+            }
+          })
+          .filter((m) => m.id)
+      )
     } catch (err) {
-      console.error('Error fetching user profiles:', err)
+      console.error('Error fetching team members:', err)
+      teamMembers.push(
+        ...members
+          .map((m) => ({
+            id: m.user_id,
+            firstName: 'Ukjent medlem',
+          }))
+          .filter((m) => m.id)
+      )
     }
   }
-
-  const teamMembers =
-    (members as Array<{ user_id: string }> | null)
-      ?.map((m) => ({
-        id: m.user_id,
-        firstName: userFirstNames[m.user_id] || m.user_id.slice(0, 8) + '...',
-      }))
-      .filter((m) => m.id) || []
 
   // Fetch dashboard items
   const { items } = await getTeamItems(teamId)
