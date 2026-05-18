@@ -37,6 +37,11 @@ interface TeamItemCardProps {
 
 type ItemStatus = 'planlagt' | 'pågår' | 'ferdig'
 
+function getFirstName(displayName: string): string {
+  const firstName = displayName.trim().split(/\s+/)[0]
+  return firstName || 'Ukjent'
+}
+
 const STATUS_COLORS: Record<
   ItemStatus,
   { background: string; border: string; shadow: string; accent: string }
@@ -453,7 +458,7 @@ export function TeamItemCard({
                     const user = teamMembers.find(
                       (m) => m.id === member.user_id
                     )
-                    const name = user?.firstName || 'Ukjent'
+                    const name = getFirstName(user?.firstName || 'Ukjent')
                     return (
                       <span
                         key={member.user_id}
@@ -767,7 +772,7 @@ export function TeamItemCard({
                 <PersonChip
                   key={member.user_id}
                   userId={member.user_id}
-                  displayName={user?.firstName || 'Ukjent'}
+                  displayName={getFirstName(user?.firstName || 'Ukjent')}
                   itemId={item.id}
                   onUpdate={handleTagUpdate}
                 />
@@ -842,7 +847,7 @@ export function TeamItemCard({
                         e.currentTarget.style.backgroundColor = 'transparent'
                       }}
                     >
-                      {member.firstName}
+                      {getFirstName(member.firstName)}
                     </button>
                   ))}
                 </div>
