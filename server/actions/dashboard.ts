@@ -22,6 +22,72 @@ export interface TeamItem {
   tags: Array<{ tag_name: string }>
 }
 
+export interface ArchivedItemTrendPoint {
+  weekStart: string
+  label: string
+  count: number
+}
+
+const OSLO_TIME_ZONE = 'Europe/Oslo'
+
+function getOsloDateParts(date: Date): {
+  year: number
+  month: number
+  day: number
+  hour: number
+  weekday: number
+} {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: OSLO_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hour12: false,
+    weekday: 'short',
+  })
+
+  const parts = formatter.formatToParts(date)
+  const lookup = new Map(parts.map((part) => [part.type, part.value]))
+  const weekdayLabel = lookup.get('weekday') ?? 'Mon'
+
+  const weekdayMap: Record<string, number> = {
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+    Sun: 7,
+  }
+
+  return {
+    year: Number(lookup.get('year')),
+    month: Number(lookup.get('month')),
+    day: Number(lookup.get('day')),
+    hour: Number(lookup.get('hour')),
+    weekday: weekdayMap[weekdayLabel] ?? 1,
+  }
+}
+
+function getOsloWeekStart(date: Date): Date {
+  const { year, month, day, hour, weekday } = getOsloDateParts(date)
+  const result = new Date(Date.UTC(year, month - 1, day))
+  const offset = weekday === 1 && hour < 10 ? -7 : 1 - weekday
+  result.setUTCDate(result.getUTCDate() + offset)
+  return result
+}
+
+function formatWeekLabel(date: Date): string {
+  const day = String(date.getUTCDate()).padStart(2, '0')
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+  return `${day}.${month}`
+}
+
+function formatWeekKey(date: Date): string {
+  return date.toISOString().slice(0, 10)
+}
+
 export async function getTeamItems(
   teamId: string,
   type?: ItemType,
@@ -95,6 +161,57 @@ export async function getTeamItems(
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     return { items: [], error: message }
+  }
+}
+
+export async function getArchivedItemTrend(
+  teamId: string,
+  weeks = 12
+): Promise<{ data: ArchivedItemTrendPoint[]; error?: string }> {
+  const supabase = supabaseServer()
+
+  try {
+    const { data: archivedItems, error } = await supabase
+      .from('team_items')
+      .select('archived_at')
+      .eq('team_id', teamId)
+      .not('archived_at', 'is', null)
+
+    if (error) {
+      return { data: [], error: error.message }
+    }
+
+    const counts = new Map<string, number>()
+
+    for (const item of archivedItems ?? []) {
+      if (!item.archived_at) continue
+      const archivedDate = new Date(item.archived_at)
+      const weekStart = getOsloWeekStart(archivedDate)
+      const key = formatWeekKey(weekStart)
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+    }
+
+    const currentWeekStart = getOsloWeekStart(new Date())
+    const windowStart = new Date(currentWeekStart)
+    windowStart.setUTCDate(windowStart.getUTCDate() - (weeks - 1) * 7)
+
+    const data: ArchivedItemTrendPoint[] = []
+    for (let i = 0; i < weeks; i += 1) {
+      const weekStart = new Date(windowStart)
+      weekStart.setUTCDate(windowStart.getUTCDate() + i * 7)
+      const key = formatWeekKey(weekStart)
+
+      data.push({
+        weekStart: key,
+        label: formatWeekLabel(weekStart),
+        count: counts.get(key) ?? 0,
+      })
+    }
+
+    return { data }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return { data: [], error: message }
   }
 }
 

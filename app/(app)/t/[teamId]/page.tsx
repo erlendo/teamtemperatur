@@ -1,7 +1,12 @@
 import { AppHeader } from '@/components/AppHeader'
+import { ArchivedItemsChart } from '@/components/ArchivedItemsChart'
 import { HealthCard } from '@/components/HealthCard'
 import { supabaseServer } from '@/lib/supabase/server'
-import { getAllTeamRelations, getTeamItems } from '@/server/actions/dashboard'
+import {
+  getAllTeamRelations,
+  getArchivedItemTrend,
+  getTeamItems,
+} from '@/server/actions/dashboard'
 import { getYearStats } from '@/server/actions/stats'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -194,6 +199,7 @@ export default async function TeamHome({
   const statsData = await getYearStats(teamId, currentWeek)
   const currentWeekStats = statsData?.find((s) => s.week === currentWeek)
   const previousWeekStats = statsData?.find((s) => s.week === currentWeek - 1)
+  const archivedItemTrend = await getArchivedItemTrend(teamId, 12)
 
   return (
     <>
@@ -306,6 +312,14 @@ export default async function TeamHome({
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Row 3: Arkivering per uke */}
+          <div style={{ marginBottom: 'var(--space-2xl)' }}>
+            <ArchivedItemsChart
+              data={archivedItemTrend.data}
+              teamName={teamName}
+            />
           </div>
 
           {/* Back Link */}
