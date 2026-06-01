@@ -314,7 +314,7 @@ export default async function TeamHome({
             </div>
           </div>
 
-          {/* Row 3: Arkivering per uke */}
+          {/* Row 3: Lukkede saker per uke */}
           <div style={{ marginBottom: 'var(--space-2xl)' }}>
             <ArchivedItemsChart
               data={archivedItemTrend.data}

@@ -66,7 +66,7 @@ function ArchiveTooltip({
           color: 'var(--color-neutral-900)',
         }}
       >
-        {point.count} arkiverte saker
+        {point.count} lukkede saker
       </div>
     </div>
   )
@@ -110,7 +110,7 @@ export function ArchivedItemsChart({
               color: 'var(--color-primary-dark)',
             }}
           >
-            Arkivering
+            Lukkede saker
           </p>
           <h2
             style={{
@@ -121,7 +121,7 @@ export function ArchivedItemsChart({
               letterSpacing: '-0.02em',
             }}
           >
-            Arkiverte saker per uke
+            Lukkede saker per uke
           </h2>
           <p
             style={{
@@ -144,7 +144,7 @@ export function ArchivedItemsChart({
             fontWeight: 700,
           }}
         >
-          {totalArchived} arkiverte totalt
+          {totalArchived} lukkede totalt
         </div>
       </div>
 
@@ -192,7 +192,7 @@ export function ArchivedItemsChart({
             color: 'var(--color-neutral-600)',
           }}
         >
-          Ingen arkiverte saker i denne perioden ennå.
+          Ingen lukkede saker i denne perioden ennå.
         </div>
       )}
     </section>
