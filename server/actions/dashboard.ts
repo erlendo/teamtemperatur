@@ -446,17 +446,12 @@ export async function addMemberTag(
   const supabase = supabaseServer()
 
   try {
-    console.log('=== addMemberTag START ===')
-    console.log('itemId:', itemId, 'userId:', userId)
-
     // Validate userId format
     if (!userId || userId.trim() === '') {
-      console.error('✗ userId is empty')
       return { error: 'Bruker-ID er tom' }
     }
 
     // Get team_id for revalidation
-    console.log('Fetching team_id for item...')
     const { data: item, error: itemError } = await supabase
       .from('team_items')
       .select('id, team_id, title')
@@ -468,33 +463,21 @@ export async function addMemberTag(
     }
 
     if (!item || item.length === 0) {
-      console.error('✗ Item not found')
       return { error: 'Oppgave ikke funnet' }
     }
 
     const itemData = item[0]
     if (!itemData) {
-      console.error('✗ Item data is null')
       return { error: 'Oppgave-data mangler' }
     }
 
-    console.log(
-      '✓ Found item:',
-      itemData.title,
-      '(team:',
-      itemData.team_id,
-      ')'
-    )
-
     // Check current user's role
-    console.log('Checking current user authorization...')
     const {
       data: { user: currentUser },
       error: authError,
     } = await supabase.auth.getUser()
 
     if (authError || !currentUser) {
-      console.error('✗ User not authenticated')
       return { error: 'Ikke autentisert' }
     }
 
@@ -512,25 +495,16 @@ export async function addMemberTag(
     }
 
     if (!callerMembership) {
-      console.error('✗ Caller is not an active member of this team')
       return { error: 'Du er ikke medlem av dette laget' }
     }
 
     if (callerMembership.role === 'viewer') {
-      console.error('✗ Viewers cannot assign members')
       return {
         error: 'Leserettigheter gir ikke tilgang til å tildele medlemmer',
       }
     }
 
-    console.log(
-      '✓ User has permission to assign members (role:',
-      callerMembership.role,
-      ')'
-    )
-
     // Verify user is a member of the team
-    console.log('Verifying user is member of team...')
     const { data: membership, error: memberError } = await supabase
       .from('team_memberships')
       .select('user_id, status')
@@ -546,22 +520,16 @@ export async function addMemberTag(
     }
 
     if (!membership || membership.length === 0) {
-      console.error('✗ User is not an active member of this team')
       return { error: 'Person er ikke medlem av laget' }
     }
 
-    console.log('✓ User is active team member')
-
-    console.log('Inserting member tag...')
-    const { error, data } = await supabase
+    const { error } = await supabase
       .from('team_item_members')
       .insert({ item_id: itemId, user_id: userId })
-      .select()
 
     if (error) {
       // Ignore duplicate errors (same person already tagged)
       if (error.code === '23505') {
-        console.log('Member already tagged, ignoring duplicate')
         return {}
       }
       console.error('✗ Error inserting member tag:', error.code, error.message)
@@ -570,10 +538,7 @@ export async function addMemberTag(
       return { error: `Kunne ikke legge til person: ${error.message}` }
     }
 
-    console.log('✓ Member tag inserted:', data)
-    console.log('Revalidating path:', `/t/${itemData.team_id}`)
     revalidatePath(`/t/${itemData.team_id}`)
-    console.log('=== addMemberTag SUCCESS ===')
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -589,11 +554,7 @@ export async function removeMemberTag(
   const supabase = supabaseServer()
 
   try {
-    console.log('=== removeMemberTag START ===')
-    console.log('itemId:', itemId, 'userId:', userId)
-
     // Get team_id for revalidation
-    console.log('Fetching team_id for item...')
     const { data: item, error: itemError } = await supabase
       .from('team_items')
       .select('id, team_id, title')
@@ -605,19 +566,14 @@ export async function removeMemberTag(
     }
 
     if (!item || item.length === 0) {
-      console.error('✗ Item not found')
       return { error: 'Oppgave ikke funnet' }
     }
 
     const itemData = item[0]
     if (!itemData) {
-      console.error('✗ Item data is null')
       return { error: 'Oppgave-data mangler' }
     }
 
-    console.log('✓ Found item:', itemData.title)
-
-    console.log('Removing member tag...')
     const { error } = await supabase
       .from('team_item_members')
       .delete()
@@ -629,10 +585,7 @@ export async function removeMemberTag(
       return { error: `Kunne ikke fjerne person: ${error.message}` }
     }
 
-    console.log('✓ Member tag removed')
-    console.log('Revalidating path:', `/t/${itemData.team_id}`)
     revalidatePath(`/t/${itemData.team_id}`)
-    console.log('=== removeMemberTag SUCCESS ===')
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -655,9 +608,6 @@ export async function addSystemTag(
   }
 
   try {
-    console.log('=== addSystemTag START ===')
-    console.log('itemId:', itemId, 'tagName:', normalizedTag)
-
     // Get authenticated user first
     const {
       data: { user },
@@ -667,10 +617,8 @@ export async function addSystemTag(
       console.error('Auth error:', authError)
       return { error: 'Ikke autentisert' }
     }
-    console.log('✓ User authenticated:', user.id)
 
     // Check max 5 tags
-    console.log('Checking existing tags...')
     const { data: existingTags, error: tagsError } = await supabase
       .from('team_item_tags')
       .select('id')
@@ -687,13 +635,11 @@ export async function addSystemTag(
       }
     }
 
-    console.log('✓ Found', existingTags?.length || 0, 'existing tags')
     if (existingTags && existingTags.length >= 5) {
       return { error: 'Maks 5 tags per oppgave' }
     }
 
     // Get team_id for revalidation (try without .single() first to see if item exists)
-    console.log('Fetching team_id for item...')
     const {
       data: item,
       error: itemError,
@@ -713,34 +659,21 @@ export async function addSystemTag(
     }
 
     if (!item || item.length === 0) {
-      console.error('✗ Item not found with id:', itemId)
       return { error: 'Oppgave ikke funnet' }
     }
 
     const itemData = item[0]
     if (!itemData) {
-      console.error('✗ Item data is null')
       return { error: 'Oppgave-data mangler' }
     }
 
-    console.log(
-      '✓ Found item:',
-      itemData.title,
-      '(team:',
-      itemData.team_id,
-      ')'
-    )
-
-    console.log('Inserting tag into team_item_tags...')
-    const { error, data } = await supabase
+    const { error } = await supabase
       .from('team_item_tags')
       .insert({ item_id: itemId, tag_name: normalizedTag })
-      .select()
 
     if (error) {
       // Ignore duplicate errors
       if (error.code === '23505') {
-        console.log('Tag already exists, skipping')
         return {}
       }
       console.error(`✗ Error inserting tag (${error.code}):`, error.message)
@@ -749,10 +682,7 @@ export async function addSystemTag(
       return { error: `Kunne ikke lagre tag: ${error.message}` }
     }
 
-    console.log('✓ Tag inserted successfully:', data)
-    console.log('Revalidating path:', `/t/${itemData.team_id}`)
     revalidatePath(`/t/${itemData.team_id}`)
-    console.log('=== addSystemTag SUCCESS ===')
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -768,9 +698,6 @@ export async function removeSystemTag(
   const supabase = supabaseServer()
 
   try {
-    console.log('=== removeSystemTag START ===')
-    console.log('itemId:', itemId, 'tagName:', tagName)
-
     // Get authenticated user first
     const {
       data: { user },
@@ -780,10 +707,8 @@ export async function removeSystemTag(
       console.error('✗ Auth error:', authError)
       return { error: 'Ikke autentisert' }
     }
-    console.log('✓ User authenticated:', user.id)
 
     // Get team_id for revalidation
-    console.log('Fetching team_id for item...')
     const { data: item, error: itemError } = await supabase
       .from('team_items')
       .select('id, team_id, title')
@@ -795,22 +720,14 @@ export async function removeSystemTag(
     }
 
     if (!item || item.length === 0) {
-      console.error('✗ Item not found')
       return { error: 'Oppgave ikke funnet' }
     }
 
     const itemData = item[0]
     if (!itemData) {
-      console.error('✗ Item data is null')
       return { error: 'Oppgave-data mangler' }
     }
 
-    console.log('✓ Found item:', itemData.title)
-
-    console.log('Deleting tag:', {
-      item_id: itemId,
-      tag_name: tagName.toLowerCase(),
-    })
     const { error } = await supabase
       .from('team_item_tags')
       .delete()
@@ -822,10 +739,7 @@ export async function removeSystemTag(
       return { error: `Kunne ikke slette tag: ${error.message}` }
     }
 
-    console.log('✓ Tag removed successfully:', tagName.toLowerCase())
-    console.log('Revalidating path:', `/t/${itemData.team_id}`)
     revalidatePath(`/t/${itemData.team_id}`)
-    console.log('=== removeSystemTag SUCCESS ===')
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -852,7 +766,6 @@ export async function getSystemTagSuggestions(
     const suggestions = (data || []).map(
       (row: { tag_name: string }) => row.tag_name
     )
-    console.log('Tag suggestions fetched:', suggestions.length)
     return { suggestions }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -869,10 +782,6 @@ export async function reorderItem(
   const supabase = supabaseServer()
 
   try {
-    console.log(
-      `Reordering item ${itemId} to sort_order ${newSortOrder} in team ${teamId}`
-    )
-
     const { error } = await supabase
       .from('team_items')
       .update({
@@ -983,9 +892,6 @@ export async function deleteRelation(
   const supabase = supabaseServer()
 
   try {
-    console.log('=== deleteRelation START ===')
-    console.log({ relationId, teamId })
-
     // Verify relation exists and belongs to team
     const { data: relation, error: fetchError } = await supabase
       .from('team_item_relations')
@@ -999,7 +905,6 @@ export async function deleteRelation(
     }
 
     if (!relation || relation.length === 0) {
-      console.error('✗ Relation not found in team')
       return { error: 'Relasjon finnes ikke i dette teamet' }
     }
 
@@ -1015,7 +920,6 @@ export async function deleteRelation(
       return { error: `Sletting feilet: ${deleteError.message}` }
     }
 
-    console.log('✓ Relation deleted:', relationId)
     revalidatePath(`/t/${teamId}`)
     return {}
   } catch (err) {
@@ -1065,9 +969,6 @@ export async function getItemRelations(
   const supabase = supabaseServer()
 
   try {
-    console.log('=== getItemRelations START ===')
-    console.log({ itemId, teamId })
-
     // Get outbound relations (this item as source)
     const { data: outbound, error: outboundError } = await supabase
       .from('team_item_relations')
@@ -1108,11 +1009,6 @@ export async function getItemRelations(
         error: inboundError.message,
       }
     }
-
-    console.log('✓ Relations fetched:', {
-      inbound: (inbound || []).length,
-      outbound: (outbound || []).length,
-    })
 
     return {
       inbound: (inbound || []) as ItemRelation[],

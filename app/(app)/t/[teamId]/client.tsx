@@ -45,13 +45,13 @@ export function DashboardClient({
   // Optimistic add - immediately show new item in UI
   const handleOptimisticAdd = (item: TeamItem) => {
     if (item.type === 'ukemål') {
-      setUkemålItems((prev) => [...prev, item])
+      setUkemålItems((prev) => [item, ...prev])
     } else if (item.type === 'pipeline') {
-      setPipelineItems((prev) => [...prev, item])
+      setPipelineItems((prev) => [item, ...prev])
     } else if (item.type === 'mål') {
-      setMålItems((prev) => [...prev, item])
+      setMålItems((prev) => [item, ...prev])
     } else if (item.type === 'retro') {
-      setRetroItems((prev) => [...prev, item])
+      setRetroItems((prev) => [item, ...prev])
     }
   }
 
@@ -104,7 +104,12 @@ export function DashboardClient({
       />
 
       {/* Retro section */}
-      <div style={{ marginBottom: 'var(--space-2xl)', marginTop: 'var(--space-2xl)' }}>
+      <div
+        style={{
+          marginBottom: 'var(--space-2xl)',
+          marginTop: 'var(--space-2xl)',
+        }}
+      >
         <DashboardSection
           title="Retro-forbedringer"
           type="retro"

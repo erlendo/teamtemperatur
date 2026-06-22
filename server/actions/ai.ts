@@ -55,8 +55,6 @@ async function generateSummary(
     return 'OpenAI API-nøkkel er ikke konfigurert.'
   }
 
-  console.log('[AI Summary] Calling OpenAI with model:', model)
-
   const allResponded = data.responseCount === data.memberCount
   const nonRespondentCount = data.memberCount - data.responseCount
 
@@ -120,11 +118,6 @@ ${participationInstruction}`
       temperature: 0.7,
     })
 
-    console.log(
-      '[AI Summary] OpenAI response received, length:',
-      text?.length || 0
-    )
-
     if (!text) throw new Error('Fikk ikke generert en oppsummering.')
 
     return text.trim()
@@ -187,14 +180,6 @@ export async function regenerateWeeklySummary(
   }
 
   // 3. Generer nytt sammendrag
-  console.log(
-    '[AI Summary] Generating summary on owner request for team:',
-    teamId,
-    'year:',
-    year,
-    'week:',
-    weekNumber
-  )
   const newSummary = await generateSummary(data, model)
 
   if (!newSummary || newSummary.includes('feil')) {
@@ -228,6 +213,5 @@ export async function regenerateWeeklySummary(
   revalidatePath(`/t/${teamId}/stats`)
   revalidatePath(`/t/${teamId}/stats?week=${weekNumber}`)
 
-  console.log('[AI Summary] Successfully generated and saved summary')
   return { success: true, summary: newSummary }
 }

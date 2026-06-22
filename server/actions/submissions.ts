@@ -25,12 +25,6 @@ export async function submitSurvey(input: {
   }
 
   // Verify membership BEFORE attempting insert
-  console.log(
-    '[submitSurvey] Checking membership for user:',
-    u.user.id,
-    'team:',
-    input.teamId
-  )
 
   const { data: membership, error: memCheckErr } = await supabase
     .from('tt_team_memberships')
@@ -49,7 +43,6 @@ export async function submitSurvey(input: {
   }
 
   if (!membership) {
-    console.log('[submitSurvey] User not a member of team')
     return {
       success: false,
       error: 'Du er ikke medlem av dette teamet',
@@ -57,13 +50,6 @@ export async function submitSurvey(input: {
   }
 
   try {
-    console.log(
-      '[submitSurvey] Starting submission for team:',
-      input.teamId,
-      'week:',
-      input.week
-    )
-
     // Delete existing submission for same week to allow overwriting
     const { error: delErr } = await supabase
       .from('tt_submissions')
@@ -90,11 +76,6 @@ export async function submitSurvey(input: {
       .select()
       .single()
 
-    console.log('[submitSurvey] Submission result:', {
-      sErr: sErr?.message,
-      submissionId: submission?.id,
-    })
-
     if (sErr) throw sErr
 
     const rows = input.answers.map((a) => ({
@@ -105,15 +86,10 @@ export async function submitSurvey(input: {
       value_text: a.value_text ?? null,
     }))
 
-    console.log('[submitSurvey] Inserting', rows.length, 'answers')
-
     const { error: aErr } = await supabase.from('tt_answers').insert(rows)
-
-    console.log('[submitSurvey] Answers result:', { aErr: aErr?.message })
 
     if (aErr) throw aErr
 
-    console.log('[submitSurvey] SUCCESS')
     return { success: true, week: input.week }
   } catch (err) {
     console.error('[submitSurvey] CAUGHT ERROR:', err)
@@ -121,11 +97,9 @@ export async function submitSurvey(input: {
       err && typeof err === 'object' && 'message' in err
         ? String(err.message)
         : 'Ukjent feil'
-    console.log('[submitSurvey] Error message:', msg)
     const friendly = msg.includes('unique')
       ? 'Du har allerede svart for denne uken'
       : msg
-    console.log('[submitSurvey] Friendly error:', friendly)
     return { success: false, error: friendly }
   }
 }

@@ -23,24 +23,28 @@ export async function listMyTeams() {
 
   // Get members for each team
   const teamsWithMembers = await Promise.all(
-    (data ?? []).map(async (r: any) => {
+    (data ?? []).map(async (r) => {
+      const row = r as unknown as {
+        teams: { id: string; name: string }
+        role: string
+      }
       // Get members with emails via database function
       const { data: membersData, error: membersError } = await supabase.rpc(
         'get_team_members_with_emails',
-        { p_team_id: r.teams.id }
+        { p_team_id: row.teams.id }
       )
 
       if (membersError) {
         console.error(
-          `Error fetching members for team ${r.teams.name}:`,
+          `Error fetching members for team ${row.teams.name}:`,
           membersError
         )
       }
 
       return {
-        id: r.teams.id as string,
-        name: r.teams.name as string,
-        role: r.role as string,
+        id: row.teams.id,
+        name: row.teams.name,
+        role: row.role,
         memberCount: membersData?.length || 0,
         members: membersData || [],
       }
@@ -80,10 +84,14 @@ export async function listAvailableTeams() {
     return []
   }
 
-  const userTeamIds = new Set((userTeams ?? []).map((t: any) => t.team_id))
+  const userTeamIds = new Set(
+    (userTeams ?? []).map((t: { team_id: string }) => t.team_id)
+  )
 
   // Return teams the user is NOT a member of
-  return (allTeams ?? []).filter((team: any) => !userTeamIds.has(team.id))
+  return (allTeams ?? []).filter(
+    (team: { id: string }) => !userTeamIds.has(team.id)
+  )
 }
 
 export async function joinTeam(teamId: string) {
@@ -130,13 +138,6 @@ export async function createTeam(name: string) {
     return { error: 'Ikke autentisert' }
   }
 
-  console.log(
-    '[createTeam] Creating team for user:',
-    u.user.id,
-    'with name:',
-    name
-  )
-
   const { data: team, error: teamErr } = await supabase
     .from('tt_teams')
     .insert({ name, created_by: u.user.id, settings: { teamSize: 6 } })
@@ -151,8 +152,6 @@ export async function createTeam(name: string) {
     return { error: `Database error: ${teamErr.message}` }
   }
 
-  console.log('[createTeam] Team created:', team.id)
-
   const { error: memErr } = await supabase.from('tt_team_memberships').insert({
     team_id: team.id,
     user_id: u.user.id,
@@ -163,8 +162,6 @@ export async function createTeam(name: string) {
     console.error('createTeam membership error:', memErr)
     return { error: memErr.message }
   }
-
-  console.log('[createTeam] Creating default questionnaire')
 
   // Create default questionnaire
   const { error: qErr } = await supabase.rpc('create_default_questionnaire', {
@@ -205,23 +202,15 @@ export async function removeMember(
     return { error: 'Du har ikke tillatelse til å fjerne medlemmer' }
   }
 
-  console.log('[removeMember] Removing member:', {
-    teamId,
-    memberId,
-    deleteSubmissions,
-  })
-
   // Delete submissions if requested
   if (deleteSubmissions) {
-    console.log('[removeMember] Deleting submissions...')
-    const { error: submissionError, count } = await supabase
+    const { error: submissionError } = await supabase
       .from('submissions')
       .delete()
       .eq('team_id', teamId)
       .eq('submitted_by', memberId)
       .select()
 
-    console.log('[removeMember] Submissions deleted:', count)
     if (submissionError) {
       console.error('Error deleting submissions:', submissionError)
       return { error: 'Kunne ikke slette tidligere svar' }
@@ -229,21 +218,18 @@ export async function removeMember(
   }
 
   // Remove member from team
-  console.log('[removeMember] Deleting membership...')
-  const { error: deleteError, count: memberCount } = await supabase
+  const { error: deleteError } = await supabase
     .from('tt_team_memberships')
     .delete()
     .eq('team_id', teamId)
     .eq('user_id', memberId)
     .select()
 
-  console.log('[removeMember] Memberships deleted:', memberCount)
   if (deleteError) {
     console.error('Error removing member:', deleteError)
     return { error: 'Kunne ikke fjerne medlem' }
   }
 
-  console.log('[removeMember] Success!')
   return { success: true }
 }
 
@@ -269,14 +255,8 @@ export async function getUsersWithSubmissions(teamId: string) {
     return { error: 'Du har ikke tillatelse til å se denne informasjonen' }
   }
 
-  console.log('[getUsersWithSubmissions] Calling RPC for teamId:', teamId)
   const { data, error } = await supabase.rpc('get_users_with_submissions', {
     p_team_id: teamId,
-  })
-
-  console.log('[getUsersWithSubmissions] RPC response:', {
-    error,
-    dataLength: Array.isArray(data) ? data.length : typeof data,
   })
 
   if (error) {
@@ -310,11 +290,6 @@ export async function deleteUserSubmissions(teamId: string, userId: string) {
     return { error: 'Du har ikke tillatelse til å slette besvarelser' }
   }
 
-  console.log('[deleteUserSubmissions] Deleting submissions:', {
-    teamId,
-    userId,
-  })
-
   const { error: deleteError, count } = await supabase
     .from('submissions')
     .delete()
@@ -322,7 +297,6 @@ export async function deleteUserSubmissions(teamId: string, userId: string) {
     .eq('submitted_by', userId)
     .select()
 
-  console.log('[deleteUserSubmissions] Submissions deleted:', count)
   if (deleteError) {
     console.error('[deleteUserSubmissions] Error:', deleteError)
     return { error: 'Kunne ikke slette besvarelser' }
@@ -377,12 +351,6 @@ export async function updateMemberIncludeInStats(
     }
   }
 
-  console.log('[updateMemberIncludeInStats] Updating:', {
-    teamId,
-    userId,
-    includeInStats,
-  })
-
   const { error: updateError } = await supabase
     .from('team_memberships')
     .update({ include_in_stats: includeInStats })
@@ -394,7 +362,6 @@ export async function updateMemberIncludeInStats(
     return { error: 'Kunne ikke oppdatere innstilling' }
   }
 
-  console.log('[updateMemberIncludeInStats] Success!')
   return { success: true }
 }
 
@@ -435,12 +402,6 @@ export async function updateMemberRole(
     return { error: 'Du kan ikke endre din egen rolle som owner' }
   }
 
-  console.log('[updateMemberRole] Updating:', {
-    teamId,
-    userId,
-    newRole,
-  })
-
   const { error: updateError } = await supabase
     .from('team_memberships')
     .update({ role: newRole })
@@ -452,6 +413,5 @@ export async function updateMemberRole(
     return { error: 'Kunne ikke oppdatere rolle' }
   }
 
-  console.log('[updateMemberRole] Success!')
   return { success: true }
 }

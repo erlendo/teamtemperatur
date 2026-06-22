@@ -79,6 +79,7 @@ export function TeamItemCard({
   const [isEditMode, setIsEditMode] = useState(false)
   const [title, setTitle] = useState(item.title)
   const [showMemberDropdown, setShowMemberDropdown] = useState(false)
+  const [memberSearch, setMemberSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -212,6 +213,7 @@ export function TeamItemCard({
       setStatusMessage('✓ Medlem lagt til')
       setTimeout(() => setStatusMessage(null), 2000)
       setShowMemberDropdown(false)
+      setMemberSearch('')
       await onRefetch?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
@@ -298,7 +300,7 @@ export function TeamItemCard({
         borderLeft: `4px solid ${statusPalette.accent}`,
         transition: 'all 0.3s ease',
         position: 'relative',
-        zIndex: isEditMode ? 1000 : 1,
+        zIndex: showMemberDropdown ? 1002 : isEditMode ? 1000 : 1,
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = `0 16px 32px ${statusPalette.shadow}`
@@ -781,7 +783,10 @@ export function TeamItemCard({
 
             <div style={{ position: 'relative', zIndex: 50 }}>
               <button
-                onClick={() => setShowMemberDropdown(!showMemberDropdown)}
+                onClick={() => {
+                  setShowMemberDropdown(!showMemberDropdown)
+                  setMemberSearch('')
+                }}
                 disabled={isAddingMember}
                 style={{
                   padding: '4px 8px',
@@ -810,7 +815,7 @@ export function TeamItemCard({
                 )}
               </button>
 
-              {showMemberDropdown && availableMembers.length > 0 && (
+              {showMemberDropdown && (
                 <div
                   style={{
                     position: 'absolute',
@@ -825,31 +830,75 @@ export function TeamItemCard({
                     minWidth: '200px',
                   }}
                 >
-                  {availableMembers.map((member) => (
-                    <button
-                      key={member.id}
-                      onClick={() => handleAddMember(member.id)}
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Søk navn..."
+                    value={memberSearch}
+                    onChange={(e) => setMemberSearch(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: 'var(--space-sm)',
+                      border: 'none',
+                      borderBottom: '1px solid var(--color-neutral-200)',
+                      borderRadius:
+                        'var(--border-radius-md) var(--border-radius-md) 0 0',
+                      fontSize: 'var(--font-size-sm)',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      backgroundColor: 'var(--color-neutral-100)',
+                    }}
+                  />
+                  {availableMembers
+                    .filter((m) =>
+                      getFirstName(m.firstName)
+                        .toLowerCase()
+                        .includes(memberSearch.toLowerCase())
+                    )
+                    .map((member) => (
+                      <button
+                        key={member.id}
+                        onClick={() => {
+                          void handleAddMember(member.id)
+                          setMemberSearch('')
+                        }}
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          padding: 'var(--space-sm)',
+                          border: 'none',
+                          background: 'none',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          fontSize: 'var(--font-size-sm)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            'var(--color-neutral-200)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                        }}
+                      >
+                        {getFirstName(member.firstName)}
+                      </button>
+                    ))}
+                  {availableMembers.filter((m) =>
+                    getFirstName(m.firstName)
+                      .toLowerCase()
+                      .includes(memberSearch.toLowerCase())
+                  ).length === 0 && (
+                    <div
                       style={{
-                        display: 'block',
-                        width: '100%',
                         padding: 'var(--space-sm)',
-                        border: 'none',
-                        background: 'none',
-                        textAlign: 'left',
-                        cursor: 'pointer',
                         fontSize: 'var(--font-size-sm)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                          'var(--color-neutral-100)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
+                        color: 'var(--color-neutral-500)',
+                        fontStyle: 'italic',
                       }}
                     >
-                      {getFirstName(member.firstName)}
-                    </button>
-                  ))}
+                      Ingen treff
+                    </div>
+                  )}
                 </div>
               )}
             </div>
