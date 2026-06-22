@@ -21,37 +21,38 @@ export async function listMyTeams() {
     return []
   }
 
-  // Get members for each team
-  const teamsWithMembers = await Promise.all(
-    (data ?? []).map(async (r) => {
-      const row = r as unknown as {
-        teams: { id: string; name: string }
-        role: string
-      }
-      // Get members with emails via database function
-      const { data: membersData, error: membersError } = await supabase.rpc(
-        'get_team_members_with_emails',
-        { p_team_id: row.teams.id }
-      )
-
-      if (membersError) {
-        console.error(
-          `Error fetching members for team ${row.teams.name}:`,
-          membersError
-        )
-      }
-
-      return {
-        id: row.teams.id,
-        name: row.teams.name,
-        role: row.role,
-        memberCount: membersData?.length || 0,
-        members: membersData || [],
-      }
-    })
+  const rows = (data ?? []).map(
+    (r) => r as unknown as { teams: { id: string; name: string }; role: string }
   )
 
-  return teamsWithMembers
+  const teamIds = rows.map((r) => r.teams.id)
+
+  // Fetch all members for all teams in a single batch call
+  const { data: allMembers, error: membersError } = await supabase.rpc(
+    'get_members_for_teams',
+    { p_team_ids: teamIds }
+  )
+
+  if (membersError) {
+    console.error('listMyTeams members error:', membersError)
+  }
+
+  const membersByTeam = new Map<string, typeof allMembers>()
+  for (const member of allMembers ?? []) {
+    const existing = membersByTeam.get(member.team_id) ?? []
+    membersByTeam.set(member.team_id, [...existing, member])
+  }
+
+  return rows.map((row) => {
+    const members = membersByTeam.get(row.teams.id) ?? []
+    return {
+      id: row.teams.id,
+      name: row.teams.name,
+      role: row.role,
+      memberCount: members.length,
+      members,
+    }
+  })
 }
 
 export async function listAvailableTeams() {

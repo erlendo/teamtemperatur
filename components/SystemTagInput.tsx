@@ -52,14 +52,11 @@ export function SystemTagInput({
 
     startTransition(async () => {
       try {
-        console.log('Adding tag:', tag, 'to item:', itemId)
         const result = await addSystemTag(itemId, tag)
         if (result.error) {
-          console.error('Server error:', result.error)
           setError(result.error)
           return
         }
-        console.log('Tag added successfully')
         setError(null)
         setInput('')
         setShowSuggestions(false)
@@ -83,14 +80,11 @@ export function SystemTagInput({
   const handleRemoveTag = async (tag: string) => {
     startTransition(async () => {
       try {
-        console.log('Removing tag:', tag, 'from item:', itemId)
         const result = await removeSystemTag(itemId, tag)
         if (result.error) {
-          console.error('Server error:', result.error)
           setError(result.error)
           return
         }
-        console.log('Tag removed successfully')
         setError(null)
         // Notify parent to refresh - don't use router.refresh() to avoid conflicts with revalidatePath
         onUpdate?.()
