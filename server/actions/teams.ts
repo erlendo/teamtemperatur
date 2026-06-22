@@ -454,21 +454,25 @@ export async function inviteToTeam(teamId: string, email: string) {
     if (alreadyMember) return { error: 'Denne brukeren er allerede medlem' }
   }
 
-  // Upsert invitation (replace expired/old pending)
-  const { data: existing } = await supabase
+  // Check for existing pending invitation
+  const { data: pendingExisting } = await supabase
     .from('team_invitations')
-    .select('id, status')
+    .select('id')
     .eq('team_id', teamId)
     .eq('email', normalizedEmail)
+    .eq('status', 'pending')
     .maybeSingle()
 
-  if (existing && existing.status === 'pending') {
+  if (pendingExisting) {
     return { error: 'En invitasjon til denne e-posten er allerede sendt' }
   }
 
-  if (existing) {
-    await supabase.from('team_invitations').delete().eq('id', existing.id)
-  }
+  // Delete any old expired/accepted records for this email to avoid constraint conflicts
+  await supabase
+    .from('team_invitations')
+    .delete()
+    .eq('team_id', teamId)
+    .eq('email', normalizedEmail)
 
   const { data: invitation, error: invError } = await supabase
     .from('team_invitations')
