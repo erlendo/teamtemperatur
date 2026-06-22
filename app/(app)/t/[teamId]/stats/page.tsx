@@ -1,8 +1,6 @@
-import { AISummary } from '@/components/AISummary'
 import { AppHeader } from '@/components/AppHeader'
 import { YearStatsView } from '@/components/YearStatsView'
 import { supabaseServer } from '@/lib/supabase/server'
-import { getWeeklySummary } from '@/server/actions/ai'
 import { getYearBinaryStats, getYearStats } from '@/server/actions/stats'
 import { notFound } from 'next/navigation'
 
@@ -42,8 +40,8 @@ export default async function Page({ params, searchParams }: PageProps) {
     .eq('status', 'active')
     .maybeSingle()
 
-  const isTeamOwner = membership?.role === 'owner'
-  const isTeamAdmin = isTeamOwner || membership?.role === 'admin'
+  const isTeamAdmin =
+    membership?.role === 'owner' || membership?.role === 'admin'
 
   const year = searchParams.year
     ? parseInt(searchParams.year, 10)
@@ -76,60 +74,6 @@ export default async function Page({ params, searchParams }: PageProps) {
   if (!selectedWeek && weeksWithResponses.length > 0) {
     // Fall back to the most recent week with responses
     selectedWeek = weeksWithResponses[weeksWithResponses.length - 1]
-  }
-
-  let weeklySummary = ''
-  let summaryData:
-    | {
-        overallAvg: number
-        bayesianAdjusted: number
-        responseRate: number
-        responseCount: number
-        memberCount: number
-        topQuestionLabel?: string
-        topQuestionScore?: number
-        bottomQuestionLabel?: string
-        bottomQuestionScore?: number
-        learningYesRate?: number
-        learningYesCount?: number
-        obstaclesYesRate?: number
-        obstaclesYesCount?: number
-      }
-    | undefined
-
-  if (selectedWeek) {
-    const sortedQuestions = [...(selectedWeek.question_stats ?? [])].sort(
-      (a, b) => a.avg_score - b.avg_score
-    )
-    const bottomQuestion = sortedQuestions[0]
-    const topQuestion = sortedQuestions[sortedQuestions.length - 1]
-    const learningSignal = teamYearBinaryStats.find(
-      (signal) =>
-        signal.week === selectedWeek?.week && signal.question_key === 'learning'
-    )
-    const obstaclesSignal = teamYearBinaryStats.find(
-      (signal) =>
-        signal.week === selectedWeek?.week &&
-        signal.question_key === 'obstacles'
-    )
-
-    summaryData = {
-      overallAvg: selectedWeek.overall_avg ?? 0,
-      bayesianAdjusted: selectedWeek.bayesian_adjusted ?? 0,
-      responseRate: selectedWeek.response_rate ?? 0,
-      responseCount: selectedWeek.response_count ?? 0,
-      memberCount: selectedWeek.member_count ?? 0,
-      topQuestionLabel: topQuestion?.question_label,
-      topQuestionScore: topQuestion?.avg_score,
-      bottomQuestionLabel: bottomQuestion?.question_label,
-      bottomQuestionScore: bottomQuestion?.avg_score,
-      learningYesRate: learningSignal?.yes_rate,
-      learningYesCount: learningSignal?.yes_count,
-      obstaclesYesRate: obstaclesSignal?.yes_rate,
-      obstaclesYesCount: obstaclesSignal?.yes_count,
-    }
-
-    weeklySummary = await getWeeklySummary(team.id, year, selectedWeek.week)
   }
 
   return (
@@ -197,16 +141,6 @@ export default async function Page({ params, searchParams }: PageProps) {
               arbeidsflaten.
             </p>
           </section>
-
-          <AISummary
-            key={`ai-summary-${team.id}-${year}-${selectedWeek?.week ?? 'none'}`}
-            summary={weeklySummary}
-            teamId={team.id}
-            isTeamOwner={isTeamOwner}
-            year={year}
-            weekNumber={selectedWeek?.week}
-            summaryData={summaryData}
-          />
 
           <YearStatsView
             data={teamYearStats}
