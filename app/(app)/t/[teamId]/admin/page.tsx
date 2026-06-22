@@ -1,7 +1,11 @@
 import { AdminUserProfiles } from '@/components/AdminUserProfiles'
 import { AppHeader } from '@/components/AppHeader'
+import { InviteForm } from '@/components/InviteForm'
 import { supabaseServer } from '@/lib/supabase/server'
-import { getUsersWithSubmissions } from '@/server/actions/teams'
+import {
+  getPendingInvitations,
+  getUsersWithSubmissions,
+} from '@/server/actions/teams'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import AdminUsersWithSubmissions from './client'
@@ -60,6 +64,8 @@ export default async function AdminPage({
       .maybeSingle()
 
     const teamName = team?.name ?? undefined
+
+    const { data: pendingInvitations } = await getPendingInvitations(teamId)
 
     // Fetch team members with their profiles
     const { data: members } = await supabase
@@ -230,6 +236,12 @@ export default async function AdminPage({
                 produktet.
               </p>
             </section>
+
+            {/* Invite Section */}
+            <InviteForm
+              teamId={teamId}
+              pendingInvitations={pendingInvitations ?? []}
+            />
 
             {/* User Profiles Section */}
             <AdminUserProfiles teamId={teamId} teamMembers={teamMembers} />

@@ -416,3 +416,133 @@ export async function updateMemberRole(
 
   return { success: true }
 }
+
+export async function inviteToTeam(teamId: string, email: string) {
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+  if (authError || !u.user) return { error: 'Ikke autentisert' }
+
+  const { data: membership } = await supabase
+    .from('team_memberships')
+    .select('role')
+    .eq('team_id', teamId)
+    .eq('user_id', u.user.id)
+    .eq('status', 'active')
+    .single()
+
+  if (!membership || !['owner', 'admin'].includes(membership.role)) {
+    return { error: 'Kun eier eller admin kan invitere' }
+  }
+
+  const normalizedEmail = email.trim().toLowerCase()
+
+  // Check if already an active member via user_profiles
+  const { data: existingProfile } = await supabase
+    .from('user_profiles')
+    .select('user_id')
+    .eq('email', normalizedEmail)
+    .maybeSingle()
+
+  if (existingProfile) {
+    const { data: alreadyMember } = await supabase
+      .from('team_memberships')
+      .select('id')
+      .eq('team_id', teamId)
+      .eq('user_id', existingProfile.user_id)
+      .eq('status', 'active')
+      .maybeSingle()
+    if (alreadyMember) return { error: 'Denne brukeren er allerede medlem' }
+  }
+
+  // Upsert invitation (replace expired/old pending)
+  const { data: existing } = await supabase
+    .from('team_invitations')
+    .select('id, status')
+    .eq('team_id', teamId)
+    .eq('email', normalizedEmail)
+    .maybeSingle()
+
+  if (existing && existing.status === 'pending') {
+    return { error: 'En invitasjon til denne e-posten er allerede sendt' }
+  }
+
+  if (existing) {
+    await supabase.from('team_invitations').delete().eq('id', existing.id)
+  }
+
+  const { data: invitation, error: invError } = await supabase
+    .from('team_invitations')
+    .insert({ team_id: teamId, email: normalizedEmail, invited_by: u.user.id })
+    .select('token')
+    .single()
+
+  if (invError || !invitation) {
+    console.error('[inviteToTeam] insert error:', invError)
+    return { error: 'Kunne ikke opprette invitasjon' }
+  }
+
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000')
+
+  const redirectTo = `${appUrl}/invite/accept?token=${invitation.token}`
+
+  const { error: authInviteError } =
+    await supabase.auth.admin.inviteUserByEmail(normalizedEmail, { redirectTo })
+
+  if (authInviteError) {
+    await supabase
+      .from('team_invitations')
+      .delete()
+      .eq('token', invitation.token)
+    console.error('[inviteToTeam] invite error:', authInviteError)
+    return { error: authInviteError.message }
+  }
+
+  return { success: true }
+}
+
+export async function getPendingInvitations(teamId: string) {
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+  if (authError || !u.user) return { error: 'Ikke autentisert', data: [] }
+
+  const { data, error } = await supabase
+    .from('team_invitations')
+    .select('id, email, created_at, expires_at, status')
+    .eq('team_id', teamId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+
+  if (error) return { error: error.message, data: [] }
+  return { data: data ?? [] }
+}
+
+export async function cancelInvitation(teamId: string, invitationId: string) {
+  const supabase = supabaseServer()
+  const { data: u, error: authError } = await supabase.auth.getUser()
+  if (authError || !u.user) return { error: 'Ikke autentisert' }
+
+  const { data: membership } = await supabase
+    .from('team_memberships')
+    .select('role')
+    .eq('team_id', teamId)
+    .eq('user_id', u.user.id)
+    .eq('status', 'active')
+    .single()
+
+  if (!membership || !['owner', 'admin'].includes(membership.role)) {
+    return { error: 'Ingen tilgang' }
+  }
+
+  const { error } = await supabase
+    .from('team_invitations')
+    .update({ status: 'expired' })
+    .eq('id', invitationId)
+    .eq('team_id', teamId)
+
+  if (error) return { error: error.message }
+  return { success: true }
+}
