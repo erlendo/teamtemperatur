@@ -781,127 +781,104 @@ export function TeamItemCard({
               )
             })}
 
-            <div style={{ position: 'relative', zIndex: 50 }}>
-              <button
-                onClick={() => {
-                  setShowMemberDropdown(!showMemberDropdown)
-                  setMemberSearch('')
-                }}
-                disabled={isAddingMember}
-                style={{
-                  padding: '4px 8px',
-                  backgroundColor: 'var(--color-neutral-100)',
-                  border: '1px dashed var(--color-neutral-400)',
-                  borderRadius: '999px',
-                  cursor: isAddingMember ? 'not-allowed' : 'pointer',
-                  fontSize: 'var(--font-size-xs)',
-                  fontWeight: 500,
-                  opacity: isAddingMember ? 0.6 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                {isAddingMember ? (
-                  <>
-                    <Loader
-                      size={12}
-                      style={{ animation: 'spin 1s linear infinite' }}
-                    />
-                    Legger til...
-                  </>
-                ) : (
-                  '+ Legg til person'
-                )}
-              </button>
-
-              {showMemberDropdown && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    marginTop: 'var(--space-xs)',
-                    backgroundColor: 'var(--color-neutral-100)',
-                    border: '1px solid var(--color-neutral-300)',
-                    borderRadius: 'var(--border-radius-md)',
-                    boxShadow: 'var(--shadow-md)',
-                    zIndex: 9999,
-                    minWidth: '200px',
+            {availableMembers.length > 0 && (
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder="+ Legg til person..."
+                  value={memberSearch}
+                  onChange={(e) => {
+                    setMemberSearch(e.target.value)
+                    setShowMemberDropdown(true)
                   }}
-                >
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder="Søk navn..."
-                    value={memberSearch}
-                    onChange={(e) => setMemberSearch(e.target.value)}
+                  onFocus={() => setShowMemberDropdown(true)}
+                  onBlur={() =>
+                    setTimeout(() => setShowMemberDropdown(false), 150)
+                  }
+                  disabled={isAddingMember}
+                  style={{
+                    padding: 'var(--space-xs) var(--space-sm)',
+                    border: '1px solid var(--color-neutral-300)',
+                    borderRadius: 'var(--radius-md, 0.375rem)',
+                    fontSize: 'var(--font-size-xs)',
+                    width: '140px',
+                    opacity: isAddingMember ? 0.6 : 1,
+                    cursor: isAddingMember ? 'not-allowed' : 'text',
+                  }}
+                />
+                {showMemberDropdown && memberSearch.length > 0 && (
+                  <div
                     style={{
-                      width: '100%',
-                      padding: 'var(--space-sm)',
-                      border: 'none',
-                      borderBottom: '1px solid var(--color-neutral-200)',
-                      borderRadius:
-                        'var(--border-radius-md) var(--border-radius-md) 0 0',
-                      fontSize: 'var(--font-size-sm)',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      backgroundColor: 'var(--color-neutral-100)',
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      marginTop: 'var(--space-xs)',
+                      backgroundColor: 'white',
+                      border: '1px solid var(--color-neutral-300)',
+                      borderRadius: 'var(--radius-md)',
+                      boxShadow: 'var(--shadow-md)',
+                      zIndex: 9999,
+                      minWidth: '150px',
+                      maxHeight: '150px',
+                      overflowY: 'auto',
                     }}
-                  />
-                  {availableMembers
-                    .filter((m) =>
+                  >
+                    {availableMembers
+                      .filter((m) =>
+                        getFirstName(m.firstName)
+                          .toLowerCase()
+                          .includes(memberSearch.toLowerCase())
+                      )
+                      .map((member) => (
+                        <button
+                          key={member.id}
+                          onMouseDown={() => {
+                            void handleAddMember(member.id)
+                            setMemberSearch('')
+                            setShowMemberDropdown(false)
+                          }}
+                          style={{
+                            display: 'block',
+                            width: '100%',
+                            padding: 'var(--space-sm)',
+                            border: 'none',
+                            background: 'none',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            fontSize: 'var(--font-size-sm)',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              'var(--color-neutral-100)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              'transparent'
+                          }}
+                        >
+                          {getFirstName(member.firstName)}
+                        </button>
+                      ))}
+                    {availableMembers.filter((m) =>
                       getFirstName(m.firstName)
                         .toLowerCase()
                         .includes(memberSearch.toLowerCase())
-                    )
-                    .map((member) => (
-                      <button
-                        key={member.id}
-                        onClick={() => {
-                          void handleAddMember(member.id)
-                          setMemberSearch('')
-                        }}
+                    ).length === 0 && (
+                      <div
                         style={{
-                          display: 'block',
-                          width: '100%',
                           padding: 'var(--space-sm)',
-                          border: 'none',
-                          background: 'none',
-                          textAlign: 'left',
-                          cursor: 'pointer',
                           fontSize: 'var(--font-size-sm)',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            'var(--color-neutral-200)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent'
+                          color: 'var(--color-neutral-500)',
+                          fontStyle: 'italic',
                         }}
                       >
-                        {getFirstName(member.firstName)}
-                      </button>
-                    ))}
-                  {availableMembers.filter((m) =>
-                    getFirstName(m.firstName)
-                      .toLowerCase()
-                      .includes(memberSearch.toLowerCase())
-                  ).length === 0 && (
-                    <div
-                      style={{
-                        padding: 'var(--space-sm)',
-                        fontSize: 'var(--font-size-sm)',
-                        color: 'var(--color-neutral-500)',
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      Ingen treff
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                        Ingen treff
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <SystemTagInput
