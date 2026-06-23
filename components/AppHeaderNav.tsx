@@ -1,6 +1,6 @@
 'use client'
 
-import { BarChart3, LayoutDashboard, PenTool, Users } from 'lucide-react'
+import { BarChart3, LayoutDashboard, PenTool, User, Users } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { CSSProperties } from 'react'
@@ -79,6 +79,13 @@ export function AppHeaderNav({
       >
         <Users size={16} />
         Teamoversikt
+      </Link>
+      <Link
+        href="/profil"
+        style={getStyle(pathname?.startsWith('/profil') ?? false)}
+      >
+        <User size={16} />
+        Profil
       </Link>
     </nav>
   )

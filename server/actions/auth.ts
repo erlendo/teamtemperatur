@@ -128,3 +128,24 @@ export async function adminUpdateUserFirstName(
     return { error: message }
   }
 }
+
+export async function updatePassword(newPassword: string) {
+  'use server'
+  const supabase = supabaseServer()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+  if (authError || !user) return { error: 'Ikke autentisert' }
+
+  const { error } = await supabase.auth.admin.updateUserById(user.id, {
+    password: newPassword,
+  })
+
+  if (error) {
+    console.error('[updatePassword] error:', error)
+    return { error: error.message }
+  }
+
+  return { success: true }
+}
