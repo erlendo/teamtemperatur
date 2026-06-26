@@ -128,7 +128,7 @@ export default async function TeamHome({
 
       const { data: profiles } = await supabase
         .from('user_profiles')
-        .select('user_id, first_name, email')
+        .select('user_id, first_name')
         .in('user_id', userIds)
 
       const profileMap = new Map(
@@ -136,7 +136,6 @@ export default async function TeamHome({
           (profiles as Array<{
             user_id: string
             first_name: string | null
-            email: string | null
           }>) || []
         ).map((profile) => [profile.user_id, profile])
       )
@@ -159,7 +158,6 @@ export default async function TeamHome({
             const profile = profileMap.get(m.user_id)
             const displayName =
               profile?.first_name ||
-              getDisplayNameFromEmail(profile?.email) ||
               getDisplayNameFromEmail(emailMap.get(m.user_id)) ||
               'Ukjent medlem'
 
