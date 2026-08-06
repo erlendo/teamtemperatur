@@ -7,14 +7,8 @@ export async function listMyTeams() {
   const { data: u, error: authError } = await supabase.auth.getUser()
 
   if (authError || !u.user) {
-    console.error(
-      '[listMyTeams] auth failed:',
-      authError?.message,
-      authError?.status
-    )
     return null // Return null when not authenticated
   }
-  console.log('[listMyTeams] user ok:', u.user.id)
 
   const { data, error } = await supabase
     .from('tt_team_memberships')
