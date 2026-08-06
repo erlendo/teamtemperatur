@@ -48,10 +48,10 @@ export function LoginClient() {
     const checkAuth = async () => {
       const supabase = supabaseBrowser()
       const {
-        data: { session },
-      } = await supabase.auth.getSession()
+        data: { user },
+      } = await supabase.auth.getUser()
 
-      if (session) {
+      if (user) {
         router.push('/teams')
       } else {
         setLoading(false)
