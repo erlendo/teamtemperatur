@@ -21,7 +21,13 @@ export function supabaseServer() {
             value: string
             options?: Record<string, unknown>
           }>
-        ) => cs.forEach((c) => cookieStore.set(c.name, c.value, c.options)),
+        ) => {
+          try {
+            cs.forEach((c) => cookieStore.set(c.name, c.value, c.options))
+          } catch {
+            // Called from a Server Component — middleware handles session refresh
+          }
+        },
       },
     }
   )
