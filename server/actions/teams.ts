@@ -1,6 +1,6 @@
 'use server'
 
-import { supabaseServer } from '@/lib/supabase/server'
+import { supabaseAdmin, supabaseServer } from '@/lib/supabase/server'
 
 export async function listMyTeams() {
   const supabase = supabaseServer()
@@ -494,7 +494,9 @@ export async function inviteToTeam(teamId: string, email: string) {
   const redirectTo = `${appUrl}/invite/accept?token=${invitation.token}`
 
   const { error: authInviteError } =
-    await supabase.auth.admin.inviteUserByEmail(normalizedEmail, { redirectTo })
+    await supabaseAdmin().auth.admin.inviteUserByEmail(normalizedEmail, {
+      redirectTo,
+    })
 
   if (authInviteError) {
     await supabase
