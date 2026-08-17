@@ -1,6 +1,6 @@
 'use server'
 
-import { supabaseAdmin, supabaseServer } from '@/lib/supabase/server'
+import { supabaseServer } from '@/lib/supabase/server'
 
 export async function listMyTeams() {
   const supabase = supabaseServer()
@@ -491,20 +491,57 @@ export async function inviteToTeam(teamId: string, email: string) {
       ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:3000')
 
-  const redirectTo = `${appUrl}/invite/accept?token=${invitation.token}`
+  const inviteUrl = `${appUrl}/invite/accept?token=${invitation.token}`
 
-  const { error: authInviteError } =
-    await supabaseAdmin().auth.admin.inviteUserByEmail(normalizedEmail, {
-      redirectTo,
-    })
-
-  if (authInviteError) {
+  const resendKey = process.env.RESEND_API_KEY
+  if (!resendKey) {
     await supabase
       .from('team_invitations')
       .delete()
       .eq('token', invitation.token)
-    console.error('[inviteToTeam] invite error:', authInviteError)
-    return { error: authInviteError.message }
+    console.error('[inviteToTeam] RESEND_API_KEY is not set')
+    return { error: 'E-posttjeneste er ikke konfigurert' }
+  }
+
+  const emailRes = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${resendKey}`,
+    },
+    body: JSON.stringify({
+      from: 'Teamtemperatur <invitasjon@teamtemperatur.no>',
+      to: normalizedEmail,
+      subject: 'Du er invitert til et team på Teamtemperatur',
+      html: `
+        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px">
+          <h2 style="color:#2d6a5c">Du er invitert!</h2>
+          <p>Du har blitt invitert til å bli med i et team på <strong>Teamtemperatur</strong>.</p>
+          <p>Klikk på knappen nedenfor for å akseptere invitasjonen:</p>
+          <a href="${inviteUrl}"
+             style="display:inline-block;margin:16px 0;padding:12px 24px;
+                    background:#2d6a5c;color:#fff;text-decoration:none;
+                    border-radius:6px;font-weight:bold">
+            Aksepter invitasjon
+          </a>
+          <p style="color:#666;font-size:14px">
+            Hvis du ikke kan klikke på knappen, kopier og lim inn denne lenken i nettleseren:<br>
+            <a href="${inviteUrl}" style="color:#2d6a5c">${inviteUrl}</a>
+          </p>
+          <p style="color:#999;font-size:12px">Lenken utløper etter 7 dager.</p>
+        </div>
+      `,
+    }),
+  })
+
+  if (!emailRes.ok) {
+    const body = await emailRes.text()
+    await supabase
+      .from('team_invitations')
+      .delete()
+      .eq('token', invitation.token)
+    console.error('[inviteToTeam] Resend error:', body)
+    return { error: 'Kunne ikke sende invitasjons-e-post' }
   }
 
   return { success: true }
