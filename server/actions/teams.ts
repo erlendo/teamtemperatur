@@ -510,7 +510,7 @@ export async function inviteToTeam(teamId: string, email: string) {
       Authorization: `Bearer ${resendKey}`,
     },
     body: JSON.stringify({
-      from: 'Teamtemperatur <invitasjon@teamtemperatur.no>',
+      from: 'Teamtemperatur <invitasjon@pointerdatabasen.pointer.no>',
       to: normalizedEmail,
       subject: 'Du er invitert til et team på Teamtemperatur',
       html: `
