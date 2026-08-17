@@ -1,6 +1,6 @@
 'use server'
 
-import { supabaseServer } from '@/lib/supabase/server'
+import { supabaseAdmin, supabaseServer } from '@/lib/supabase/server'
 
 export async function sendMagicLink(email: string) {
   const supabase = supabaseServer()
@@ -138,7 +138,7 @@ export async function updatePassword(newPassword: string) {
   } = await supabase.auth.getUser()
   if (authError || !user) return { error: 'Ikke autentisert' }
 
-  const { error } = await supabase.auth.admin.updateUserById(user.id, {
+  const { error } = await supabaseAdmin().auth.admin.updateUserById(user.id, {
     password: newPassword,
   })
 
