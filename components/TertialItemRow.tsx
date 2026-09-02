@@ -3,12 +3,13 @@
 import {
   addSystemTag,
   getSystemTagSuggestions,
+  removeSystemTag,
 } from '@/server/actions/dashboard'
 import type { TertialItem } from '@/server/actions/stats'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 
-export function UkjentTagRow({
+export function TertialItemRow({
   item,
   teamId,
 }: {
@@ -32,7 +33,7 @@ export function UkjentTagRow({
   const handleAddTag = (tag: string) => {
     if (!tag.trim()) return
     startTransition(async () => {
-      const result = await addSystemTag(item.id, tag)
+      const result = await addSystemTag(item.id, tag, teamId)
       if (result.error) {
         setError(result.error)
         return
@@ -42,6 +43,20 @@ export function UkjentTagRow({
       router.refresh()
     })
   }
+
+  const handleRemoveTag = (tag: string) => {
+    startTransition(async () => {
+      const result = await removeSystemTag(item.id, tag, teamId)
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+      setError(null)
+      router.refresh()
+    })
+  }
+
+  const availableTags = allTags.filter((t) => !item.tags.includes(t))
 
   return (
     <li
@@ -66,7 +81,32 @@ export function UkjentTagRow({
       </span>
 
       <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-        {allTags.map((tag) => (
+        {item.tags.map((tag) => (
+          <button
+            key={tag}
+            onClick={() => handleRemoveTag(tag)}
+            disabled={isPending}
+            title="Fjern tag"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '1px 8px',
+              borderRadius: '999px',
+              border: '1px solid var(--color-neutral-300)',
+              background: 'var(--color-mist)',
+              color: 'var(--color-primary-dark)',
+              fontSize: 'var(--font-size-xs)',
+              fontWeight: 600,
+              cursor: isPending ? 'not-allowed' : 'pointer',
+              opacity: isPending ? 0.6 : 1,
+            }}
+          >
+            {tag}
+            <span style={{ opacity: 0.6 }}>×</span>
+          </button>
+        ))}
+        {availableTags.map((tag) => (
           <button
             key={tag}
             onClick={() => handleAddTag(tag)}

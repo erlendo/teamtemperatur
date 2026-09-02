@@ -1,5 +1,5 @@
 import type { TertialItem, TertialReport } from '@/server/actions/stats'
-import { UkjentTagRow } from './UkjentTagRow'
+import { TertialItemRow } from './TertialItemRow'
 
 const UNTAGGED_LABEL = 'Ukjent'
 
@@ -21,26 +21,6 @@ function groupByTag(items: TertialItem[]): [string, TertialItem[]][] {
     if (b === UNTAGGED_LABEL) return -1
     return a.localeCompare(b, 'nb')
   })
-}
-
-function ItemRow({ item }: { item: TertialItem }) {
-  return (
-    <li
-      style={{
-        padding: '0.2rem 0',
-        fontSize: 'var(--font-size-sm)',
-        color: 'var(--color-neutral-800)',
-      }}
-    >
-      {item.title}
-      <span style={{ color: 'var(--color-neutral-400)' }}> — </span>
-      <span style={{ color: 'var(--color-neutral-500)' }}>
-        {item.members.length > 0
-          ? item.members.join(', ')
-          : '(ukjent ansvarlig)'}
-      </span>
-    </li>
-  )
 }
 
 function TagGroup({
@@ -69,13 +49,9 @@ function TagGroup({
         {tag}
       </h4>
       <ul style={{ listStyle: 'disc', margin: 0, paddingLeft: '1.25rem' }}>
-        {items.map((item) =>
-          isUntagged ? (
-            <UkjentTagRow key={item.id} item={item} teamId={teamId} />
-          ) : (
-            <ItemRow key={item.id} item={item} />
-          )
-        )}
+        {items.map((item) => (
+          <TertialItemRow key={item.id} item={item} teamId={teamId} />
+        ))}
       </ul>
     </div>
   )
