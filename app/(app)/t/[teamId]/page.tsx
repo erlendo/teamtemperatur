@@ -216,47 +216,38 @@ export default async function TeamHome({
         >
           <section
             style={{
-              marginBottom: 'var(--space-3xl)',
-              padding: 'var(--space-2xl)',
-              borderRadius: '1.5rem',
+              marginBottom: 'var(--space-xl)',
+              padding: 'var(--space-md) var(--space-lg)',
+              borderRadius: '1rem',
               background:
                 'linear-gradient(135deg, rgba(220, 224, 214, 0.9), rgba(250, 247, 242, 0.96))',
               border: '1px solid var(--color-neutral-200)',
-              boxShadow: 'var(--shadow-md)',
+              boxShadow: 'var(--shadow-sm)',
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: 'var(--space-sm)',
+              flexWrap: 'wrap',
             }}
           >
-            <p
+            <h1
               style={{
-                marginBottom: 'var(--space-xs)',
-                color: 'var(--color-primary-dark)',
-                fontWeight: 700,
+                margin: 0,
+                fontSize: 'var(--font-size-xl)',
+                fontWeight: '800',
+                color: 'var(--color-neutral-900)',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {teamName ?? 'Teamet'} · Uke {weekInfo.week}
+            </h1>
+            <span
+              style={{
+                color: 'var(--color-neutral-500)',
                 fontSize: 'var(--font-size-sm)',
               }}
             >
-              Teamoversikt
-            </p>
-            <h1
-              style={{
-                margin: '0 0 var(--space-sm) 0',
-                fontSize: 'var(--font-size-4xl)',
-                fontWeight: '900',
-                color: 'var(--color-neutral-900)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Uke {weekInfo.week} for {teamName ?? 'teamet'}
-            </h1>
-            <p
-              style={{
-                marginBottom: 0,
-                color: 'var(--color-neutral-600)',
-                maxWidth: '48rem',
-              }}
-            >
-              Følg ukemål, pipeline, mål, retro og helsesignaler i samme flate.
-              Perioden dekker {formatDate(weekInfo.start)}–
-              {formatDate(weekInfo.end)}.
-            </p>
+              {formatDate(weekInfo.start)}–{formatDate(weekInfo.end)}
+            </span>
           </section>
 
           {/* Row 1: Ukemål | Pipeline | Mål (with cross-column linking) */}
