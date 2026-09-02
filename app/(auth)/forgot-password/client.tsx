@@ -34,7 +34,7 @@ export function ForgotPasswordClient() {
 
     const supabase = supabaseBrowser()
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/reset-password')}`,
     })
 
     setLoading(false)
@@ -46,7 +46,7 @@ export function ForgotPasswordClient() {
 
     setMsg({
       type: 'success',
-      text: 'Sjekk e-posten din for en lenke til å tilbakestille passordet.',
+      text: 'Hvis kontoen finnes, sender vi en tilbakestillingslenke. Sjekk søppelpost om du ikke ser den.',
     })
     setEmail('')
   }

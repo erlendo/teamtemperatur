@@ -16,7 +16,7 @@ import {
   User,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 const featureHighlights = [
@@ -24,6 +24,12 @@ const featureHighlights = [
   'Samle mål, pipeline, ukemål og retro i én rolig arbeidsflate',
   'Gi nye medlemmer en raskere vei inn i teamets arbeidsflyt',
 ]
+
+function getSafeRedirectPath(value: string | null): string {
+  return value && value.startsWith('/') && !value.startsWith('//')
+    ? value
+    : '/teams'
+}
 
 export function SignupClient() {
   const [firstName, setFirstName] = useState('')
@@ -39,6 +45,8 @@ export function SignupClient() {
   } | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectPath = getSafeRedirectPath(searchParams.get('redirect'))
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -55,7 +63,7 @@ export function SignupClient() {
     }
 
     void checkAuth()
-  }, [router])
+  }, [redirectPath, router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -83,7 +91,7 @@ export function SignupClient() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/teams`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
       },
     })
 
@@ -111,7 +119,7 @@ export function SignupClient() {
         type: 'success',
         text: 'Konto opprettet. Du blir sendt videre til teamoversikten.',
       })
-      router.push('/teams')
+      router.push(redirectPath)
     }
   }
 
@@ -389,6 +397,22 @@ export function SignupClient() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {password.length > 0 && (
+                <p
+                  style={{
+                    marginTop: 'var(--space-xs)',
+                    fontSize: 'var(--font-size-sm)',
+                    color:
+                      password.length >= 6
+                        ? 'var(--color-success, #1a8a4a)'
+                        : 'var(--color-neutral-500)',
+                  }}
+                >
+                  {password.length >= 6
+                    ? '✓ Passordet er langt nok'
+                    : `${password.length}/6 tegn — trenger ${6 - password.length} til`}
+                </p>
+              )}
             </div>
 
             <div>
@@ -477,7 +501,9 @@ export function SignupClient() {
               disabled={isSubmitting}
               style={{
                 padding: 'var(--space-md) var(--space-lg)',
-                backgroundColor: 'var(--color-primary)',
+                backgroundColor: isSubmitting
+                  ? 'var(--color-neutral-400)'
+                  : 'var(--color-primary)',
                 color: 'white',
                 border: 'none',
                 borderRadius: 'var(--border-radius-md)',
@@ -489,7 +515,6 @@ export function SignupClient() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 'var(--space-sm)',
-                opacity: isSubmitting ? 0.8 : 1,
               }}
               onMouseEnter={(e) => {
                 if (isSubmitting) return

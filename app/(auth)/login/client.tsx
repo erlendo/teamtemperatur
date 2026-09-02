@@ -23,6 +23,12 @@ const featureHighlights = [
   'Tydelige trender som gjør det enklere å oppdage endringer tidlig',
 ]
 
+function getSafeRedirectPath(value: string | null): string {
+  return value && value.startsWith('/') && !value.startsWith('//')
+    ? value
+    : '/teams'
+}
+
 export function LoginClient() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,6 +41,7 @@ export function LoginClient() {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const searchParams = useSearchParams()
+  const redirectPath = getSafeRedirectPath(searchParams.get('redirect'))
 
   useEffect(() => {
     const error = searchParams.get('error')
@@ -52,14 +59,14 @@ export function LoginClient() {
       } = await supabase.auth.getUser()
 
       if (user) {
-        router.push('/teams')
+        router.push(redirectPath)
       } else {
         setLoading(false)
       }
     }
 
     void checkAuth()
-  }, [router, searchParams])
+  }, [redirectPath, router, searchParams])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -86,7 +93,7 @@ export function LoginClient() {
       type: 'success',
       text: 'Innlogging vellykket. Sender deg videre til teamoversikten...',
     })
-    router.push('/teams')
+    router.push(redirectPath)
   }
 
   if (loading) {
@@ -347,7 +354,9 @@ export function LoginClient() {
               disabled={isSubmitting}
               style={{
                 padding: 'var(--space-md) var(--space-lg)',
-                backgroundColor: 'var(--color-primary)',
+                backgroundColor: isSubmitting
+                  ? 'var(--color-neutral-400)'
+                  : 'var(--color-primary)',
                 color: 'white',
                 border: 'none',
                 borderRadius: 'var(--border-radius-md)',
@@ -359,7 +368,6 @@ export function LoginClient() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 'var(--space-sm)',
-                opacity: isSubmitting ? 0.8 : 1,
               }}
               onMouseEnter={(e) => {
                 if (isSubmitting) return
@@ -470,7 +478,11 @@ export function LoginClient() {
             <p style={{ margin: 0 }}>
               Har du ikke konto ennå?{' '}
               <Link
-                href="/signup"
+                href={
+                  searchParams.get('redirect')
+                    ? `/signup?redirect=${encodeURIComponent(redirectPath)}`
+                    : '/signup'
+                }
                 style={{ color: 'var(--color-primary)', fontWeight: '600' }}
               >
                 Opprett bruker
