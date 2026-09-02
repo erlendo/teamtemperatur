@@ -33,6 +33,11 @@ import { TeamItemCard } from './TeamItemCard'
 
 type ItemType = 'ukemål' | 'pipeline' | 'mål' | 'retro'
 
+// Mål-kolonnen er midlertidig skjult i påvente av at teamet tar den i
+// bruk igjen. Dataene og relasjonene (part_of) er urørt — sett denne
+// til true for å vise kolonnen igjen.
+const SHOW_MÅL_COLUMN = false
+
 interface DashboardGridProps {
   ukemålItems: TeamItem[]
   pipelineItems: TeamItem[]
@@ -778,23 +783,25 @@ export function DashboardGrid({
           onRelationDelete={handleRelationDelete}
           isValidDropZone={isValidDropZone('pipeline')}
         />
-        <GridSection
-          title={`Mål (T${Math.ceil((new Date().getMonth() + 1) / 4)} ${new Date().getFullYear()})`}
-          type="mål"
-          items={målItems}
-          relationLookup={relationLookup}
-          teamId={teamId}
-          teamMembers={teamMembers}
-          userRole={userRole}
-          onOptimisticAdd={onOptimisticAdd}
-          onOptimisticRemove={onOptimisticRemove}
-          onOptimisticReplace={onOptimisticReplace}
-          onOptimisticPatch={onOptimisticPatch}
-          onRefetch={onRefetch}
-          onHover={setHighlightedItemId}
-          onRelationDelete={handleRelationDelete}
-          isValidDropZone={isValidDropZone('mål')}
-        />
+        {SHOW_MÅL_COLUMN && (
+          <GridSection
+            title={`Mål (T${Math.ceil((new Date().getMonth() + 1) / 4)} ${new Date().getFullYear()})`}
+            type="mål"
+            items={målItems}
+            relationLookup={relationLookup}
+            teamId={teamId}
+            teamMembers={teamMembers}
+            userRole={userRole}
+            onOptimisticAdd={onOptimisticAdd}
+            onOptimisticRemove={onOptimisticRemove}
+            onOptimisticReplace={onOptimisticReplace}
+            onOptimisticPatch={onOptimisticPatch}
+            onRefetch={onRefetch}
+            onHover={setHighlightedItemId}
+            onRelationDelete={handleRelationDelete}
+            isValidDropZone={isValidDropZone('mål')}
+          />
+        )}
       </div>
     </DndContext>
   )
