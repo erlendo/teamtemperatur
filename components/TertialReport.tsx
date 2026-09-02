@@ -1,60 +1,69 @@
 import type { TertialItem, TertialReport } from '@/server/actions/stats'
 
+const UNTAGGED_LABEL = 'Ukjent'
+
+function groupByTag(items: TertialItem[]): [string, TertialItem[]][] {
+  const groups = new Map<string, TertialItem[]>()
+
+  for (const item of items) {
+    const key = item.tags[0] ?? UNTAGGED_LABEL
+    const existing = groups.get(key)
+    if (existing) {
+      existing.push(item)
+    } else {
+      groups.set(key, [item])
+    }
+  }
+
+  return Array.from(groups.entries()).sort(([a], [b]) => {
+    if (a === UNTAGGED_LABEL) return 1
+    if (b === UNTAGGED_LABEL) return -1
+    return a.localeCompare(b, 'nb')
+  })
+}
+
 function ItemRow({ item }: { item: TertialItem }) {
   return (
     <li
       style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 'var(--space-sm)',
-        padding: 'var(--space-sm) 0',
-        borderBottom: '1px solid var(--color-neutral-100)',
+        padding: '0.2rem 0',
+        fontSize: 'var(--font-size-sm)',
+        color: 'var(--color-neutral-800)',
       }}
     >
-      <div style={{ flex: 1, display: 'grid', gap: 'var(--space-xs)' }}>
-        <span
-          style={{
-            fontSize: 'var(--font-size-sm)',
-            color: 'var(--color-neutral-800)',
-          }}
-        >
-          {item.title}
-        </span>
-        {item.tags.length > 0 && (
-          <div
-            style={{
-              display: 'flex',
-              gap: 'var(--space-xs)',
-              flexWrap: 'wrap',
-            }}
-          >
-            {item.tags.map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  fontSize: 'var(--font-size-xs)',
-                  padding: '0.1rem 0.5rem',
-                  borderRadius: '999px',
-                  background: 'var(--color-neutral-100)',
-                  color: 'var(--color-neutral-600)',
-                }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-      <span
-        style={{
-          flexShrink: 0,
-          fontSize: 'var(--font-size-xs)',
-          color: 'var(--color-neutral-500)',
-        }}
-      >
-        {item.members.join(', ')}
+      {item.title}
+      <span style={{ color: 'var(--color-neutral-400)' }}> — </span>
+      <span style={{ color: 'var(--color-neutral-500)' }}>
+        {item.members.length > 0
+          ? item.members.join(', ')
+          : '(ukjent ansvarlig)'}
       </span>
     </li>
+  )
+}
+
+function TagGroup({ tag, items }: { tag: string; items: TertialItem[] }) {
+  return (
+    <div>
+      <h4
+        style={{
+          margin: '0 0 var(--space-xs)',
+          fontSize: 'var(--font-size-base)',
+          fontWeight: 700,
+          color:
+            tag === UNTAGGED_LABEL
+              ? 'var(--color-neutral-500)'
+              : 'var(--color-primary-dark)',
+        }}
+      >
+        {tag}
+      </h4>
+      <ul style={{ listStyle: 'disc', margin: 0, paddingLeft: '1.25rem' }}>
+        {items.map((item) => (
+          <ItemRow key={item.id} item={item} />
+        ))}
+      </ul>
+    </div>
   )
 }
 
@@ -67,6 +76,8 @@ function TertialSection({
   period: string
   items: TertialItem[]
 }) {
+  const groups = groupByTag(items)
+
   return (
     <div>
       <div
@@ -118,11 +129,11 @@ function TertialSection({
           Ingen ukemål ferdigstilt i denne perioden.
         </p>
       ) : (
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-          {items.map((item) => (
-            <ItemRow key={item.id} item={item} />
+        <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
+          {groups.map(([tag, tagItems]) => (
+            <TagGroup key={tag} tag={tag} items={tagItems} />
           ))}
-        </ul>
+        </div>
       )}
     </div>
   )
