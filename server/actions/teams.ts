@@ -547,6 +547,31 @@ export async function inviteToTeam(teamId: string, email: string) {
   return { success: true }
 }
 
+export async function acceptTeamInvitation(
+  token: string
+): Promise<{ teamId?: string; error?: string }> {
+  const supabase = supabaseServer()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: 'Ikke autentisert' }
+  }
+
+  const { data: teamId, error } = await supabase.rpc('accept_team_invitation', {
+    p_token: token,
+  })
+
+  if (error || !teamId) {
+    console.error('[acceptTeamInvitation] error:', error)
+    return { error: error?.message || 'Invitasjonen kunne ikke aksepteres' }
+  }
+
+  return { teamId }
+}
+
 export async function getPendingInvitations(teamId: string) {
   const supabase = supabaseServer()
   const { data: u, error: authError } = await supabase.auth.getUser()

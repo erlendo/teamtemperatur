@@ -26,30 +26,6 @@ export async function middleware(req: NextRequest) {
     }
   )
 
-  // Handle OTP callback from magic link - exchange code for session
-  const code = req.nextUrl.searchParams.get('code')
-  if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (error) {
-      console.error(
-        '[Middleware] exchangeCodeForSession error:',
-        error.message,
-        error.status
-      )
-      // Redirect to login with error message
-      const url = req.nextUrl.clone()
-      url.pathname = '/login'
-      url.searchParams.delete('code')
-      url.searchParams.set('error', 'auth_failed')
-      return NextResponse.redirect(url)
-    } else {
-      console.log(
-        '[Middleware] OTP exchange successful for:',
-        req.nextUrl.pathname
-      )
-    }
-  }
-
   // Refresh session if needed
   const {
     data: { user },

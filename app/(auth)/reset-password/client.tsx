@@ -1,6 +1,7 @@
 'use client'
 
 import { supabaseBrowser } from '@/lib/supabase/browser'
+import { updatePassword } from '@/server/actions/auth'
 import {
   AlertCircle,
   ArrowRight,
@@ -73,15 +74,12 @@ export function ResetPasswordClient() {
 
     setLoading(true)
 
-    const supabase = supabaseBrowser()
-    const { error } = await supabase.auth.updateUser({
-      password,
-    })
+    const result = await updatePassword(password)
 
     setLoading(false)
 
-    if (error) {
-      setMsg({ type: 'error', text: `Feil: ${error.message}` })
+    if (result.error) {
+      setMsg({ type: 'error', text: `Feil: ${result.error}` })
       return
     }
 

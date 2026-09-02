@@ -4,11 +4,13 @@ import { supabaseServer } from '@/lib/supabase/server'
 
 export async function sendMagicLink(email: string) {
   const supabase = supabaseServer()
+  const appUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const callbackUrl = `${appUrl}/auth/callback?next=${encodeURIComponent('/teams')}`
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/teams`,
+      emailRedirectTo: callbackUrl,
     },
   })
 

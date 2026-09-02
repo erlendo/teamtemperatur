@@ -1,4 +1,4 @@
-import { supabaseServer } from '@/lib/supabase/server'
+import { acceptTeamInvitation } from '@/server/actions/teams'
 import { redirect } from 'next/navigation'
 
 export default async function InviteAcceptPage({
@@ -12,70 +12,22 @@ export default async function InviteAcceptPage({
     redirect('/login?error=ugyldig_invitasjon')
   }
 
-  const supabase = supabaseServer()
+  const encodedInvitePath = encodeURIComponent(`/invite/accept?token=${token}`)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const result = await acceptTeamInvitation(token)
 
-  if (!user) {
-    // Not authenticated yet — redirect to login, preserving the token
-    redirect(`/login?redirect=/invite/accept%3Ftoken%3D${token}`)
+  if (result.error === 'Ikke autentisert') {
+    redirect(`/login?redirect=${encodedInvitePath}`)
   }
 
-  // Look up the invitation
-  const { data: invitation, error: invError } = await supabase
-    .from('team_invitations')
-    .select('id, team_id, email, status, expires_at')
-    .eq('token', token)
-    .maybeSingle()
-
-  if (invError || !invitation) {
-    redirect('/login?error=invitasjon_ikke_funnet')
+  if (result.error) {
+    const errorCode = result.error.includes('utløpt')
+      ? 'invitasjon_utgaatt'
+      : result.error.includes('e-post')
+        ? 'invitasjon_feil_e-post'
+        : 'invitasjon_ikke_funnet'
+    redirect(`/teams?error=${errorCode}`)
   }
 
-  if (invitation.status !== 'pending') {
-    redirect('/teams?error=invitasjon_brukt')
-  }
-
-  if (new Date(invitation.expires_at) < new Date()) {
-    await supabase
-      .from('team_invitations')
-      .update({ status: 'expired' })
-      .eq('id', invitation.id)
-    redirect('/teams?error=invitasjon_utgaatt')
-  }
-
-  // Check not already a member
-  const { data: existing } = await supabase
-    .from('team_memberships')
-    .select('id')
-    .eq('team_id', invitation.team_id)
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .maybeSingle()
-
-  if (!existing) {
-    const { error: memberError } = await supabase
-      .from('team_memberships')
-      .insert({
-        team_id: invitation.team_id,
-        user_id: user.id,
-        role: 'member',
-        status: 'active',
-      })
-
-    if (memberError) {
-      console.error('[InviteAccept] insert membership error:', memberError)
-      redirect('/teams?error=kunne_ikke_legge_til')
-    }
-  }
-
-  // Mark invitation as accepted
-  await supabase
-    .from('team_invitations')
-    .update({ status: 'accepted' })
-    .eq('id', invitation.id)
-
-  redirect(`/t/${invitation.team_id}`)
+  redirect(`/t/${result.teamId}`)
 }

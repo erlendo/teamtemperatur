@@ -1,7 +1,12 @@
 import { AppHeader } from '@/components/AppHeader'
+import { TertialReportView } from '@/components/TertialReport'
 import { YearStatsView } from '@/components/YearStatsView'
 import { supabaseServer } from '@/lib/supabase/server'
-import { getYearBinaryStats, getYearStats } from '@/server/actions/stats'
+import {
+  getYearBinaryStats,
+  getYearStats,
+  getTertialReport,
+} from '@/server/actions/stats'
 import { notFound } from 'next/navigation'
 
 export const revalidate = 0
@@ -49,10 +54,13 @@ export default async function Page({ params, searchParams }: PageProps) {
   const currentWeek = Math.ceil(
     (new Date().getTime() - new Date(year, 0, 1).getTime()) / 604800000
   )
-  const [teamYearStats, teamYearBinaryStats] = await Promise.all([
-    getYearStats(team.id, currentWeek),
-    getYearBinaryStats(team.id, currentWeek),
-  ])
+  const [teamYearStats, teamYearBinaryStats, tertialReport] = await Promise.all(
+    [
+      getYearStats(team.id, currentWeek),
+      getYearBinaryStats(team.id, currentWeek),
+      getTertialReport(team.id, year),
+    ]
+  )
 
   // Filter weeks with actual responses
   const weeksWithResponses = teamYearStats.filter(
@@ -148,6 +156,8 @@ export default async function Page({ params, searchParams }: PageProps) {
             teamId={team.id}
             selectedWeekNumber={selectedWeek?.week}
           />
+
+          <TertialReportView report={tertialReport} />
         </div>
       </main>
     </>
