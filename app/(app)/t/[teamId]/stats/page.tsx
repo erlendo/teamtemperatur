@@ -157,7 +157,7 @@ export default async function Page({ params, searchParams }: PageProps) {
             selectedWeekNumber={selectedWeek?.week}
           />
 
-          <TertialReportView report={tertialReport} />
+          <TertialReportView report={tertialReport} teamId={team.id} />
         </div>
       </main>
     </>

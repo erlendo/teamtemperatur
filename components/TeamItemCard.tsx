@@ -19,7 +19,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { PersonChip } from './PersonChip'
 import { SystemTagInput } from './SystemTagInput'
 
@@ -77,6 +77,7 @@ export function TeamItemCard({
   const canEdit = userRole !== 'viewer' && userRole !== 'external'
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
   const [title, setTitle] = useState(item.title)
   const [showMemberDropdown, setShowMemberDropdown] = useState(false)
   const [memberSearch, setMemberSearch] = useState('')
@@ -98,6 +99,29 @@ export function TeamItemCard({
       setRelations(initialRelations)
     }
   }, [initialRelations])
+
+  // Close edit mode on outside click or Escape
+  useEffect(() => {
+    if (!isEditMode) return
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+        setIsEditMode(false)
+      }
+    }
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsEditMode(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isEditMode])
 
   const handleSaveTitle = async () => {
     if (title.trim() && title !== item.title) {
@@ -291,6 +315,7 @@ export function TeamItemCard({
 
   return (
     <div
+      ref={cardRef}
       style={{
         backgroundColor: getBackgroundColor(),
         borderRadius: 'var(--border-radius-lg)',
@@ -737,28 +762,12 @@ export function TeamItemCard({
             gap: 'var(--space-sm)',
           }}
         >
-          {/* Status dropdown (only in edit mode) */}
-          <div style={{ flexShrink: 0 }}>
-            <select
-              value={item.status}
-              onChange={(e) => handleStatusChange(e.target.value as ItemStatus)}
-              disabled={isStatusChanging}
-              style={{
-                padding: '4px 6px',
-                border: '1px solid var(--color-neutral-300)',
-                borderRadius: 'var(--border-radius-md)',
-                fontSize: 'var(--font-size-xs)',
-                cursor: isStatusChanging ? 'not-allowed' : 'pointer',
-                opacity: isStatusChanging ? 0.6 : 1,
-                backgroundColor: 'var(--color-neutral-100)',
-                color: 'var(--color-neutral-800)',
-              }}
-            >
-              <option value="planlagt">◆ Planlagt</option>
-              <option value="pågår">▶ Pågår</option>
-              <option value="ferdig">● Ferdig</option>
-            </select>
-          </div>
+          <SystemTagInput
+            itemId={item.id}
+            teamId={item.team_id}
+            existingTags={item.tags.map((t) => t.tag_name)}
+            onUpdate={handleTagUpdate}
+          />
 
           <div
             style={{
@@ -881,12 +890,28 @@ export function TeamItemCard({
             )}
           </div>
 
-          <SystemTagInput
-            itemId={item.id}
-            teamId={item.team_id}
-            existingTags={item.tags.map((t) => t.tag_name)}
-            onUpdate={handleTagUpdate}
-          />
+          {/* Status dropdown (only in edit mode) */}
+          <div style={{ flexShrink: 0 }}>
+            <select
+              value={item.status}
+              onChange={(e) => handleStatusChange(e.target.value as ItemStatus)}
+              disabled={isStatusChanging}
+              style={{
+                padding: '4px 6px',
+                border: '1px solid var(--color-neutral-300)',
+                borderRadius: 'var(--border-radius-md)',
+                fontSize: 'var(--font-size-xs)',
+                cursor: isStatusChanging ? 'not-allowed' : 'pointer',
+                opacity: isStatusChanging ? 0.6 : 1,
+                backgroundColor: 'var(--color-neutral-100)',
+                color: 'var(--color-neutral-800)',
+              }}
+            >
+              <option value="planlagt">◆ Planlagt</option>
+              <option value="pågår">▶ Pågår</option>
+              <option value="ferdig">● Ferdig</option>
+            </select>
+          </div>
         </div>
       )}
     </div>

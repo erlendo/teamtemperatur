@@ -1,4 +1,5 @@
 import type { TertialItem, TertialReport } from '@/server/actions/stats'
+import { UkjentTagRow } from './UkjentTagRow'
 
 const UNTAGGED_LABEL = 'Ukjent'
 
@@ -42,7 +43,17 @@ function ItemRow({ item }: { item: TertialItem }) {
   )
 }
 
-function TagGroup({ tag, items }: { tag: string; items: TertialItem[] }) {
+function TagGroup({
+  tag,
+  items,
+  teamId,
+}: {
+  tag: string
+  items: TertialItem[]
+  teamId: string
+}) {
+  const isUntagged = tag === UNTAGGED_LABEL
+
   return (
     <div>
       <h4
@@ -50,18 +61,21 @@ function TagGroup({ tag, items }: { tag: string; items: TertialItem[] }) {
           margin: '0 0 var(--space-xs)',
           fontSize: 'var(--font-size-base)',
           fontWeight: 700,
-          color:
-            tag === UNTAGGED_LABEL
-              ? 'var(--color-neutral-500)'
-              : 'var(--color-primary-dark)',
+          color: isUntagged
+            ? 'var(--color-neutral-500)'
+            : 'var(--color-primary-dark)',
         }}
       >
         {tag}
       </h4>
       <ul style={{ listStyle: 'disc', margin: 0, paddingLeft: '1.25rem' }}>
-        {items.map((item) => (
-          <ItemRow key={item.id} item={item} />
-        ))}
+        {items.map((item) =>
+          isUntagged ? (
+            <UkjentTagRow key={item.id} item={item} teamId={teamId} />
+          ) : (
+            <ItemRow key={item.id} item={item} />
+          )
+        )}
       </ul>
     </div>
   )
@@ -71,10 +85,12 @@ function TertialSection({
   label,
   period,
   items,
+  teamId,
 }: {
   label: string
   period: string
   items: TertialItem[]
+  teamId: string
 }) {
   const groups = groupByTag(items)
 
@@ -131,7 +147,7 @@ function TertialSection({
       ) : (
         <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
           {groups.map(([tag, tagItems]) => (
-            <TagGroup key={tag} tag={tag} items={tagItems} />
+            <TagGroup key={tag} tag={tag} items={tagItems} teamId={teamId} />
           ))}
         </div>
       )}
@@ -139,7 +155,13 @@ function TertialSection({
   )
 }
 
-export function TertialReportView({ report }: { report: TertialReport }) {
+export function TertialReportView({
+  report,
+  teamId,
+}: {
+  report: TertialReport
+  teamId: string
+}) {
   const tertials = [
     { label: 'T1', period: '1. jan – 30. apr', items: report.T1 },
     { label: 'T2', period: '1. mai – 31. aug', items: report.T2 },
@@ -199,6 +221,7 @@ export function TertialReportView({ report }: { report: TertialReport }) {
           label={t.label}
           period={t.period}
           items={t.items}
+          teamId={teamId}
         />
       ))}
     </section>
