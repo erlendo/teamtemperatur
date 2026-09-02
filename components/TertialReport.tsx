@@ -15,7 +15,7 @@ function groupByTag(items: TertialItem[]): [string, TertialItem[]][] {
     }
   }
 
-  return Array.from(groups.entries()).sort(([a], [b]) => {
+  return [...groups.entries()].sort(([a], [b]) => {
     if (a === UNTAGGED_LABEL) return 1
     if (b === UNTAGGED_LABEL) return -1
     return a.localeCompare(b, 'nb')
