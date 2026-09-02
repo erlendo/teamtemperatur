@@ -6,6 +6,7 @@ interface PersonChipProps {
   userId: string
   displayName: string
   itemId: string
+  teamId: string
   onUpdate?: () => void
 }
 
@@ -13,10 +14,11 @@ export function PersonChip({
   userId,
   displayName,
   itemId,
+  teamId,
   onUpdate,
 }: PersonChipProps) {
   const handleRemove = async () => {
-    await removeMemberTag(itemId, userId)
+    await removeMemberTag(itemId, userId, teamId)
     onUpdate?.()
   }
 

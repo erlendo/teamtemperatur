@@ -48,12 +48,14 @@ function SortableItemWrapper({
   teamMembers,
   allRelations,
   onRefetch,
+  onOptimisticPatch,
   userRole,
 }: {
   item: TeamItem
   teamMembers: Array<{ id: string; firstName: string }>
   allRelations: ItemRelation[]
   onRefetch?: () => Promise<void>
+  onOptimisticPatch?: (itemId: string, patch: Partial<TeamItem>) => void
   userRole: string
 }) {
   const {
@@ -84,6 +86,7 @@ function SortableItemWrapper({
         teamMembers={teamMembers}
         relations={itemRelations}
         onRefetch={onRefetch}
+        onOptimisticPatch={onOptimisticPatch}
         userRole={userRole}
       />
     </div>
@@ -101,6 +104,7 @@ interface DashboardSectionProps {
   onOptimisticAdd?: (item: TeamItem) => void
   onOptimisticRemove?: (itemId: string) => void
   onOptimisticReplace?: (tempId: string, realId: string) => void
+  onOptimisticPatch?: (itemId: string, patch: Partial<TeamItem>) => void
   onRefetch?: () => Promise<void>
 }
 
@@ -115,6 +119,7 @@ export function DashboardSection({
   onOptimisticAdd,
   onOptimisticRemove,
   onOptimisticReplace,
+  onOptimisticPatch,
   onRefetch,
 }: DashboardSectionProps) {
   const colors = NORDIC_COLORS[type]
@@ -397,6 +402,7 @@ export function DashboardSection({
                   allRelations={allRelations}
                   userRole={userRole}
                   onRefetch={onRefetch}
+                  onOptimisticPatch={onOptimisticPatch}
                 />
               ))
             )}

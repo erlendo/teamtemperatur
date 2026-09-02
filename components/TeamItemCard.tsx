@@ -32,6 +32,7 @@ interface TeamItemCardProps {
     outbound: ItemRelation[]
   }
   onRefetch?: () => Promise<void>
+  onOptimisticPatch?: (itemId: string, patch: Partial<TeamItem>) => void
   onRelationDelete?: (relationId: string) => void
 }
 
@@ -72,6 +73,7 @@ export function TeamItemCard({
   userRole,
   relations: initialRelations,
   onRefetch,
+  onOptimisticPatch,
   onRelationDelete,
 }: TeamItemCardProps) {
   const canEdit = userRole !== 'viewer' && userRole !== 'external'
@@ -128,7 +130,12 @@ export function TeamItemCard({
       setIsSaving(true)
       setStatusMessage('Lagrer...')
       try {
-        const result = await updateItem(item.id, { title: title.trim() })
+        const trimmedTitle = title.trim()
+        const result = await updateItem(
+          item.id,
+          { title: trimmedTitle },
+          item.team_id
+        )
         if (result.error) {
           setError(result.error)
           setStatusMessage(null)
@@ -137,7 +144,7 @@ export function TeamItemCard({
         setError(null)
         setStatusMessage('✓ Lagret')
         setTimeout(() => setStatusMessage(null), 2000)
-        await onRefetch?.()
+        onOptimisticPatch?.(item.id, { title: trimmedTitle })
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Ukjent feil'
         setError(msg)
@@ -204,7 +211,11 @@ export function TeamItemCard({
     setIsStatusChanging(true)
     setStatusMessage('Oppdaterer status...')
     try {
-      const result = await updateItem(item.id, { status: newStatus })
+      const result = await updateItem(
+        item.id,
+        { status: newStatus },
+        item.team_id
+      )
       if (result.error) {
         setError(result.error)
         setStatusMessage(null)
@@ -213,7 +224,7 @@ export function TeamItemCard({
       setError(null)
       setStatusMessage('✓ Status oppdatert')
       setTimeout(() => setStatusMessage(null), 2000)
-      await onRefetch?.()
+      onOptimisticPatch?.(item.id, { status: newStatus })
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
       setError(msg)
@@ -227,7 +238,7 @@ export function TeamItemCard({
     setIsAddingMember(true)
     setStatusMessage('Legger til medlem...')
     try {
-      const result = await addMemberTag(item.id, userId)
+      const result = await addMemberTag(item.id, userId, item.team_id)
       if (result.error) {
         setError(result.error)
         setStatusMessage(null)
@@ -238,7 +249,9 @@ export function TeamItemCard({
       setTimeout(() => setStatusMessage(null), 2000)
       setShowMemberDropdown(false)
       setMemberSearch('')
-      await onRefetch?.()
+      onOptimisticPatch?.(item.id, {
+        members: [...item.members, { user_id: userId }],
+      })
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ukjent feil'
       setError(msg)
@@ -248,9 +261,16 @@ export function TeamItemCard({
     }
   }
 
-  const handleTagUpdate = async () => {
-    // revalidatePath is already called on the server side, no need for router.refresh
-    await onRefetch?.()
+  const handleRemoveMember = (userId: string) => {
+    onOptimisticPatch?.(item.id, {
+      members: item.members.filter((m) => m.user_id !== userId),
+    })
+  }
+
+  const handleTagUpdate = (tags: string[]) => {
+    onOptimisticPatch?.(item.id, {
+      tags: tags.map((tag_name) => ({ tag_name })),
+    })
   }
 
   const handleDeleteRelation = async (relationId: string) => {
@@ -785,7 +805,8 @@ export function TeamItemCard({
                   userId={member.user_id}
                   displayName={getFirstName(user?.firstName || 'Ukjent')}
                   itemId={item.id}
-                  onUpdate={handleTagUpdate}
+                  teamId={item.team_id}
+                  onUpdate={() => handleRemoveMember(member.user_id)}
                 />
               )
             })}

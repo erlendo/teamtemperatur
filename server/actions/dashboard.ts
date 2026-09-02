@@ -250,7 +250,8 @@ export async function createItem(
 
 export async function updateItem(
   itemId: string,
-  updates: { title?: string; status?: ItemStatus }
+  updates: { title?: string; status?: ItemStatus },
+  teamId?: string
 ): Promise<{ error?: string }> {
   const supabase = supabaseServer()
 
@@ -261,28 +262,35 @@ export async function updateItem(
     return { error: 'Ikke autentisert' }
   }
 
-  // Get team_id for revalidation
-  const { data: item } = await supabase
-    .from('team_items')
-    .select('team_id')
-    .eq('id', itemId)
-    .single()
+  // Only look up team_id when the caller doesn't already have it —
+  // avoids a redundant round trip on every edit.
+  const teamIdPromise = teamId
+    ? Promise.resolve(teamId)
+    : supabase
+        .from('team_items')
+        .select('team_id')
+        .eq('id', itemId)
+        .single()
+        .then(({ data }) => data?.team_id)
 
-  const { error } = await supabase
-    .from('team_items')
-    .update({
-      ...updates,
-      updated_at: new Date().toISOString(),
-      updated_by: user.id,
-    })
-    .eq('id', itemId)
+  const [resolvedTeamId, { error }] = await Promise.all([
+    teamIdPromise,
+    supabase
+      .from('team_items')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', itemId),
+  ])
 
   if (error) {
     return { error: error.message }
   }
 
-  if (item) {
-    revalidatePath(`/t/${item.team_id}`)
+  if (resolvedTeamId) {
+    revalidatePath(`/t/${resolvedTeamId}`)
   }
   return {}
 }
@@ -441,7 +449,8 @@ export async function toggleItemStatus(
 
 export async function addMemberTag(
   itemId: string,
-  userId: string
+  userId: string,
+  teamId?: string
 ): Promise<{ error?: string }> {
   const supabase = supabaseServer()
 
@@ -451,43 +460,53 @@ export async function addMemberTag(
       return { error: 'Bruker-ID er tom' }
     }
 
-    // Get team_id for revalidation
-    const { data: item, error: itemError } = await supabase
-      .from('team_items')
-      .select('id, team_id, title')
-      .eq('id', itemId)
+    // Resolve team_id and the current user in parallel — the caller
+    // usually already knows both, so most of the time this just
+    // becomes the auth check with no extra round trip.
+    const [resolvedTeamId, authResult] = await Promise.all([
+      teamId
+        ? Promise.resolve(teamId)
+        : supabase
+            .from('team_items')
+            .select('team_id')
+            .eq('id', itemId)
+            .single()
+            .then(({ data }) => data?.team_id),
+      supabase.auth.getUser(),
+    ])
 
-    if (itemError) {
-      console.error('✗ Error fetching item:', itemError.code, itemError.message)
-      return { error: `Kunne ikke finne oppgave: ${itemError.message}` }
-    }
-
-    if (!item || item.length === 0) {
+    if (!resolvedTeamId) {
       return { error: 'Oppgave ikke funnet' }
     }
 
-    const itemData = item[0]
-    if (!itemData) {
-      return { error: 'Oppgave-data mangler' }
-    }
-
-    // Check current user's role
     const {
       data: { user: currentUser },
       error: authError,
-    } = await supabase.auth.getUser()
+    } = authResult
 
     if (authError || !currentUser) {
       return { error: 'Ikke autentisert' }
     }
 
-    const { data: callerMembership, error: callerMembError } = await supabase
-      .from('team_memberships')
-      .select('role')
-      .eq('team_id', itemData.team_id)
-      .eq('user_id', currentUser.id)
-      .eq('status', 'active')
-      .maybeSingle()
+    // Check caller's role and target membership in parallel
+    const [
+      { data: callerMembership, error: callerMembError },
+      { data: membership, error: memberError },
+    ] = await Promise.all([
+      supabase
+        .from('team_memberships')
+        .select('role')
+        .eq('team_id', resolvedTeamId)
+        .eq('user_id', currentUser.id)
+        .eq('status', 'active')
+        .maybeSingle(),
+      supabase
+        .from('team_memberships')
+        .select('user_id, status')
+        .eq('team_id', resolvedTeamId)
+        .eq('user_id', userId)
+        .eq('status', 'active'),
+    ])
 
     if (callerMembError) {
       console.error('✗ Error checking caller role:', callerMembError.message)
@@ -503,14 +522,6 @@ export async function addMemberTag(
         error: 'Leserettigheter gir ikke tilgang til å tildele medlemmer',
       }
     }
-
-    // Verify user is a member of the team
-    const { data: membership, error: memberError } = await supabase
-      .from('team_memberships')
-      .select('user_id, status')
-      .eq('team_id', itemData.team_id)
-      .eq('user_id', userId)
-      .eq('status', 'active')
 
     if (memberError) {
       console.error('✗ Error checking membership:', memberError.message)
@@ -538,7 +549,7 @@ export async function addMemberTag(
       return { error: `Kunne ikke legge til person: ${error.message}` }
     }
 
-    revalidatePath(`/t/${itemData.team_id}`)
+    revalidatePath(`/t/${resolvedTeamId}`)
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -549,29 +560,23 @@ export async function addMemberTag(
 
 export async function removeMemberTag(
   itemId: string,
-  userId: string
+  userId: string,
+  teamId?: string
 ): Promise<{ error?: string }> {
   const supabase = supabaseServer()
 
   try {
-    // Get team_id for revalidation
-    const { data: item, error: itemError } = await supabase
-      .from('team_items')
-      .select('id, team_id, title')
-      .eq('id', itemId)
+    const resolvedTeamId = teamId
+      ? teamId
+      : await supabase
+          .from('team_items')
+          .select('team_id')
+          .eq('id', itemId)
+          .single()
+          .then(({ data }) => data?.team_id)
 
-    if (itemError) {
-      console.error('✗ Error fetching item:', itemError.message)
-      return { error: `Kunne ikke finne oppgave: ${itemError.message}` }
-    }
-
-    if (!item || item.length === 0) {
+    if (!resolvedTeamId) {
       return { error: 'Oppgave ikke funnet' }
-    }
-
-    const itemData = item[0]
-    if (!itemData) {
-      return { error: 'Oppgave-data mangler' }
     }
 
     const { error } = await supabase
@@ -585,7 +590,7 @@ export async function removeMemberTag(
       return { error: `Kunne ikke fjerne person: ${error.message}` }
     }
 
-    revalidatePath(`/t/${itemData.team_id}`)
+    revalidatePath(`/t/${resolvedTeamId}`)
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -596,7 +601,8 @@ export async function removeMemberTag(
 
 export async function addSystemTag(
   itemId: string,
-  tagName: string
+  tagName: string,
+  teamId?: string
 ): Promise<{ error?: string }> {
   const supabase = supabaseServer()
 
@@ -618,11 +624,21 @@ export async function addSystemTag(
       return { error: 'Ikke autentisert' }
     }
 
-    // Check max 5 tags
-    const { data: existingTags, error: tagsError } = await supabase
-      .from('team_item_tags')
-      .select('id')
-      .eq('item_id', itemId)
+    // Run the tag-count check and (if needed) the team_id lookup in
+    // parallel instead of one-after-another — the caller usually
+    // already knows the team_id, so that lookup is skipped entirely.
+    const [{ data: existingTags, error: tagsError }, resolvedTeamId] =
+      await Promise.all([
+        supabase.from('team_item_tags').select('id').eq('item_id', itemId),
+        teamId
+          ? Promise.resolve(teamId)
+          : supabase
+              .from('team_items')
+              .select('team_id')
+              .eq('id', itemId)
+              .single()
+              .then(({ data }) => data?.team_id),
+      ])
 
     if (tagsError) {
       console.error(
@@ -639,32 +655,8 @@ export async function addSystemTag(
       return { error: 'Maks 5 tags per oppgave' }
     }
 
-    // Get team_id for revalidation (try without .single() first to see if item exists)
-    const {
-      data: item,
-      error: itemError,
-      status: itemStatus,
-    } = await supabase
-      .from('team_items')
-      .select('id, team_id, title')
-      .eq('id', itemId)
-
-    if (itemError) {
-      console.error(
-        `✗ Error fetching item (status ${itemStatus}):`,
-        itemError.code,
-        itemError.message
-      )
-      return { error: `Kunne ikke finne oppgave: ${itemError.message}` }
-    }
-
-    if (!item || item.length === 0) {
+    if (!resolvedTeamId) {
       return { error: 'Oppgave ikke funnet' }
-    }
-
-    const itemData = item[0]
-    if (!itemData) {
-      return { error: 'Oppgave-data mangler' }
     }
 
     const { error } = await supabase
@@ -682,7 +674,7 @@ export async function addSystemTag(
       return { error: `Kunne ikke lagre tag: ${error.message}` }
     }
 
-    revalidatePath(`/t/${itemData.team_id}`)
+    revalidatePath(`/t/${resolvedTeamId}`)
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -693,7 +685,8 @@ export async function addSystemTag(
 
 export async function removeSystemTag(
   itemId: string,
-  tagName: string
+  tagName: string,
+  teamId?: string
 ): Promise<{ error?: string }> {
   const supabase = supabaseServer()
 
@@ -708,24 +701,17 @@ export async function removeSystemTag(
       return { error: 'Ikke autentisert' }
     }
 
-    // Get team_id for revalidation
-    const { data: item, error: itemError } = await supabase
-      .from('team_items')
-      .select('id, team_id, title')
-      .eq('id', itemId)
+    const resolvedTeamId = teamId
+      ? teamId
+      : await supabase
+          .from('team_items')
+          .select('team_id')
+          .eq('id', itemId)
+          .single()
+          .then(({ data }) => data?.team_id)
 
-    if (itemError) {
-      console.error('✗ Error fetching item:', itemError.message)
-      return { error: `Kunne ikke finne oppgave: ${itemError.message}` }
-    }
-
-    if (!item || item.length === 0) {
+    if (!resolvedTeamId) {
       return { error: 'Oppgave ikke funnet' }
-    }
-
-    const itemData = item[0]
-    if (!itemData) {
-      return { error: 'Oppgave-data mangler' }
     }
 
     const { error } = await supabase
@@ -739,7 +725,7 @@ export async function removeSystemTag(
       return { error: `Kunne ikke slette tag: ${error.message}` }
     }
 
-    revalidatePath(`/t/${itemData.team_id}`)
+    revalidatePath(`/t/${resolvedTeamId}`)
     return {}
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'

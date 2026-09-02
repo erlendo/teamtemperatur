@@ -11,7 +11,7 @@ interface SystemTagInputProps {
   itemId: string
   teamId: string
   existingTags: string[]
-  onUpdate?: () => void
+  onUpdate?: (tags: string[]) => void
 }
 
 export function SystemTagInput({
@@ -44,9 +44,11 @@ export function SystemTagInput({
   const handleAddTag = async (tag: string) => {
     if (!tag.trim() || existingTags.length >= 5) return
 
+    const normalizedTag = tag.trim().toLowerCase()
+
     startTransition(async () => {
       try {
-        const result = await addSystemTag(itemId, tag)
+        const result = await addSystemTag(itemId, tag, teamId)
         if (result.error) {
           setError(result.error)
           return
@@ -54,12 +56,10 @@ export function SystemTagInput({
         setError(null)
         setInput('')
         setAllTags((prev) =>
-          prev.includes(tag.trim().toLowerCase())
-            ? prev
-            : [...prev, tag.trim().toLowerCase()]
+          prev.includes(normalizedTag) ? prev : [...prev, normalizedTag]
         )
-        // Notify parent to refresh - don't use router.refresh() to avoid conflicts with revalidatePath
-        onUpdate?.()
+        // Patch the item locally instead of refetching the whole team
+        onUpdate?.([...existingTags, normalizedTag])
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Ukjent feil'
         console.error('Add tag error:', msg, err)
@@ -78,14 +78,14 @@ export function SystemTagInput({
   const handleRemoveTag = async (tag: string) => {
     startTransition(async () => {
       try {
-        const result = await removeSystemTag(itemId, tag)
+        const result = await removeSystemTag(itemId, tag, teamId)
         if (result.error) {
           setError(result.error)
           return
         }
         setError(null)
-        // Notify parent to refresh - don't use router.refresh() to avoid conflicts with revalidatePath
-        onUpdate?.()
+        // Patch the item locally instead of refetching the whole team
+        onUpdate?.(existingTags.filter((t) => t !== tag))
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Ukjent feil'
         console.error('Remove tag error:', msg, err)

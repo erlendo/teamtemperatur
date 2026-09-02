@@ -74,6 +74,18 @@ export function DashboardClient({
     setRetroItems(replaceInArray)
   }
 
+  // Optimistic patch - update a single item's fields locally, without
+  // refetching every item and relation for the whole team.
+  const handleOptimisticPatch = (itemId: string, patch: Partial<TeamItem>) => {
+    const patchInArray = (items: TeamItem[]) =>
+      items.map((item) => (item.id === itemId ? { ...item, ...patch } : item))
+
+    setUkemålItems(patchInArray)
+    setPipelineItems(patchInArray)
+    setMålItems(patchInArray)
+    setRetroItems(patchInArray)
+  }
+
   // Refetch items from server (for updates, deletes, etc.)
   const handleRefetchItems = async () => {
     const { items } = await getTeamItems(teamId)
@@ -100,6 +112,7 @@ export function DashboardClient({
         onOptimisticAdd={handleOptimisticAdd}
         onOptimisticRemove={handleOptimisticRemove}
         onOptimisticReplace={handleOptimisticReplace}
+        onOptimisticPatch={handleOptimisticPatch}
         onRefetch={handleRefetchItems}
       />
 
@@ -121,6 +134,7 @@ export function DashboardClient({
           onOptimisticAdd={handleOptimisticAdd}
           onOptimisticRemove={handleOptimisticRemove}
           onOptimisticReplace={handleOptimisticReplace}
+          onOptimisticPatch={handleOptimisticPatch}
           onRefetch={handleRefetchItems}
         />
       </div>

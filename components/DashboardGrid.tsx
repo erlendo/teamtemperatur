@@ -44,6 +44,7 @@ interface DashboardGridProps {
   onOptimisticAdd?: (item: TeamItem) => void
   onOptimisticRemove?: (itemId: string) => void
   onOptimisticReplace?: (tempId: string, realId: string) => void
+  onOptimisticPatch?: (itemId: string, patch: Partial<TeamItem>) => void
   onRefetch?: () => Promise<void>
 }
 
@@ -66,6 +67,7 @@ function SortableItemWrapper(
     teamMembers,
     relations,
     onRefetch,
+    onOptimisticPatch,
     userRole,
     onHover,
     onRelationDelete,
@@ -77,6 +79,7 @@ function SortableItemWrapper(
       outbound: ItemRelation[]
     }
     onRefetch?: () => Promise<void>
+    onOptimisticPatch?: (itemId: string, patch: Partial<TeamItem>) => void
     userRole: string
     onHover?: (itemId: string | null) => void
     onRelationDelete?: (relationId: string) => void
@@ -113,6 +116,7 @@ function SortableItemWrapper(
         teamMembers={teamMembers}
         relations={relations}
         onRefetch={onRefetch}
+        onOptimisticPatch={onOptimisticPatch}
         userRole={userRole}
         onRelationDelete={onRelationDelete}
       />
@@ -133,6 +137,7 @@ function GridSection({
   onOptimisticAdd,
   onOptimisticRemove,
   onOptimisticReplace,
+  onOptimisticPatch,
   onRefetch,
   onHover,
   onRelationDelete,
@@ -154,6 +159,7 @@ function GridSection({
   onOptimisticAdd?: (item: TeamItem) => void
   onOptimisticRemove?: (itemId: string) => void
   onOptimisticReplace?: (tempId: string, realId: string) => void
+  onOptimisticPatch?: (itemId: string, patch: Partial<TeamItem>) => void
   onRefetch?: () => Promise<void>
   onHover?: (itemId: string | null) => void
   onRelationDelete?: (relationId: string) => void
@@ -400,6 +406,7 @@ function GridSection({
                 }
                 userRole={userRole}
                 onRefetch={onRefetch}
+                onOptimisticPatch={onOptimisticPatch}
                 onHover={onHover}
                 onRelationDelete={onRelationDelete}
               />
@@ -422,6 +429,7 @@ export function DashboardGrid({
   onOptimisticAdd,
   onOptimisticRemove,
   onOptimisticReplace,
+  onOptimisticPatch,
   onRefetch,
 }: DashboardGridProps) {
   const { showRelations } = useVisibleRelations()
@@ -747,6 +755,7 @@ export function DashboardGrid({
           onOptimisticAdd={onOptimisticAdd}
           onOptimisticRemove={onOptimisticRemove}
           onOptimisticReplace={onOptimisticReplace}
+          onOptimisticPatch={onOptimisticPatch}
           onRefetch={onRefetch}
           onHover={setHighlightedItemId}
           onRelationDelete={handleRelationDelete}
@@ -763,6 +772,7 @@ export function DashboardGrid({
           onOptimisticAdd={onOptimisticAdd}
           onOptimisticRemove={onOptimisticRemove}
           onOptimisticReplace={onOptimisticReplace}
+          onOptimisticPatch={onOptimisticPatch}
           onRefetch={onRefetch}
           onHover={setHighlightedItemId}
           onRelationDelete={handleRelationDelete}
@@ -779,6 +789,7 @@ export function DashboardGrid({
           onOptimisticAdd={onOptimisticAdd}
           onOptimisticRemove={onOptimisticRemove}
           onOptimisticReplace={onOptimisticReplace}
+          onOptimisticPatch={onOptimisticPatch}
           onRefetch={onRefetch}
           onHover={setHighlightedItemId}
           onRelationDelete={handleRelationDelete}
