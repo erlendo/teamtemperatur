@@ -5,7 +5,7 @@ import {
   getSystemTagSuggestions,
   removeSystemTag,
 } from '@/server/actions/dashboard'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 
 interface SystemTagInputProps {
   itemId: string
@@ -21,31 +21,25 @@ export function SystemTagInput({
   onUpdate,
 }: SystemTagInputProps) {
   const [input, setInput] = useState('')
-  const [suggestions, setSuggestions] = useState<string[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [allTags, setAllTags] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [_isPending, startTransition] = useTransition()
-  const inputRef = useRef<HTMLInputElement>(null)
 
+  // Load every known tag for the team up front, so people can see and
+  // pick from the full list instead of typing blind.
   useEffect(() => {
-    if (input.length > 0) {
-      void getSystemTagSuggestions(teamId).then(({ suggestions, error }) => {
-        if (error) {
-          setError(error)
-          return
-        }
-        const filtered = suggestions.filter(
-          (s) =>
-            s.toLowerCase().includes(input.toLowerCase()) &&
-            !existingTags.includes(s)
-        )
-        setSuggestions(filtered)
-        setShowSuggestions(filtered.length > 0)
-      })
-    } else {
-      setShowSuggestions(false)
-    }
-  }, [input, teamId, existingTags])
+    void getSystemTagSuggestions(teamId).then(({ suggestions, error }) => {
+      if (error) {
+        setError(error)
+        return
+      }
+      setAllTags(suggestions)
+    })
+  }, [teamId])
+
+  const availableTags = allTags
+    .filter((s) => !existingTags.includes(s))
+    .filter((s) => s.toLowerCase().includes(input.toLowerCase()))
 
   const handleAddTag = async (tag: string) => {
     if (!tag.trim() || existingTags.length >= 5) return
@@ -59,7 +53,11 @@ export function SystemTagInput({
         }
         setError(null)
         setInput('')
-        setShowSuggestions(false)
+        setAllTags((prev) =>
+          prev.includes(tag.trim().toLowerCase())
+            ? prev
+            : [...prev, tag.trim().toLowerCase()]
+        )
         // Notify parent to refresh - don't use router.refresh() to avoid conflicts with revalidatePath
         onUpdate?.()
       } catch (err) {
@@ -162,71 +160,67 @@ export function SystemTagInput({
             </button>
           </span>
         ))}
-
-        {existingTags.length < 5 && (
-          <div style={{ position: 'relative' }}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Legg til tag..."
-              style={{
-                padding: 'var(--space-xs) var(--space-sm)',
-                border: '1px solid var(--color-neutral-300, #d4d4d4)',
-                borderRadius: 'var(--radius-md, 0.375rem)',
-                fontSize: 'var(--font-size-xs, 0.75rem)',
-                width: '120px',
-              }}
-            />
-            {showSuggestions && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  marginTop: 'var(--space-xs)',
-                  backgroundColor: 'white',
-                  border: '1px solid var(--color-neutral-300)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: 'var(--shadow-md)',
-                  zIndex: 10,
-                  maxHeight: '150px',
-                  overflowY: 'auto',
-                  minWidth: '150px',
-                }}
-              >
-                {suggestions.slice(0, 5).map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => handleAddTag(suggestion)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      padding: 'var(--space-sm)',
-                      border: 'none',
-                      background: 'none',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      fontSize: 'var(--font-size-sm)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        'var(--color-neutral-100, #f5f5f5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                    }}
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
+
+      {existingTags.length < 5 && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-xs)',
+            width: '100%',
+          }}
+        >
+          {availableTags.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 'var(--space-xs)',
+              }}
+            >
+              {availableTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleAddTag(tag)}
+                  style={{
+                    padding: '2px 10px',
+                    borderRadius: '999px',
+                    border: '1px solid var(--color-neutral-300)',
+                    background: 'var(--color-neutral-50)',
+                    color: 'var(--color-primary-dark)',
+                    fontSize: 'var(--font-size-xs)',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--color-mist)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'var(--color-neutral-50)'
+                  }}
+                >
+                  + {tag}
+                </button>
+              ))}
+            </div>
+          )}
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ny tag..."
+            style={{
+              padding: 'var(--space-xs) var(--space-sm)',
+              border: '1px solid var(--color-neutral-300, #d4d4d4)',
+              borderRadius: 'var(--radius-md, 0.375rem)',
+              fontSize: 'var(--font-size-xs, 0.75rem)',
+              width: '140px',
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }

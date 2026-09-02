@@ -16,25 +16,18 @@ export function UkjentTagRow({
   teamId: string
 }) {
   const [input, setInput] = useState('')
-  const [suggestions, setSuggestions] = useState<string[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [allTags, setAllTags] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
+  // Load every known tag for the team up front, so people can see and
+  // pick from the full list instead of typing blind.
   useEffect(() => {
-    if (input.length === 0) {
-      setShowSuggestions(false)
-      return
-    }
     void getSystemTagSuggestions(teamId).then(({ suggestions }) => {
-      const filtered = suggestions.filter((s) =>
-        s.toLowerCase().includes(input.toLowerCase())
-      )
-      setSuggestions(filtered)
-      setShowSuggestions(filtered.length > 0)
+      setAllTags(suggestions)
     })
-  }, [input, teamId])
+  }, [teamId])
 
   const handleAddTag = (tag: string) => {
     if (!tag.trim()) return
@@ -46,7 +39,6 @@ export function UkjentTagRow({
       }
       setError(null)
       setInput('')
-      setShowSuggestions(false)
       router.refresh()
     })
   }
@@ -56,13 +48,14 @@ export function UkjentTagRow({
       style={{
         display: 'flex',
         alignItems: 'center',
+        flexWrap: 'wrap',
         gap: 'var(--space-sm)',
-        padding: '0.2rem 0',
+        padding: '0.3rem 0',
         fontSize: 'var(--font-size-sm)',
         color: 'var(--color-neutral-800)',
       }}
     >
-      <span style={{ flex: 1 }}>
+      <span style={{ flex: '1 1 auto', minWidth: '12rem' }}>
         {item.title}
         <span style={{ color: 'var(--color-neutral-400)' }}> — </span>
         <span style={{ color: 'var(--color-neutral-500)' }}>
@@ -71,7 +64,34 @@ export function UkjentTagRow({
             : '(ukjent ansvarlig)'}
         </span>
       </span>
-      <span style={{ position: 'relative', flexShrink: 0 }}>
+
+      <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+        {allTags.map((tag) => (
+          <button
+            key={tag}
+            onClick={() => handleAddTag(tag)}
+            disabled={isPending}
+            style={{
+              padding: '1px 8px',
+              borderRadius: '999px',
+              border: '1px solid var(--color-neutral-300)',
+              background: 'var(--color-neutral-50)',
+              color: 'var(--color-primary-dark)',
+              fontSize: 'var(--font-size-xs)',
+              fontWeight: 500,
+              cursor: isPending ? 'not-allowed' : 'pointer',
+              opacity: isPending ? 0.6 : 1,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--color-mist)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'var(--color-neutral-50)'
+            }}
+          >
+            + {tag}
+          </button>
+        ))}
         <input
           type="text"
           value={input}
@@ -82,55 +102,19 @@ export function UkjentTagRow({
               handleAddTag(input)
             }
           }}
-          placeholder="+ tag"
+          placeholder="ny tag"
           disabled={isPending}
           style={{
             padding: '0.1rem 0.5rem',
             border: '1px solid var(--color-neutral-300)',
             borderRadius: '999px',
             fontSize: 'var(--font-size-xs)',
-            width: '90px',
+            width: '80px',
             opacity: isPending ? 0.6 : 1,
           }}
         />
-        {showSuggestions && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '100%',
-              right: 0,
-              marginTop: '4px',
-              backgroundColor: 'white',
-              border: '1px solid var(--color-neutral-300)',
-              borderRadius: 'var(--border-radius-md)',
-              boxShadow: 'var(--shadow-md)',
-              zIndex: 10,
-              minWidth: '120px',
-              maxHeight: '150px',
-              overflowY: 'auto',
-            }}
-          >
-            {suggestions.slice(0, 5).map((s) => (
-              <button
-                key={s}
-                onClick={() => handleAddTag(s)}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: 'var(--space-xs) var(--space-sm)',
-                  border: 'none',
-                  background: 'none',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  fontSize: 'var(--font-size-xs)',
-                }}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
       </span>
+
       {error && (
         <span
           style={{
