@@ -10,7 +10,7 @@ Your job is to find performance issues before they become user-visible problems.
 
 ## Project Context
 
-- **Hotspots:** Stats page (`YearStatsView.tsx` — 893 lines, renders all weeks), Dashboard (`DashboardGrid.tsx` — drag-and-drop + relation connectors)
+- **Hotspots:** Stats page (`YearStatsView.tsx` — large, renders all weeks), Dashboard (`DashboardGrid.tsx` — drag-and-drop + relation connectors)
 - **Known N+1 fixed:** `listMyTeams()` now uses batched `get_members_for_teams()` RPC
 - **Stats calculations:** `get_team_week_stats()` is a SECURITY DEFINER function — runs server-side
 - **Recharts:** Used for all charts — be careful about rendering 52 data points at once

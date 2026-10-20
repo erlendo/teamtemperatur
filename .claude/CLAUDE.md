@@ -5,12 +5,14 @@
 **Teamtemperatur** er en full-stack Next.js-applikasjon for å måle og følge teamhelse over tid. Appen kombinerer ukentlige helseundersøkelser med et samarbeidsdashboard for å håndtere teammål, pipeline-items, ukemål og retrospektiver.
 
 ### Kjerneformål
+
 - **Ukentlige helseundersøkelser**: Team vurderer trivsel på skala 1-5 hver uke
 - **Dashboard med samarbeidselementer**: Organisere og koble sammen mål, pipeline, ukemål og retro
 - **Statistikk og trendanalyse**: Visualisere teamhelse med avanserte beregninger (Bayesian adjustment, moving averages)
 - **Relasjoner mellom items**: Many-to-many koblinger mellom ulike item-typer
 
 ### Språk
+
 - **UI**: Norsk
 - **Kode**: Engelsk (variabelnavn, funksjoner, kommentarer)
 - **Database**: Engelsk (tabellnavn, kolonner)
@@ -20,6 +22,7 @@
 ## 🏗️ Teknologistack
 
 ### Frontend
+
 - **Next.js 14.2.35** - App Router med Server/Client Components
 - **React 18.3.1** - UI library
 - **TypeScript 5** - Strict mode aktivert
@@ -29,12 +32,14 @@
 - **Zod 3.23.8** - Schema validation
 
 ### Backend
+
 - **Next.js Server Actions** - Primær backend-pattern (ikke traditional API routes)
 - **Supabase 2.49.1** - PostgreSQL + Auth + Real-time
 - **@supabase/ssr** - Server-side rendering utilities
 - **pg 8.17.2** - Direct PostgreSQL client for migrations
 
 ### Deployment
+
 - **Vercel** - Frontend hosting
 - **Supabase** - Database (managed PostgreSQL)
 
@@ -97,7 +102,7 @@
 │       └── browser.ts               # Browser-side Supabase client
 
 ├── supabase/                         # Database migrations
-│   └── migrations/                  # SQL migration files (39+ files)
+│   └── migrations/                  # SQL migration files (001–047)
 │       ├── 001_init.sql             # Initial schema
 │       ├── 002_default_questionnaire.sql
 │       ├── 026_create_team_items_tables.sql
@@ -115,122 +120,56 @@
 
 ## 🗄️ Database Schema
 
-### Core Tables
+### Core Tables (verifisert mot produksjon 20. okt 2026)
 
-#### Teams & Membership
+Kilden til sannhet er databasen, ikke denne filen. Generer typer med Supabase MCP (`generate_typescript_types`) før du skriver spørringer mot kolonner du er usikker på.
+
 ```sql
-teams
-├── id (uuid, primary key)
-├── name (text)
-├── created_at (timestamptz)
-└── updated_at (timestamptz)
+teams (id, name, settings jsonb, created_by, created_at)
 
-team_memberships
-├── id (uuid, primary key)
-├── team_id (uuid, foreign key → teams)
-├── user_id (uuid, foreign key → auth.users)
-├── role (text: 'owner' | 'admin' | 'member' | 'viewer')
-├── created_at (timestamptz)
-└── is_active (boolean, default true)
+team_memberships (team_id, user_id, role, status, created_at, include_in_stats)
+  -- role:   'owner' | 'admin' | 'member' | 'viewer' | 'external'
+  -- status: 'active' | 'invited'   -- bruk status = 'active', det finnes IKKE is_active
+  -- tt_team_memberships er en VIEW over denne tabellen
 
-user_profiles
-├── id (uuid, primary key, matches auth.users.id)
-├── email (text)
-├── first_name (text)
-├── created_at (timestamptz)
-└── updated_at (timestamptz)
+team_invitations (id, team_id, email, token uuid, status, invited_by, created_at, expires_at)
+  -- status: 'pending' | 'accepted' | 'expired'
+  -- aksept går via RPC accept_team_invitation(p_token)
+
+user_profiles (user_id, first_name, created_at, updated_at)
+  -- Ingen id- eller email-kolonne. E-post ligger kun i auth.users.
+
+questionnaires, questions, submissions, answers, tt_draft_answers
+  -- Én submission per (team_id, user_id, year, week_number)
 ```
 
-#### Questionnaires & Surveys
+#### Dashboard-items
+
 ```sql
-questionnaires
-├── id (uuid, primary key)
-├── team_id (uuid, foreign key → teams)
-├── title (text)
-├── is_active (boolean)
-├── created_at (timestamptz)
-└── updated_at (timestamptz)
+team_items (id, team_id, type, title, status, sort_order, created_at, updated_at,
+            updated_by, archived_at, archived_by)
+  -- type:   'ukemål' | 'pipeline' | 'mål' | 'retro'      (med æ/å, ikke 'ukemaal')
+  -- status: 'planlagt' | 'pågår' | 'ferdig'              (ikke planned/in_progress/completed)
+  -- Arkivert = archived_at IS NOT NULL. Det finnes ikke is_archived.
+  -- Arkiverte items vises ikke på dashbordet, bare i tertialrapporten (Statistikk).
 
-questions
-├── id (uuid, primary key)
-├── questionnaire_id (uuid, foreign key → questionnaires)
-├── text (text)
-├── type (text: 'scale' | 'yes_no' | 'text')
-├── sort_order (integer)
-└── created_at (timestamptz)
-
-submissions
-├── id (uuid, primary key)
-├── questionnaire_id (uuid, foreign key → questionnaires)
-├── team_id (uuid, foreign key → teams)
-├── user_id (uuid, foreign key → auth.users)
-├── week_number (integer, 1-53)
-├── year (integer)
-├── submitted_at (timestamptz)
-└── UNIQUE(team_id, user_id, year, week_number) -- Én submission per bruker per uke
-
-answers
-├── id (uuid, primary key)
-├── submission_id (uuid, foreign key → submissions)
-├── question_id (uuid, foreign key → questions)
-├── value (text) -- '1'-'5' for scale, 'yes'/'no', or free text
-└── created_at (timestamptz)
-
-tt_draft_answers (draft saving)
-├── id (uuid, primary key)
-├── team_id (uuid)
-├── user_id (uuid)
-├── year (integer)
-├── week_number (integer)
-├── question_id (uuid)
-├── value (text)
-└── created_at (timestamptz)
-```
-
-#### Dashboard Items (Collaborative Elements)
-```sql
-team_items
-├── id (uuid, primary key)
-├── team_id (uuid, foreign key → teams)
-├── type (text: 'ukemaal' | 'pipeline' | 'maal' | 'retro')
-├── title (text, not null)
-├── description (text)
-├── status (text: 'planned' | 'in_progress' | 'completed', default 'planned')
-├── sort_order (integer, default 0) -- For drag-and-drop ordering
-├── created_at (timestamptz)
-├── updated_at (timestamptz)
-├── created_by (uuid, foreign key → auth.users)
-├── is_archived (boolean, default false)
-└── archived_at (timestamptz, nullable)
-
-team_item_members (many-to-many)
-├── id (uuid, primary key)
-├── team_item_id (uuid, foreign key → team_items)
-├── user_id (uuid, foreign key → auth.users)
-└── created_at (timestamptz)
-
-team_item_tags (many-to-many)
-├── id (uuid, primary key)
-├── team_item_id (uuid, foreign key → team_items)
-├── tag (text, not null)
-└── created_at (timestamptz)
-
-team_item_relations (many-to-many)
-├── id (uuid, primary key)
-├── source_item_id (uuid, foreign key → team_items)
-├── target_item_id (uuid, foreign key → team_items)
-├── relation_type (text: 'next_step' | 'part_of')
-└── created_at (timestamptz)
+team_item_members (id, item_id, user_id, created_at)
+team_item_tags    (id, item_id, tag_name, created_at)
+  -- tag_name lagres i lowercase (normaliseres i addSystemTag). Maks 5 tags per item.
+team_item_relations (id, team_id, source_item_id, target_item_id, relation_type, created_at, created_by)
+  -- relation_type: 'next_step' | 'part_of'
 ```
 
 ### Database Functions & RLS
 
 **Helper Functions:**
+
 - `is_team_member(team_uuid, user_uuid)` - Check if user is member
 - `team_role(team_uuid, user_uuid)` - Get user's role in team
 - `get_team_week_stats(team_uuid, year_int, week_int)` - Calculate weekly stats with Bayesian adjustment
 
 **Row-Level Security (RLS):**
+
 - All tables have RLS enabled
 - Policies enforce team membership boundaries
 - Some aggregation functions use `security definer` to bypass RLS for calculations
@@ -240,21 +179,25 @@ team_item_relations (many-to-many)
 ## 🎯 Viktige Konsepter
 
 ### 1. Item Types (Dashboard)
-Fire typer team items med distinkte roller:
 
-| Type | Norsk navn | Farge | Formål |
-|------|-----------|-------|--------|
-| `ukemaal` | Ukemål | Gray | Ukentlige mål/oppgaver |
-| `pipeline` | Pipeline | Green | Pipeline-elementer som leverer til mål |
-| `maal` | Mål | Teal | Overordnede mål |
-| `retro` | Retro | Amber/Gold | Retrospektiv forbedringer |
+Fire typer team items med distinkte roller. Mål-kolonnen er skjult på oversikten via `SHOW_MÅL_COLUMN` i `components/DashboardGrid.tsx`; data og relasjoner er urørt.
+
+| Type       | Norsk navn | Farge      | Formål                                 |
+| ---------- | ---------- | ---------- | -------------------------------------- |
+| `ukemål`   | Ukemål     | Gray       | Ukentlige mål/oppgaver                 |
+| `pipeline` | Pipeline   | Green      | Pipeline-elementer som leverer til mål |
+| `mål`      | Mål        | Teal       | Overordnede mål                        |
+| `retro`    | Retro      | Amber/Gold | Retrospektiv forbedringer              |
 
 ### 2. Item Relations (Many-to-Many)
+
 **Relation Types:**
+
 - `next_step` - Dette item er neste steg fra source
 - `part_of` - Dette item er del av source
 
 **Eksempel:**
+
 ```
 Pipeline A → (next_step) → Ukemål X
 Pipeline A → (part_of) → Mål Y
@@ -262,6 +205,7 @@ Pipeline B → (next_step) → Ukemål X  (many-to-many!)
 ```
 
 **Recent Evolution:**
+
 - Tidligere: One-to-one per source
 - Nå: Full many-to-many support (flere kilder → ett target, ett source → flere targets)
 
@@ -270,12 +214,14 @@ Pipeline B → (next_step) → Ukemål X  (many-to-many!)
 Tre beregningsmetoder for team health scores:
 
 **A. Raw Score**
+
 ```typescript
 Simple average of all responses
 Example: [4, 5, 3, 4, 5] → 4.2
 ```
 
 **B. Bayesian Adjusted Score**
+
 ```typescript
 // Trekker ikke-respondenter mot midten (3.0)
 // Premierer høy deltakelse
@@ -288,12 +234,14 @@ bayesianScore = (7 * 4.2 + 3 * 3.0) / 10 = 3.84
 ```
 
 **C. Moving Average**
+
 ```typescript
 // Glatter trender med vektet historikk
 movingAvg = 0.6 * currentWeek + 0.3 * lastWeek + 0.1 * twoWeeksAgo
 ```
 
 ### 4. Survey Submission Rules
+
 - **Én submission per bruker per uke** (enforced by unique constraint)
 - Brukere kan **overskrive** sin egen submission i samme uke
 - **Draft saving**: Ufullstendige submissions lagres i `tt_draft_answers`
@@ -302,12 +250,14 @@ movingAvg = 0.6 * currentWeek + 0.3 * lastWeek + 0.1 * twoWeeksAgo
 ### 5. Authorization Levels
 
 **Roller (i rekkefølge av tilgang):**
+
 1. `owner` - Full tilgang, kan slette team
 2. `admin` - Kan administrere medlemmer, items, settings
 3. `member` - Kan svare på undersøkelser, se dashboard, lage items
 4. `viewer` - Read-only tilgang
 
 **Defense in Depth:**
+
 1. Middleware sjekker session validity
 2. Server Actions verifiserer team membership
 3. RLS policies på database-nivå
@@ -322,18 +272,21 @@ movingAvg = 0.6 * currentWeek + 0.3 * lastWeek + 0.1 * twoWeeksAgo
 
 ```typescript
 // ✅ RIKTIG: server/actions/example.ts
-'use server';
+'use server'
 
-import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { supabaseServer } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 
 export async function exampleAction(teamId: string, data: any) {
-  const supabase = await createClient();
+  const supabase = supabaseServer()
 
   // 1. Autentisering
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
   if (authError || !user) {
-    return { error: 'Unauthorized' };
+    return { error: 'Unauthorized' }
   }
 
   // 2. Autorisering - sjekk team membership
@@ -342,11 +295,11 @@ export async function exampleAction(teamId: string, data: any) {
     .select('role')
     .eq('team_id', teamId)
     .eq('user_id', user.id)
-    .eq('is_active', true)
-    .single();
+    .eq('status', 'active')
+    .maybeSingle()
 
   if (!membership) {
-    return { error: 'Not a team member' };
+    return { error: 'Not a team member' }
   }
 
   // 3. Business logic
@@ -354,21 +307,22 @@ export async function exampleAction(teamId: string, data: any) {
     .from('some_table')
     .insert({ ...data, team_id: teamId })
     .select()
-    .single();
+    .single()
 
   if (error) {
-    console.error('Error in exampleAction:', error);
-    return { error: error.message };
+    console.error('Error in exampleAction:', error)
+    return { error: error.message }
   }
 
   // 4. Cache invalidation
-  revalidatePath(`/t/${teamId}`);
+  revalidatePath(`/t/${teamId}`)
 
-  return { data };
+  return { data }
 }
 ```
 
 **Returformat:**
+
 - Success: `{ data: T }`
 - Error: `{ error: string }`
 - Aldri throw errors - returner alltid et objekt
@@ -446,15 +400,15 @@ Alle farger og spacing er definert som CSS custom properties i `app/globals.css`
 ```css
 :root {
   /* Colors - Nordic/Scandinavian palette */
-  --color-primary: #2d6a5c;    /* Teal green */
-  --color-secondary: #4a7c6f;  /* Lighter teal */
-  --color-accent: #d4af37;     /* Gold */
+  --color-primary: #2d6a5c; /* Teal green */
+  --color-secondary: #4a7c6f; /* Lighter teal */
+  --color-accent: #d4af37; /* Gold */
 
   /* Item type colors */
-  --color-ukemaal: #6b7280;    /* Gray */
-  --color-pipeline: #059669;   /* Green */
-  --color-maal: #0d9488;       /* Teal */
-  --color-retro: #f59e0b;      /* Amber */
+  --color-ukemaal: #6b7280; /* Gray */
+  --color-pipeline: #059669; /* Green */
+  --color-maal: #0d9488; /* Teal */
+  --color-retro: #f59e0b; /* Amber */
 
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -466,6 +420,7 @@ Alle farger og spacing er definert som CSS custom properties i `app/globals.css`
 ```
 
 **Bruk disse i komponenter:**
+
 ```css
 .item-card {
   padding: var(--spacing-md);
@@ -489,6 +444,7 @@ Alle farger og spacing er definert som CSS custom properties i `app/globals.css`
 ### Legge til et nytt felt på team_items
 
 1. **Database migration**: Opprett ny SQL-fil i `supabase/migrations/`
+
 ```sql
 -- 040_add_field_to_team_items.sql
 ALTER TABLE team_items ADD COLUMN new_field TEXT;
@@ -515,6 +471,7 @@ ALTER TABLE team_items ADD COLUMN new_field TEXT;
 Spørsmål opprettes via `questionnaires` og `questions` tabeller. For MVP:
 
 1. Insert direkte i database via Supabase dashboard:
+
 ```sql
 INSERT INTO questions (questionnaire_id, text, type, sort_order)
 VALUES (
@@ -532,6 +489,7 @@ VALUES (
 ## ⚠️ Viktige Ting å Huske På
 
 ### ALDRI gjør dette:
+
 - ❌ Bruk tradisjonelle Next.js API routes for backend logic (bruk Server Actions)
 - ❌ Hardcode team_id eller user_id uten å verifisere membership
 - ❌ Throw errors fra Server Actions (returner `{ error }` i stedet)
@@ -541,6 +499,7 @@ VALUES (
 - ❌ Lag flere submissions per bruker per uke (enforced av unique constraint, men valider før insert)
 
 ### ALLTID gjør dette:
+
 - ✅ Sjekk `auth.getUser()` først i alle Server Actions
 - ✅ Verifiser team membership før operasjoner
 - ✅ Bruk `revalidatePath()` etter data mutations
@@ -551,13 +510,15 @@ VALUES (
 - ✅ Bruk design tokens fra `globals.css` i stedet for hardcoded colors
 
 ### Performance Considerations
+
 - Supabase har connection limits - reuse clients hvor mulig
 - Dashboard queries kan være tunge med mange items - vurder pagination hvis >100 items
 - Statistics calculations kjøres server-side (security definer functions)
 - Recharts kan være treg med >52 datapunkter - vurder sampling for lange tidsperioder
 
 ### Database Migrations
-- ALDRI endre eksisterende migrations (001-039)
+
+- ALDRI endre eksisterende migrations (001-047)
 - Opprett NYE migrations med inkrementelt nummer
 - Test migrations i development environment først
 - Bruk descriptive filenames: `040_add_field_description.sql`
@@ -568,6 +529,7 @@ VALUES (
 ## 🚀 Deployment og Miljø
 
 ### Environment Variables (.env.local)
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
@@ -575,16 +537,19 @@ SUPABASE_SERVICE_ROLE_KEY=eyJxxx... # Kun for migrations
 ```
 
 ### Vercel Deployment
+
 1. Import repo til Vercel
 2. Sett environment variables i Project Settings
 3. Deploy (automatic on push to main)
 
 ### Supabase Setup
-1. Kjør alle migrations i rekkefølge (001 → 039+)
+
+1. Kjør alle migrations i rekkefølge (001 → 047+)
 2. Verifiser at RLS er enabled på alle tables
 3. Test permissions med test users
 
 ### Testing Workflow
+
 ```bash
 # Development
 npm run dev
@@ -600,6 +565,7 @@ npm run format
 ```
 
 ### Branching Strategy
+
 - `main` - Production branch
 - Feature branches: `feature/description`
 - Hotfix branches: `hotfix/description`
@@ -608,29 +574,24 @@ npm run format
 
 ## 📚 Viktige Filer å Kjenne Til
 
-| Fil | Formål |
-|-----|--------|
-| `server/actions/dashboard.ts` | 1000+ linjer - all item + relation logic |
-| `server/actions/submissions.ts` | Survey submission + draft handling |
-| `server/actions/stats.ts` | Statistics calculations (Bayesian, moving avg) |
-| `components/DashboardGrid.tsx` | Main dashboard med drag-and-drop |
-| `components/TeamItemCard.tsx` | Item display med medlemmer/tags/status |
-| `app/(app)/t/[teamId]/client.tsx` | Client-side state for dashboard |
-| `app/globals.css` | Design tokens og global styles |
-| `middleware.ts` | OTP exchange og auth checks |
-| `supabase/migrations/026_create_team_items_tables.sql` | Team items schema |
+| Fil                                                    | Formål                                         |
+| ------------------------------------------------------ | ---------------------------------------------- |
+| `server/actions/dashboard.ts`                          | 1000+ linjer - all item + relation logic       |
+| `server/actions/submissions.ts`                        | Survey submission + draft handling             |
+| `server/actions/stats.ts`                              | Statistics calculations (Bayesian, moving avg) |
+| `components/DashboardGrid.tsx`                         | Main dashboard med drag-and-drop               |
+| `components/TeamItemCard.tsx`                          | Item display med medlemmer/tags/status         |
+| `app/(app)/t/[teamId]/client.tsx`                      | Client-side state for dashboard                |
+| `app/globals.css`                                      | Design tokens og global styles                 |
+| `middleware.ts`                                        | OTP exchange og auth checks                    |
+| `supabase/migrations/026_create_team_items_tables.sql` | Team items schema                              |
 
 ---
 
 ## 🎓 Læring og Dokumentasjon
 
-### Nyttige Ressurser
-- [Next.js 14 App Router Docs](https://nextjs.org/docs/app)
-- [Supabase JavaScript Client](https://supabase.com/docs/reference/javascript)
-- [DndKit Documentation](https://docs.dndkit.com/)
-- [Recharts Examples](https://recharts.org/en-US/examples)
-
 ### Konvensjoner
+
 - **Filnavn**: PascalCase for components (`TeamItemCard.tsx`), lowercase for routes (`page.tsx`)
 - **Function names**: camelCase (`handleSubmit`, `createTeamItem`)
 - **Database**: snake_case (`team_id`, `created_at`)
@@ -643,21 +604,25 @@ npm run format
 ### Common Issues
 
 **"Not authorized" errors:**
+
 - Sjekk om user er authenticated: `supabase.auth.getUser()`
 - Sjekk team membership: Query `team_memberships` table
 - Verifiser RLS policies i Supabase dashboard
 
 **Drag-and-drop ikke fungerer:**
+
 - Sjekk at items har unique `id` property
 - Verifiser at `SortableContext` items array matcher rendered items
 - Console.log `DragEndEvent` for å se hva som skjer
 
 **Statistics viser feil tall:**
+
 - Verifiser `week_number` og `year` i submissions
 - Sjekk at `get_team_week_stats()` function er oppdatert
 - Test Bayesian calculations manuelt
 
 **Cache issues (stale data):**
+
 - Sjekk at `revalidatePath()` kalles etter mutations
 - Prøv hard refresh (Cmd+Shift+R)
 - Verifiser at riktig path sendes til `revalidatePath()`
@@ -682,34 +647,12 @@ Fjern auto-delete logikk - tillat many-to-one relasjoner
 
 ---
 
-## 🎯 Fremtidige Features (Vurder disse ved utvidelse)
-
-- Admin UI for å håndtere spørsmål i questionnaires
-- Invitasjonssystem for å legge til nye teammedlemmer
-- Email notifications for påminnelser om weekly survey
-- Export statistics til PDF/Excel
-- Real-time collaborative editing (Supabase Realtime)
-- Mobile app (React Native)
-- AI-powered insights fra survey responses
-- Integration med Slack/Teams for notifications
-
 ---
 
-## 🤝 Samarbeid med Claude Code
+## Verifiserte repo-konvensjoner
 
-Når du jobber med meg (Claude Code) i dette prosjektet:
-
-1. **Vær spesifikk**: "Legg til et nytt felt 'priority' på team_items" i stedet for "Oppdater databasen"
-2. **Gi kontekst**: Hvis du refererer til et spesifikt item type eller feature, si hvilket
-3. **Test sammen**: La meg vite hvis noe ikke fungerer, så kan jeg debugge
-4. **Iterer**: Start smått, test, så bygg videre
-
-Jeg har nå full kontekst om prosjektet og kan hjelpe deg med:
-- Legge til nye features
-- Debugge issues
-- Refaktorere kode
-- Skrive migrations
-- Optimalisere performance
-- Forklare eksisterende kode
-
-**Lykke til med utviklingen! 🚀**
+- **Pre-push kjører alt:** `.husky/pre-push` → `npm run check:prepush` (lint, type-check, tester, `check:architecture`, build, migrasjonsguard). Ikke kjør dem manuelt før hver commit.
+- **Arkitekturguarden** (`scripts/check-architecture.mjs`) matcher `.from(` bokstavelig i `components/` og `app/(app)/`. Bruk `[...map.entries()]` i stedet for `Array.from(...)` i UI-filer.
+- **`.next` deles mellom `next dev` og `next build`.** Etter en build kan dev-serveren feile med "Cannot find module ./vendor-chunks/…". Slett `.next` og start dev på nytt.
+- **Server actions tar imot `teamId` fra klienten** der det går (sparer et oppslag); auth og rolle sjekkes likevel alltid server-side.
+- **Rediger-flyt på kort:** endringer patches lokalt via `onOptimisticPatch` i `client.tsx`; bare sletting/arkivering/relasjoner refetcher hele teamet.

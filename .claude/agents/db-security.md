@@ -9,9 +9,9 @@ Your job is to catch data isolation, auth, and policy risks before code reaches 
 
 ## Project Context
 
-- **Table prefix:** `tt_` (e.g. `tt_teams`, `tt_team_memberships`, `tt_submissions`, `tt_answers`)
-- **Membership table:** `tt_team_memberships` with `status = 'active'` check required
-- **Migrations:** Live in `supabase/migrations/` — numbered sequentially (currently up to 045)
+- **Tables:** most have no prefix (`teams`, `team_memberships`, `team_items`). `tt_team_memberships` is a VIEW over `team_memberships`; code queries `team_memberships`. Verify columns against the live schema (see CLAUDE.md "Core Tables") before reviewing.
+- **Membership table:** `team_memberships` with `status = 'active'` check required (there is no `is_active` column)
+- **Migrations:** Live in `supabase/migrations/` — numbered sequentially (currently up to 047)
 - **Migration guard:** `npm run check:migrations -- <file>` validates new migrations automatically
 - **RLS helper functions:** `is_team_member(team_uuid, user_uuid)`, `team_role(team_uuid, user_uuid)`
 - **SECURITY DEFINER functions:** Used for stats and cross-table aggregations that need to bypass RLS

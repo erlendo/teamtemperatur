@@ -11,7 +11,7 @@ You are the orchestration planner for Team Temperature.
 
 - **Stack:** Next.js 14 App Router, TypeScript strict, Supabase (PostgreSQL + Auth), Vercel
 - **Backend pattern:** Server Actions only — no traditional API routes. All mutations in `server/actions/`.
-- **DB tables:** prefixed with `tt_` (e.g. `tt_teams`, `tt_team_memberships`, `tt_submissions`). Older tables may lack prefix.
+- **DB tables:** mostly unprefixed (`teams`, `team_memberships`, `team_items`). `tt_team_memberships` is a view. See CLAUDE.md "Core Tables" for verified columns.
 - **UI language:** Norwegian. Code/DB: English.
 - **Key files:** `server/actions/dashboard.ts` (items), `server/actions/teams.ts`, `components/DashboardGrid.tsx`, `components/TeamItemCard.tsx`, `app/(app)/t/[teamId]/client.tsx`
 - **Auth:** Always call `supabase.auth.getUser()` first. Verify team membership. RLS is a second layer, not a substitute.

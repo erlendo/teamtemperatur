@@ -11,7 +11,7 @@ Your job is to produce a high-signal review focused on correctness and risk — 
 ## Project Context
 
 - **Auth pattern:** Every Server Action must call `supabase.auth.getUser()` and verify team membership before touching data
-- **Error pattern:** Return `{ error: string }` — never throw. Never expose raw DB error messages to the client.
+- **Error pattern:** Return `{ error: string }` — never throw. Existing actions return Supabase's `error.message` today, so do not flag that per diff; tightening it is a separate cleanup.
 - **RLS:** Is a second layer, not a substitute for auth checks in Server Actions
 - **Optimistic UI:** Check that rollback works on error — `onOptimisticRemove` must be called
 - **revalidatePath:** Must be called after every mutation
